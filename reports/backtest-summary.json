@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-08-31T03:20:00Z",
+  "computed": {
+    "events": 10,
+    "first_party_confirmation": 10,
+    "any_first_party_advance_signal": 9,
+    "clear_actionable_advance_signal": 6,
+    "weak_or_ambiguous_advance_signal": 3,
+    "no_usable_first_party_advance_signal": 1,
+    "community_incremental_recall": 1
+  },
+  "lead_time": {
+    "minimum_minutes": 604,
+    "maximum_minutes": 3113,
+    "typical_observed_range_hours": "10–23",
+    "note": "The maximum is a hidden-reply case; the range is descriptive, not a forecast."
+  },
+  "conclusion_zh": "一手源在 10 次中全部完成确认；9 次出现某种提前信号，但只有 6 次足够清楚。社区层补回的第 10 次只是单账号低置信猜测，不能与官方排期等价。",
+  "limitations": [
+    "Event-conditioned samples do not provide the full false-positive denominator for community accounts.",
+    "Lead time is not a probability and should not be extrapolated into an exact next-reset timestamp."
+  ]
+}

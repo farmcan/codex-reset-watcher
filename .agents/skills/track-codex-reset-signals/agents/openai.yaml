@@ -1,0 +1,7 @@
+interface:
+  display_name: "Codex Reset Signals"
+  short_description: "检查 Codex 重置预告、确认、传闻与最近十次证据"
+  default_prompt: "Use $track-codex-reset-signals to check the deployed watcher, state the current Codex reset signal in Chinese, link the strongest original evidence, and report watcher health."
+
+policy:
+  allow_implicit_invocation: true

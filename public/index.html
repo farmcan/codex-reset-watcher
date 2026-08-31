@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="追踪 Codex 全局额度重置信号：一手预告、社区风声、最近十次历史与邮件提醒。">
+    <title>Codex Reset Watcher</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Codex Reset Watcher 首页">
+        <span class="brand-mark">CR</span>
+        <span><strong>Codex Reset Watcher</strong><small>非官方 · 证据优先</small></span>
+      </a>
+      <nav aria-label="页面导航">
+        <a href="#history">十次历史</a>
+        <a href="#signals">最新信号</a>
+        <a href="#sources">信源</a>
+        <a href="/feed.xml">RSS</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <div class="eyebrow"><span id="health-dot" class="status-dot pending"></span><span id="health-label">正在读取监控状态</span></div>
+        <h1 id="page-title">先判断有没有值得行动的消息，<br>再看它为什么可信。</h1>
+        <p class="hero-copy">只追踪公开 X 信号，不读取你的 Codex 账号。官方预告、已经重置、banked reset 和社区风声会分开显示。</p>
+        <div id="current-card" class="current-card loading" aria-live="polite">
+          <div>
+            <span class="signal-kicker">当前判断</span>
+            <h2>正在加载最新信号…</h2>
+            <p>不会把缺失数据画成“没有消息”。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="takeaway" id="history" aria-labelledby="history-title">
+        <div class="section-heading">
+          <div><span class="section-index">01</span><h2 id="history-title">最近 10 次，历史到底说明了什么</h2></div>
+          <p>结论来自逐条 X 原帖回看，不是根据时间间隔硬猜下一次。</p>
+        </div>
+        <div class="metric-grid">
+          <article><strong>10/10</strong><span>一手来源最终确认</span><small>适合判断“是否真的发生”</small></article>
+          <article><strong>9/10</strong><span>出现过某种提前信号</span><small>其中包含暗语和模糊说法</small></article>
+          <article class="accent"><strong>6/10</strong><span>足够清楚、可操作</span><small>这是更值得关注的数字</small></article>
+          <article><strong>1/10</strong><span>没有可用一手预告</span><small>社区猜中，但只是单账号样本</small></article>
+        </div>
+        <div class="plain-conclusion">
+          <strong>一句话：</strong>提前通知经常存在，但“任何风声 9/10”不能写成“可靠预告 9/10”；清楚可操作的覆盖只有 6/10。
+        </div>
+        <div id="history-list" class="timeline" aria-live="polite"></div>
+      </section>
+
+      <section id="signals" aria-labelledby="signals-title">
+        <div class="section-heading">
+          <div><span class="section-index">02</span><h2 id="signals-title">最新信号</h2></div>
+          <p>低置信风声也会留档，但不会伪装成官方排期。</p>
+        </div>
+        <div id="signal-list" class="signal-list"><p class="empty">正在读取…</p></div>
+      </section>
+
+      <section id="sources" aria-labelledby="sources-title">
+        <div class="section-heading">
+          <div><span class="section-index">03</span><h2 id="sources-title">谁更值得听</h2></div>
+          <p>来源等级衡量的是证据角色，不是对人的评价。</p>
+        </div>
+        <div id="source-list" class="source-grid"></div>
+      </section>
+
+      <section class="system" aria-labelledby="system-title">
+        <div class="section-heading">
+          <div><span class="section-index">04</span><h2 id="system-title">监控是否真的在工作</h2></div>
+          <p>最后成功时间、失败原因和邮件状态都会公开显示。</p>
+        </div>
+        <div id="system-grid" class="system-grid"></div>
+      </section>
+
+      <aside class="boundary">
+        <strong>边界说明</strong>
+        <p>本项目追踪公开的全局重置消息，不读取个人 5 小时/周窗口，也不预测你的私人重置时间。只有一手明确的未来 hard reset 才会出现“可提前安排原有任务”的提示；社区传闻不会升级为使用指令。</p>
+      </aside>
+    </main>
+
+    <footer>
+      <p>开源、非官方，与 OpenAI、X 或任何被追踪账号无隶属关系。</p>
+      <div><a href="/api/status">JSON API</a><a href="/api/history">历史数据</a><a href="/feed.xml">RSS</a></div>
+    </footer>
+  </body>
+</html>

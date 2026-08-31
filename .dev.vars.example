@@ -1,0 +1,8 @@
+# Never commit the real values. Copy to .dev.vars for local development.
+X_BEARER_TOKEN=replace_me
+ADMIN_TOKEN=replace_with_a_long_random_value
+
+# Optional email alerts through Resend.
+RESEND_API_KEY=
+ALERT_EMAIL_FROM=Codex Reset Watcher <alerts@example.com>
+ALERT_EMAIL_TO=you@example.com

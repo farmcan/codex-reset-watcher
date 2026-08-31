@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-08-31T03:20:00Z",
+  "sources": [
+    {
+      "handle": "thsottiaux",
+      "tier": "A1",
+      "role": "first_party",
+      "weight": 1,
+      "conclusion_zh": "最近 10 次一手确认覆盖 10/10；6 次有清楚可操作的提前信号，3 次只有弱暗示，1 次未找到可用一手预告。必须同时抓帖子和回复。"
+    },
+    {
+      "handle": "hqmank",
+      "tier": "B",
+      "role": "scout",
+      "weight": 0.72,
+      "conclusion_zh": "至少 7/10 提供较早、较直白的转述，尤其擅长发现隐藏回复；曾出现前后矛盾判断，不能替代一手原帖。"
+    },
+    {
+      "handle": "UsageReset",
+      "tier": "B",
+      "role": "relay",
+      "weight": 0.62,
+      "conclusion_zh": "上线后可评估的 5 次中，3 次有用提前提醒、1 次漏掉、1 次 stale；适合做分发兜底，不是独立证据。"
+    },
+    {
+      "handle": "rezoundous",
+      "tier": "C",
+      "role": "rumor",
+      "weight": 0.42,
+      "conclusion_zh": "7 月 29 日样本约提前 40 小时猜中；没有完整非事件日误报分母，不能宣称预测准确率。"
+    },
+    {
+      "handle": "kimmonismus",
+      "tier": "C",
+      "role": "rumor",
+      "weight": 0.4,
+      "conclusion_zh": "可补社区氛围，日期、重置类型和动机推断不稳定。"
+    },
+    {
+      "handle": "TokenGremlin",
+      "tier": "C",
+      "role": "rumor",
+      "weight": 0.38,
+      "conclusion_zh": "仅作候选线索，不单独触发高置信提醒。"
+    },
+    {
+      "handle": "argofowl",
+      "tier": "C",
+      "role": "rumor",
+      "weight": 0.38,
+      "conclusion_zh": "仅作候选线索，不单独触发高置信提醒。"
+    }
+  ],
+  "warning": "No precise prediction accuracy is reported because a complete false-positive denominator is unavailable."
+}
