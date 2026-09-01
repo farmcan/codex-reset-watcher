@@ -57,7 +57,8 @@ function validSignals(status) {
   const seen = new Set();
   return (status.live.signals || []).filter((signal) => {
     if (signal.superseded_by_post_id || signal.event_type === "community_observation" || signal.severity === "none") return false;
-    const key = `${signal.author}|${signal.event_type}|${String(signal.text).trim().toLowerCase()}`;
+    const normalizedPrefix = String(signal.text).trim().toLowerCase().replace(/\s+/g, " ").slice(0, 120);
+    const key = `${signal.author}|${signal.event_type}|${signal.reset_mode}|${normalizedPrefix}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -98,7 +99,11 @@ function renderCurrent(status) {
   if (!signal) {
     card.className = "current-card clear";
     body.append(el("h2", "", status.live.overall === "healthy" ? "暂未发现新的有效信号" : "监控数据还没有准备好"));
-    body.append(el("p", "", status.live.overall === "healthy" ? "系统会继续轮询；没有新信号不等于预测下一次不会重置。" : "请先看下方监控健康状态，缺失数据不会被显示为“无事发生”。"));
+    const latestConfirmed = validSignals(status).find((candidate) => candidate.event_type === "explicit_reset" && candidate.reset_mode === "hard_reset");
+    const healthyMessage = latestConfirmed
+      ? `系统会继续轮询。最近一次官方确认在 ${formatTime(latestConfirmed.created_at)}，已经不再算作当前行动信号。`
+      : "系统会继续轮询；没有新信号不等于预测下一次不会重置。";
+    body.append(el("p", "", status.live.overall === "healthy" ? healthyMessage : "请先看下方监控健康状态，缺失数据不会被显示为“无事发生”。"));
     card.append(body);
     return;
   }

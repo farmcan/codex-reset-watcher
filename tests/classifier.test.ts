@@ -132,4 +132,16 @@ describe("classifyPost", () => {
     expect(signal.eventType).not.toBe("community_rumor");
     expect(signal.shouldNotify).toBe(false);
   });
+
+  it("does not turn a hoped-for limit change into a future reset rumor", () => {
+    const signal = classifyPost(post({
+      author: "TokenGremlin",
+      lane: "rumor",
+      sourceTier: "C",
+      sourceWeight: 0.38,
+      text: "An OpenAI usage reset does not feel like a gift while the weekly Codex limits stay low. I really hope this changes soon."
+    }));
+    expect(signal.eventType).not.toBe("community_rumor");
+    expect(signal.shouldNotify).toBe(false);
+  });
 });

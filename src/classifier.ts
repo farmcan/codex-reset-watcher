@@ -72,6 +72,20 @@ function clamp(value: number): number {
   return Math.max(0, Math.min(1, Number(value.toFixed(3))));
 }
 
+function hasFutureResetIntent(text: string, futureHits: string[]): boolean {
+  if (/\b(?:will|going to|about to|expected to)\b.{0,40}\breset\b/.test(text)) return true;
+  if (/\breset\b.{0,20}\bincoming\b/.test(text)) return true;
+  const resetIndexes = [...text.matchAll(/\breset(?:s|ting)?\b/g)].map((match) => match.index ?? -1);
+  return futureHits.some((phrase) => {
+    let index = text.indexOf(phrase);
+    while (index >= 0) {
+      if (resetIndexes.some((resetIndex) => resetIndex >= 0 && Math.abs(resetIndex - index) <= 64)) return true;
+      index = text.indexOf(phrase, index + phrase.length);
+    }
+    return false;
+  });
+}
+
 function inferEffectiveTime(text: string, createdAt: string): { at: string | null; approximate: boolean } {
   const created = Date.parse(createdAt);
   if (!Number.isFinite(created)) return { at: null, approximate: false };
@@ -107,7 +121,7 @@ export function classifyPost(post: RawPost): Signal {
   const futureHits = matches(text, FUTURE);
   const weakHits = matches(text, WEAK_HINTS);
   const resetWord = text.includes("reset");
-  const futureIntent = futureHits.length > 0 || /\b(?:will|going to|about to|expected to)\b.{0,40}\breset\b/.test(text) || /\breset\b.{0,20}\bincoming\b/.test(text);
+  const futureIntent = hasFutureResetIntent(text, futureHits);
   const banked = text.includes("banked reset") || text.includes("reset bank") || text.includes("banked");
   const basis = evidenceBasis(post, text);
   const timing = inferEffectiveTime(text, post.createdAt);
