@@ -37,6 +37,14 @@ describe("public bilingual dashboard", () => {
     expect(app).toContain("只作节奏参照，不预测下次重置");
   });
 
+  it("keeps an open dashboard synchronized with live status", () => {
+    expect(app).toContain("const LIVE_REFRESH_MS = 60_000");
+    expect(app).toContain("async function refreshLive()");
+    expect(app).toContain('document.addEventListener("visibilitychange"');
+    expect(app).toContain("最近轮询");
+    expect(app).toContain("Auto-refresh failed · showing last data");
+  });
+
   it("derives a stable historical median hard-reset gap", () => {
     const outcomes = history.events
       .filter((event) => event.kind === "hard_reset")

@@ -65,6 +65,8 @@ Cloudflare Cron (2 min)
   -> Web dashboard + JSON API + RSS
 ```
 
+实时 Worker 首页每 60 秒重新读取最新状态；标签页在后台停留超过一分钟后，切回时会立即补刷。GitHub Pages 备用站仍按工作流约每 10 分钟生成一次公开快照。
+
 详细设计见 [`docs/architecture.md`](docs/architecture.md)。采用和拒绝了哪些 GitHub 经验见 [`docs/research-open-source.md`](docs/research-open-source.md)。
 
 ## 本地运行

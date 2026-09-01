@@ -3,6 +3,7 @@ const ENGLISH = document.documentElement.lang.toLowerCase().startsWith("en");
 const PAGES_SNAPSHOT = location.hostname.endsWith("github.io") || new URLSearchParams(location.search).has("snapshot");
 const endpoint = (name) => PAGES_SNAPSHOT ? `${ENGLISH ? "../" : ""}snapshots/${name}.json` : `/api/${name}`;
 const ui = (zh, en) => ENGLISH ? en : zh;
+const LIVE_REFRESH_MS = 60_000;
 
 const el = (tag, className, text) => {
   const node = document.createElement(tag);
@@ -234,7 +235,10 @@ function renderHealth(status) {
     ? { healthy: "X monitoring healthy", initializing: "Building the first baseline", stale: "Data is stale", down: "X monitoring unavailable" }
     : { healthy: "X 监控正常", initializing: "首次基线建立中", stale: "数据已过期", down: "X 监控异常" };
   const prefix = PAGES_SNAPSHOT ? ui("备用快照 · ", "Fallback snapshot · ") : "";
-  document.querySelector("#health-label").textContent = `${prefix}${labels[health] || ui("状态未知", "Unknown status")}`;
+  const polledAt = status.live.official_last_success_at
+    ? ui(` · 最近轮询 ${formatTime(status.live.official_last_success_at)}`, ` · last poll ${formatTime(status.live.official_last_success_at)}`)
+    : "";
+  document.querySelector("#health-label").textContent = `${prefix}${labels[health] || ui("状态未知", "Unknown status")}${polledAt}`;
 }
 
 function renderCurrent(status) {
@@ -738,33 +742,79 @@ function renderSystem(status) {
   });
 }
 
+let cachedHistory;
+let refreshInFlight = false;
+let lastLiveRefreshAt = 0;
+
+async function fetchJson(name) {
+  const response = await fetch(endpoint(name), { cache: "no-store" });
+  if (!response.ok) throw new Error(`${name} returned ${response.status}`);
+  return response.json();
+}
+
+function renderLive(status) {
+  renderHealth(status);
+  renderCurrent(status);
+  renderResetClock(status, cachedHistory);
+  renderSignals(status);
+  renderSystem(status);
+}
+
+function showLoadFailure(initial) {
+  document.querySelector("#health-dot").className = `status-dot ${initial ? "down" : "stale"}`;
+  document.querySelector("#health-label").textContent = initial
+    ? ui("页面无法读取监控 API", "The page cannot read the monitoring API")
+    : ui("自动刷新失败 · 保留上次数据", "Auto-refresh failed · showing last data");
+  if (!initial) return;
+  const card = document.querySelector("#current-card");
+  card.className = "current-card high";
+  card.replaceChildren(el("div", "", PAGES_SNAPSHOT ? ui("备用快照加载失败。请稍后刷新。", "Fallback snapshot failed to load. Refresh in a moment.") : ui("加载失败。请稍后刷新，或查看 /healthz。", "Loading failed. Refresh in a moment or check /healthz.")));
+  const clock = document.querySelector("#reset-clock");
+  clock.className = "reset-clock error";
+  document.querySelector("#reset-clock-value").textContent = ui("计时不可用", "Clock unavailable");
+  document.querySelector("#reset-clock-anchor").textContent = ui("历史记录未能加载", "History could not be loaded");
+}
+
 async function load() {
+  if (refreshInFlight) return;
+  refreshInFlight = true;
   try {
     document.querySelector("#status-api-link").href = endpoint("status");
     document.querySelector("#history-api-link").href = endpoint("history");
     const [status, history, sources] = await Promise.all([
-      fetch(endpoint("status"), { cache: "no-store" }).then((response) => response.json()),
-      fetch(endpoint("history"), { cache: "no-store" }).then((response) => response.json()),
-      fetch(endpoint("sources"), { cache: "no-store" }).then((response) => response.json())
+      fetchJson("status"),
+      fetchJson("history"),
+      fetchJson("sources")
     ]);
-    renderHealth(status);
-    renderCurrent(status);
-    renderResetClock(status, history);
+    cachedHistory = history;
+    renderLive(status);
     renderHistory(history);
-    renderSignals(status);
     renderSources(sources);
-    renderSystem(status);
+    lastLiveRefreshAt = Date.now();
   } catch (error) {
-    document.querySelector("#health-dot").className = "status-dot down";
-    document.querySelector("#health-label").textContent = ui("页面无法读取监控 API", "The page cannot read the monitoring API");
-    const card = document.querySelector("#current-card");
-    card.className = "current-card high";
-    card.replaceChildren(el("div", "", PAGES_SNAPSHOT ? ui("备用快照加载失败。请稍后刷新。", "Fallback snapshot failed to load. Refresh in a moment.") : ui("加载失败。请稍后刷新，或查看 /healthz。", "Loading failed. Refresh in a moment or check /healthz.")));
-    const clock = document.querySelector("#reset-clock");
-    clock.className = "reset-clock error";
-    document.querySelector("#reset-clock-value").textContent = ui("计时不可用", "Clock unavailable");
-    document.querySelector("#reset-clock-anchor").textContent = ui("历史记录未能加载", "History could not be loaded");
+    showLoadFailure(true);
+  } finally {
+    refreshInFlight = false;
+  }
+}
+
+async function refreshLive() {
+  if (refreshInFlight || !cachedHistory) return;
+  refreshInFlight = true;
+  try {
+    renderLive(await fetchJson("status"));
+    lastLiveRefreshAt = Date.now();
+  } catch (error) {
+    showLoadFailure(false);
+  } finally {
+    refreshInFlight = false;
   }
 }
 
 load();
+window.setInterval(() => {
+  if (!document.hidden) refreshLive();
+}, LIVE_REFRESH_MS);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && Date.now() - lastLiveRefreshAt >= LIVE_REFRESH_MS) refreshLive();
+});
