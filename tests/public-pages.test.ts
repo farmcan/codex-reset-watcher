@@ -15,7 +15,15 @@ describe("public bilingual dashboard", () => {
       expect(page).toContain('class="github-star"');
       expect(page).toContain('href="https://github.com/farmcan/codex-reset-watcher"');
       expect(page).toContain("GitHub Star");
+      expect(page).toContain('href="https://chatgpt.com/codex/settings/usage"');
+      expect(page).toContain('target="_blank" rel="noreferrer noopener"');
     }
+    expect(chinese).toContain("查看我的 Codex 额度");
+    expect(english).toContain("Check my Codex usage");
+    expect(chinese).toContain('class="hero-visual"');
+    expect(chinese).toContain('src="brand-zh.png"');
+    expect(english).toContain('class="hero-visual"');
+    expect(english).toContain('src="../brand-en.png"');
   });
 
   it("renders the cadence context on both pages", () => {

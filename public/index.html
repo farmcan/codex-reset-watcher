@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="description" content="追踪 Codex 全局额度重置信号：一手预告、社区风声、最近十次历史与邮件提醒。">
     <title>Codex 重置雷达</title>
-    <link rel="icon" href="logo.svg" type="image/svg+xml">
+    <link rel="icon" href="brand-zh.png" type="image/png">
     <link rel="stylesheet" href="styles.css">
     <script type="module" src="app.js?v=20260901-4"></script>
   </head>
   <body>
     <header class="site-header">
       <a class="brand" href="./" aria-label="Codex 重置雷达首页">
-        <img class="brand-mark" src="logo.svg" alt="皮鞭形 Codex 重置雷达标志">
+        <img class="brand-mark" src="brand-zh.png" alt="拿着皮鞭的猫与 Codex 标志" width="42" height="42">
         <span><strong>Codex 重置雷达</strong><small>非官方 · 证据优先</small></span>
       </a>
       <div class="header-actions">
@@ -31,9 +31,22 @@
 
     <main>
       <section class="hero" aria-labelledby="page-title">
-        <div class="eyebrow"><span id="health-dot" class="status-dot pending"></span><span id="health-label">正在读取监控状态</span></div>
-        <h1 id="page-title">找到重置机会，<br>站起来猛蹬。</h1>
-        <p class="hero-copy">追踪 X 上的一手预告、社区风声与到账反馈；每条消息按来源、证据和历史表现分级。</p>
+        <div class="hero-intro">
+          <div class="hero-copy-panel">
+            <div class="eyebrow"><span id="health-dot" class="status-dot pending"></span><span id="health-label">正在读取监控状态</span></div>
+            <h1 id="page-title">找到重置机会，<br>站起来猛蹬。</h1>
+            <p class="hero-copy">追踪 X 上的一手预告、社区风声与到账反馈；每条消息按来源、证据和历史表现分级。</p>
+            <div class="hero-actions">
+              <a class="usage-link" href="https://chatgpt.com/codex/settings/usage" target="_blank" rel="noreferrer noopener" aria-label="前往 ChatGPT 查看我的 Codex 额度">
+                <span>查看我的 Codex 额度</span><span aria-hidden="true">↗</span>
+              </a>
+              <small>前往 ChatGPT 查看你的个人 Codex 使用额度</small>
+            </div>
+          </div>
+          <figure class="hero-visual">
+            <img src="brand-zh.png" alt="猫拿着皮鞭说‘我真得好好调教你了’，鞭梢指向 Codex 标志" width="960" height="905" decoding="async" fetchpriority="high">
+          </figure>
+        </div>
         <div class="hero-status-grid">
           <div id="current-card" class="current-card loading" aria-live="polite">
             <div>
