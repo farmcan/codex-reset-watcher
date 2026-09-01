@@ -4,7 +4,12 @@
 
 > 它不读取你的 Codex 登录、个人 5 小时窗口或周额度。个人剩余额度与重置时间仍应以 Codex Usage 为准。
 
-在线查看：[`codex-reset-watcher.weican16hit.workers.dev`](https://codex-reset-watcher.weican16hit.workers.dev/)。网页、JSON API 和 RSS 使用同一份 D1 证据账本。
+在线查看：
+
+- 实时入口：[`codex-reset-watcher.weican16hit.workers.dev`](https://codex-reset-watcher.weican16hit.workers.dev/)，X 一手源约每 2 分钟检查；
+- 网络受限备用入口：[`farmcan.github.io/codex-reset-watcher`](https://farmcan.github.io/codex-reset-watcher/)，约每 10 分钟从实时入口同步公开快照。
+
+两个入口使用同一份 D1 证据账本。备用入口不保存凭据，也不会从浏览器跨域读取 `workers.dev`，因此在该域名被本地网络污染时仍可显示最近快照。
 
 ## 先看历史结论
 

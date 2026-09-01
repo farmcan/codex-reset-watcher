@@ -15,6 +15,7 @@ Cron -> due query selection -> X Recent Search -> author validation -> normaliza
      -> deterministic classification -> evidence grouping / inhibition
      -> D1 event ledger -> notification outbox -> Resend
      -> dashboard / JSON / RSS / health
+     -> GitHub Pages public snapshot fallback (10 min)
 ```
 
 ### Source state
@@ -41,6 +42,8 @@ Two independent B/C community authors within six hours and the same event-day cl
 ### Health
 
 The official query is expected every 120 seconds. The site becomes stale after three missed periods plus 60 seconds. `/healthz` returns `503` for initializing, stale, or down states so an external uptime monitor can watch the watcher.
+
+The primary Worker remains the live source. A GitHub Actions workflow copies only the public status/history/source/event JSON and RSS into a GitHub Pages artifact every ten minutes. The fallback never receives X, Cloudflare, admin, or email secrets; its browser does not call `workers.dev`. It marks snapshots older than twenty minutes as stale.
 
 ## D1 tables
 

@@ -1,4 +1,6 @@
 const TZ = "Asia/Shanghai";
+const PAGES_SNAPSHOT = location.hostname.endsWith("github.io") || new URLSearchParams(location.search).has("snapshot");
+const endpoint = (name) => PAGES_SNAPSHOT ? `snapshots/${name}.json` : `/api/${name}`;
 
 const el = (tag, className, text) => {
   const node = document.createElement(tag);
@@ -78,11 +80,13 @@ function currentSignals(status) {
 }
 
 function renderHealth(status) {
-  const health = status.live.overall || "initializing";
+  const snapshotAgeMs = PAGES_SNAPSHOT ? Date.now() - Date.parse(status.live.generated_at) : 0;
+  const health = PAGES_SNAPSHOT && snapshotAgeMs > 20 * 60_000 ? "stale" : status.live.overall || "initializing";
   const dot = document.querySelector("#health-dot");
   dot.className = `status-dot ${health}`;
   const labels = { healthy: "X 监控正常", initializing: "首次基线建立中", stale: "数据已过期", down: "X 监控异常" };
-  document.querySelector("#health-label").textContent = labels[health] || "状态未知";
+  const prefix = PAGES_SNAPSHOT ? "备用快照 · " : "";
+  document.querySelector("#health-label").textContent = `${prefix}${labels[health] || "状态未知"}`;
 }
 
 function renderCurrent(status) {
@@ -178,7 +182,7 @@ function renderSystem(status) {
   container.replaceChildren();
   const official = (status.live.sources || []).find((source) => source.name === "official-first-party") || {};
   const cards = [
-    ["整体状态", status.live.overall === "healthy" ? "正常" : status.live.overall === "initializing" ? "初始化" : "需关注", `官方源每 ${status.live.expected_poll_seconds || 120} 秒检查`],
+    ["整体状态", status.live.overall === "healthy" ? "正常" : status.live.overall === "initializing" ? "初始化" : "需关注", PAGES_SNAPSHOT ? `备用页面约每 10 分钟同步；实时源每 ${status.live.expected_poll_seconds || 120} 秒检查` : `官方源每 ${status.live.expected_poll_seconds || 120} 秒检查`],
     ["官方源最后成功", official.last_success_at ? formatTime(official.last_success_at, true) : "尚未成功", official.last_error || "没有记录错误"],
     ["邮件提醒", status.live.email.configured ? "已启用" : "未配置", status.live.email.configured ? `最低 ${status.live.email.minimum_severity} 才发送` : "补收件人、发件域名和 Resend Secret 后启用"],
     ["实时记录", `${(status.live.signals || []).length} 条`, "页面显示最近 100 条有效信号"]
@@ -192,10 +196,12 @@ function renderSystem(status) {
 
 async function load() {
   try {
+    document.querySelector("#status-api-link").href = endpoint("status");
+    document.querySelector("#history-api-link").href = endpoint("history");
     const [status, history, sources] = await Promise.all([
-      fetch("/api/status", { cache: "no-store" }).then((response) => response.json()),
-      fetch("/api/history").then((response) => response.json()),
-      fetch("/api/sources").then((response) => response.json())
+      fetch(endpoint("status"), { cache: "no-store" }).then((response) => response.json()),
+      fetch(endpoint("history"), { cache: "no-store" }).then((response) => response.json()),
+      fetch(endpoint("sources"), { cache: "no-store" }).then((response) => response.json())
     ]);
     renderHealth(status);
     renderCurrent(status);
@@ -208,7 +214,7 @@ async function load() {
     document.querySelector("#health-label").textContent = "页面无法读取监控 API";
     const card = document.querySelector("#current-card");
     card.className = "current-card high";
-    card.replaceChildren(el("div", "", "加载失败。请稍后刷新，或查看 /healthz。"));
+    card.replaceChildren(el("div", "", PAGES_SNAPSHOT ? "备用快照加载失败。请稍后刷新。" : "加载失败。请稍后刷新，或查看 /healthz。"));
   }
 }
 
