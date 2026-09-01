@@ -1,56 +1,151 @@
 {
-  "schema_version": 1,
-  "as_of": "2026-08-31T03:20:00Z",
+  "schema_version": 2,
+  "as_of": "2026-09-01T07:20:00Z",
+  "sample_scope": {
+    "events": "The latest 10 confirmed reset events from 2026-07-29 through 2026-08-31.",
+    "live_ledger": "The hosted watcher ledger began on 2026-08-25; live-ledger post counts are labeled separately.",
+    "unit": "One confirmed reset event, not one post.",
+    "warning_zh": "这里显示的是已发生事件里的覆盖情况，不是预测准确率。没有完整收录“没重置时发过多少误报”，就不能算准确率。"
+  },
+  "rating_method": {
+    "inspiration": "MISP Admiralty Scale, simplified for a consumer dashboard.",
+    "source_dimension_zh": "信源角色回答“这个账号通常离事实多近”。",
+    "content_dimension_zh": "内容强度回答“这一条具体帖子说得有多清楚”。",
+    "upgrade_rule_zh": "个人到账或异常反馈默认是弱观察；至少需要多个相互独立账户交叉，或一手来源确认，才能升级事件等级。"
+  },
   "sources": [
     {
       "handle": "thsottiaux",
       "tier": "A1",
       "role": "first_party",
+      "role_label_zh": "一手确认源",
+      "reliability_label_zh": "最终结果最可靠",
+      "display_group": "measured",
       "weight": 1,
-      "conclusion_zh": "最近 10 次一手确认覆盖 10/10；6 次有清楚可操作的提前信号，3 次只有弱暗示，1 次未找到可用一手预告。必须同时抓帖子和回复。"
+      "metrics": {
+        "recorded_posts": 19,
+        "recorded_posts_qualifier": "exact_in_ten_event_timeline",
+        "evaluated_events": 10,
+        "confirmed_events": 10,
+        "useful_advance_events": 9,
+        "clear_advance_events": 6,
+        "weak_advance_events": 3,
+        "missed_advance_events": 1,
+        "median_advance_lead_minutes": 1121,
+        "median_clear_lead_minutes": 964,
+        "lead_sample_events": 9,
+        "false_positive_denominator_complete": false
+      },
+      "conclusion_zh": "判断“是否真的发生”应以它为准：10 次全部完成一手确认。提前通知也常有，但 9 次提前线索里只有 6 次足够清楚。",
+      "caveat_zh": "必须同时抓主帖和回复；弱暗示不能自动当成排期。"
     },
     {
       "handle": "hqmank",
       "tier": "B",
       "role": "scout",
+      "role_label_zh": "社区侦察员",
+      "reliability_label_zh": "通常能较早发现",
+      "display_group": "measured",
       "weight": 0.72,
-      "conclusion_zh": "至少 7/10 提供较早、较直白的转述，尤其擅长发现隐藏回复；曾出现前后矛盾判断，不能替代一手原帖。"
+      "metrics": {
+        "recorded_posts": 7,
+        "recorded_posts_qualifier": "at_least_one_useful_post_in_each_covered_event",
+        "evaluated_events": 10,
+        "confirmed_events": 7,
+        "useful_advance_events": 7,
+        "clear_advance_events": null,
+        "contradiction_events": 1,
+        "median_advance_lead_minutes": 823,
+        "lead_sample_events": 3,
+        "exact_lead_minimum_minutes": 501,
+        "exact_lead_maximum_minutes": 841,
+        "false_positive_denominator_complete": false
+      },
+      "conclusion_zh": "至少 7/10 次提供较早、较直白的转述；在 3 个保留精确时间的样本中，中位提前约 13 小时 43 分。最有价值的是发现藏在回复里的预告。",
+      "caveat_zh": "出现过前后矛盾判断，且很多内容来自同一条官方线索，不能把转发数量当独立验证。"
     },
     {
       "handle": "UsageReset",
       "tier": "B",
       "role": "relay",
+      "role_label_zh": "自动转发与分发",
+      "reliability_label_zh": "适合提醒兜底",
+      "display_group": "measured",
       "weight": 0.62,
-      "conclusion_zh": "上线后可评估的 5 次中，3 次有用提前提醒、1 次漏掉、1 次 stale；适合做分发兜底，不是独立证据。"
+      "metrics": {
+        "recorded_posts": 7,
+        "recorded_posts_qualifier": "exact_in_live_ledger_since_2026_08_25",
+        "evaluated_events": 5,
+        "confirmed_events": 3,
+        "useful_advance_events": 3,
+        "clear_advance_events": null,
+        "missed_events": 1,
+        "stale_events": 1,
+        "median_advance_lead_minutes": 833,
+        "lead_sample_events": 3,
+        "false_positive_denominator_complete": false
+      },
+      "conclusion_zh": "上线后可评估的 5 次里，3 次有用提前提醒；这些样本通常在确认前约 13 小时 53 分出现。它的优势是快分发，不是独立发现。",
+      "caveat_zh": "有 1 次漏掉、1 次在事件后仍发 incoming；同源转述不能增加独立可信度。"
     },
     {
       "handle": "rezoundous",
       "tier": "C",
       "role": "rumor",
+      "role_label_zh": "社区传闻",
+      "reliability_label_zh": "样本太少，暂不能判断",
+      "display_group": "measured",
       "weight": 0.42,
-      "conclusion_zh": "7 月 29 日样本约提前 40 小时猜中；没有完整非事件日误报分母，不能宣称预测准确率。"
+      "metrics": {
+        "recorded_posts": 1,
+        "recorded_posts_qualifier": "one_event_conditioned_prediction_sample",
+        "evaluated_events": 1,
+        "confirmed_events": 1,
+        "useful_advance_events": 1,
+        "clear_advance_events": 0,
+        "median_advance_lead_minutes": 2433,
+        "lead_sample_events": 1,
+        "false_positive_denominator_complete": false
+      },
+      "conclusion_zh": "7 月 29 日这一个样本约提前 40 小时 33 分猜中，补回了一次一手预告缺口。",
+      "caveat_zh": "只有一次事件日命中，没有非事件日误报分母；不能写成 1/1 准确。"
     },
     {
       "handle": "kimmonismus",
       "tier": "C",
       "role": "rumor",
+      "role_label_zh": "社区放大",
+      "reliability_label_zh": "仅作候选线索",
+      "display_group": "watch_only",
       "weight": 0.4,
-      "conclusion_zh": "可补社区氛围，日期、重置类型和动机推断不稳定。"
+      "metrics": null,
+      "conclusion_zh": "可补社区氛围，日期、重置类型和动机推断不稳定。",
+      "caveat_zh": "当前没有足够完整的预测与误报台账。"
     },
     {
       "handle": "TokenGremlin",
       "tier": "C",
       "role": "rumor",
+      "role_label_zh": "社区候选",
+      "reliability_label_zh": "仅作候选线索",
+      "display_group": "watch_only",
       "weight": 0.38,
-      "conclusion_zh": "仅作候选线索，不单独触发高置信提醒。"
+      "metrics": null,
+      "conclusion_zh": "只用于发现可能相关的讨论，不单独触发高置信提醒。",
+      "caveat_zh": "近期出现过与 reset 无关的长文被关键词误收录。"
     },
     {
       "handle": "argofowl",
       "tier": "C",
       "role": "rumor",
+      "role_label_zh": "社区放大",
+      "reliability_label_zh": "仅作候选线索",
+      "display_group": "watch_only",
       "weight": 0.38,
-      "conclusion_zh": "仅作候选线索，不单独触发高置信提醒。"
+      "metrics": null,
+      "conclusion_zh": "能快速放大消息，但当前样本主要是同源转述。",
+      "caveat_zh": "没有足够独立证据与误报分母。"
     }
   ],
-  "warning": "No precise prediction accuracy is reported because a complete false-positive denominator is unavailable."
+  "warning": "No prediction precision is reported because a complete false-positive denominator is unavailable."
 }

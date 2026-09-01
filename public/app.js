@@ -32,6 +32,31 @@ function formatTime(value, withYear = false) {
   }).format(new Date(value));
 }
 
+function formatDuration(totalMinutes) {
+  if (!Number.isFinite(totalMinutes)) return "未知";
+  const minutes = Math.max(0, Math.round(totalMinutes));
+  const days = Math.floor(minutes / 1440);
+  const hours = Math.floor((minutes % 1440) / 60);
+  const remaining = minutes % 60;
+  if (days) return `${days} 天 ${hours} 小时 ${remaining} 分`;
+  if (hours) return `${hours} 小时 ${remaining} 分`;
+  return `${remaining} 分`;
+}
+
+function localDay(value) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(new Date(value));
+}
+
+function compactText(value, maximum = 260) {
+  const normalized = String(value || "").replace(/\s+/g, " ").trim();
+  return normalized.length > maximum ? `${normalized.slice(0, maximum - 1)}…` : normalized;
+}
+
 function eventLabel(signal) {
   if (signal.event_type === "explicit_reset" && signal.reset_mode === "hard_reset") return "官方确认：重置已经发生";
   if (signal.event_type === "scheduled_reset" && signal.reset_mode === "hard_reset") return "官方预告：未来 hard reset";
@@ -57,6 +82,8 @@ function validSignals(status) {
   const seen = new Set();
   return (status.live.signals || []).filter((signal) => {
     if (signal.superseded_by_post_id || signal.event_type === "community_observation" || signal.severity === "none") return false;
+    if (signal.event_type === "community_rumor" && Number(signal.confidence) < 0.25) return false;
+    if (signal.event_type === "community_rumor" && /no (?:new )?(?:usage )?reset|not an announcement|joke,? not|没有.{0,8}(?:确认|宣布)/i.test(signal.text)) return false;
     const normalizedPrefix = String(signal.text).trim().toLowerCase().replace(/\s+/g, " ").slice(0, 120);
     const key = `${signal.author}|${signal.event_type}|${signal.reset_mode}|${normalizedPrefix}`;
     if (seen.has(key)) return false;
@@ -118,66 +145,312 @@ function renderCurrent(status) {
   card.append(body, link("打开原帖 →", signal.url, "primary-link"));
 }
 
+function renderHistoryMetrics(history) {
+  const container = document.querySelector("#history-metrics");
+  const summary = history.summary;
+  const metrics = [
+    [`${summary.first_party_confirmation}/${summary.events}`, "最终一手确认", "用来判断是否真的发生"],
+    [`${summary.any_first_party_advance_signal}/${summary.events}`, "出现提前线索", "包含暗语和模糊说法"],
+    [`${summary.clear_actionable_advance_signal}/${summary.events}`, "清楚、可操作", `中位提前 ${formatDuration(summary.median_clear_first_party_lead_minutes)}`],
+    [`${summary.no_usable_first_party_advance_signal}/${summary.events}`, "无可用一手预告", "只找到单账号社区样本"]
+  ];
+  container.replaceChildren();
+  metrics.forEach(([value, label, note], index) => {
+    const card = el("article", index === 2 ? "accent" : "");
+    card.append(el("strong", "", value), el("span", "", label), el("small", "", note));
+    container.append(card);
+  });
+}
+
+const historicalRoleLabels = {
+  first_party: "一手来源",
+  scout: "社区侦察",
+  relay: "转发分发",
+  rumor: "社区传闻",
+  personal_observation: "个人反馈"
+};
+
+const historicalStageLabels = {
+  earliest_signal: "最早线索",
+  actionable_signal: "明确预告",
+  community_inference: "社区判断",
+  relay: "快速转发",
+  official_announcement: "官方宣布",
+  official_confirmation: "官方确认",
+  verification_relay: "确认转发",
+  individual_observation: "个人到账",
+  observed_delivery: "观察到账",
+  stale_signal: "迟到提醒"
+};
+
+function timingLabel(node) {
+  if (node.timing === "outcome") return "最终结果";
+  if (node.timing === "after") return `结果后 ${formatDuration(node.distance_minutes)}`;
+  return `提前 ${formatDuration(node.distance_minutes)}`;
+}
+
 function renderHistory(history) {
+  renderHistoryMetrics(history);
   const container = document.querySelector("#history-list");
   container.replaceChildren();
-  history.events.forEach((event) => {
-    const item = el("article", "timeline-item");
+  history.events.forEach((event, index) => {
+    const item = el("details", `timeline-item ${event.advance_quality}`);
+    if (index === 0) item.open = true;
+
+    const firstNode = event.timeline?.[0];
+    const summary = el("summary", "timeline-summary");
     const date = el("div", "timeline-date");
-    date.append(el("strong", "", formatTime(event.confirmed_at).split(" ")[0]));
+    date.append(el("strong", "", formatTime(event.outcome_at || event.confirmed_at).split(" ")[0]));
     date.append(el("span", "", event.kind === "hard_reset" ? "hard reset" : "banked reset"));
-    const body = el("div", "timeline-body");
-    const title = el("h3", "", event.confirmation.summary_zh);
-    const quality = el("span", `pill ${event.advance_quality}`, event.advance_quality === "clear" ? "清楚预警" : event.advance_quality === "weak" ? "弱暗示" : "无一手预告");
-    title.prepend(quality, document.createTextNode(" "));
-    body.append(title);
-    if (event.earliest_first_party_signal) {
-      const hours = Math.floor(event.earliest_first_party_signal.lead_minutes / 60);
-      const minutes = event.earliest_first_party_signal.lead_minutes % 60;
-      body.append(el("p", "", `最早一手信号约提前 ${hours} 小时 ${minutes} 分：${event.earliest_first_party_signal.summary_zh}`));
-    } else if (event.community_signal) {
-      const hours = Math.floor(event.community_signal.lead_minutes / 60);
-      const minutes = event.community_signal.lead_minutes % 60;
-      body.append(el("p", "", `未找到可用一手预告。社区单账号约提前 ${hours} 小时 ${minutes} 分猜中，但不能据此计算预测准确率。`));
+
+    const headline = el("div", "timeline-headline");
+    const titleRow = el("div", "timeline-title-row");
+    titleRow.append(
+      el("span", `pill ${event.advance_quality}`, event.advance_quality === "clear" ? "清楚预警" : event.advance_quality === "weak" ? "弱暗示" : "社区补位"),
+      el("h3", "", event.outcome_summary_zh || event.confirmation.summary_zh)
+    );
+    headline.append(titleRow);
+    if (firstNode) {
+      const firstText = firstNode.timing === "before"
+        ? `@${firstNode.author} 最先出现 · ${timingLabel(firstNode)}`
+        : `@${firstNode.author} 首次记录`;
+      headline.append(el("p", "", firstText));
     }
-    body.append(el("p", "", event.community_note_zh));
-    const links = el("div", "timeline-links");
-    links.append(link("确认原帖", event.confirmation.url));
-    if (event.earliest_first_party_signal) links.append(link("最早一手信号", event.earliest_first_party_signal.url));
-    if (event.community_signal) links.append(link("社区样本", event.community_signal.url));
-    body.append(links);
-    item.append(date, body);
+    if (event.actionable_first_party_signal && event.earliest_first_party_signal?.post_id !== event.actionable_first_party_signal.post_id) {
+      headline.append(el("small", "", `真正明确的预告：提前 ${formatDuration(event.actionable_first_party_signal.lead_minutes)}`));
+    }
+    summary.append(date, headline, el("span", "timeline-toggle", "查看证据时间轴"));
+
+    const body = el("div", "timeline-body");
+    const outcome = el("div", "outcome-box");
+    outcome.append(el("span", "", "最后结果"), el("strong", "", event.outcome_summary_zh || event.confirmation.summary_zh), el("time", "", formatTime(event.outcome_at || event.confirmed_at, true)));
+    body.append(outcome);
+
+    const track = el("ol", "evidence-track");
+    (event.timeline || []).forEach((node) => {
+      const row = el("li", `evidence-node ${node.role} ${node.signal_quality}`);
+      const marker = el("span", "evidence-marker");
+      const time = el("time", "evidence-time", formatTime(node.published_at, true));
+      const content = el("div", "evidence-content");
+      const header = el("div", "evidence-header");
+      header.append(
+        el("span", `node-stage ${node.role}`, historicalStageLabels[node.stage] || node.stage),
+        el("strong", "", `@${node.author}`),
+        el("span", "node-role", historicalRoleLabels[node.role] || node.role),
+        el("span", `timing-badge ${node.timing}`, timingLabel(node))
+      );
+      content.append(header, el("p", "", node.summary_zh));
+      if (node.url) content.append(link("打开原帖 →", node.url, "node-link"));
+      else content.append(el("small", "evidence-missing", "当前切片未保留原帖 ID；不作为强确认。"));
+      row.append(marker, time, content);
+      track.append(row);
+    });
+    body.append(track);
+
+    if (event.timeline_gaps?.length) {
+      const gaps = el("div", "timeline-gaps");
+      gaps.append(el("strong", "", "证据缺口"));
+      event.timeline_gaps.forEach((gap) => gaps.append(el("p", "", gap)));
+      body.append(gaps);
+    }
+    body.append(el("p", "community-note", event.community_note_zh));
+    item.append(summary, body);
     container.append(item);
   });
 }
 
-function renderSignals(status) {
+let activeSignalFilter = "all";
+let latestMonitorSignals = [];
+
+function personalSignal(signal) {
+  const text = String(signal.text || "");
+  const accountPattern = /(?:(?:reset|usage|limit).{0,30}for me|my (?:usage|limit|reset)|went from\s+\d+%?\s+to\s+\d+%?|i (?:got|lost|have|had).{0,30}(?:reset|usage|limit)|我的.{0,12}(?:额度|reset)|到账|个人账户)/i;
+  return signal.source_tier !== "A1" && accountPattern.test(text);
+}
+
+function signalLane(signal) {
+  if (String(signal.source_tier).startsWith("A")) return "official";
+  if (personalSignal(signal)) return "personal";
+  if (signal.evidence_basis === "derivative" || signal.event_type === "community_observation") return "relay";
+  return "rumor";
+}
+
+function monitorRelevant(signal) {
+  if (!signal?.post_id || signal.superseded_by_post_id && signal.event_type === "community_observation") return false;
+  if (String(signal.source_tier).startsWith("A")) return true;
+  if (personalSignal(signal)) return true;
+  if (signal.event_type === "community_rumor" && Number(signal.confidence) < 0.2) return false;
+  if (["scheduled_reset", "explicit_reset", "weak_hint", "community_rumor", "rate_limit_change"].includes(signal.event_type)) {
+    const evidence = String(signal.evidence || "");
+    return signal.reset_mode !== "unknown" || /reset|usage|limit|额度/i.test(`${evidence} ${signal.text}`);
+  }
+  return signal.event_type === "community_observation" && signal.reset_mode !== "unknown";
+}
+
+function monitorSignals(status) {
+  const seen = new Set();
+  return [...(status.live.signals || [])]
+    .filter(monitorRelevant)
+    .sort((left, right) => Date.parse(right.created_at) - Date.parse(left.created_at))
+    .filter((signal) => {
+      if (seen.has(signal.post_id)) return false;
+      seen.add(signal.post_id);
+      return true;
+    })
+    .slice(0, 40);
+}
+
+function signalLevel(signal) {
+  const lane = signalLane(signal);
+  if (lane === "personal") return ["个人弱观察", "personal"];
+  if (lane === "official" && signal.event_type === "explicit_reset") return ["官方确认", "high"];
+  if (lane === "official" && signal.event_type === "scheduled_reset") return ["明确预告", "high"];
+  if (lane === "official") return ["一手弱暗示", "medium"];
+  if (lane === "relay") return ["同源转述", "relay"];
+  return [signal.severity === "medium" ? "社区交叉风声" : "单一社区风声", signal.severity === "medium" ? "medium" : "weak"];
+}
+
+function signalTitle(signal) {
+  const lane = signalLane(signal);
+  if (lane === "personal") {
+    return /error|missing|lost|failed|unable|not reset|异常|消失|没到账/i.test(signal.text) ? "个人账户异常反馈" : "个人账户到账反馈";
+  }
+  if (lane === "relay") return signal.event_type === "community_observation" ? "确认后的社区转述" : "社区侦察 / 转发";
+  return eventLabel(signal);
+}
+
+function signalMatchesFilter(signal, filter) {
+  const lane = signalLane(signal);
+  if (filter === "all") return true;
+  if (filter === "core") return lane === "official" || signal.severity === "high" || signal.severity === "medium";
+  return lane === filter;
+}
+
+function renderSignalSummary(status, signals) {
+  const container = document.querySelector("#signal-summary");
+  const today = localDay(new Date());
+  const todaySignals = signals.filter((signal) => localDay(signal.created_at) === today);
+  const personal = todaySignals.filter((signal) => signalLane(signal) === "personal").length;
+  const scheduled = todaySignals.filter((signal) => signal.event_type === "scheduled_reset" && String(signal.source_tier).startsWith("A")).length;
+  const hasCurrentGlobal = currentSignals(status).some((signal) => ["explicit_reset", "scheduled_reset"].includes(signal.event_type) && signal.reset_mode === "hard_reset");
+  const cards = [
+    [String(todaySignals.length), "今日相关节点", "去重后时间轴记录"],
+    [String(personal), "个人到账 / 异常", "默认弱证据，不单独升级"],
+    [String(scheduled), "一手未来预告", "明确指向尚未发生的 reset"],
+    [hasCurrentGlobal ? "有" : "无", "新一轮全局信号", hasCurrentGlobal ? "请回看顶部当前判断" : "个人反馈不能替代官方确认"]
+  ];
+  container.replaceChildren();
+  cards.forEach(([value, label, note]) => {
+    const card = el("article");
+    card.append(el("strong", "", value), el("span", "", label), el("small", "", note));
+    container.append(card);
+  });
+}
+
+function renderSignalRows() {
   const container = document.querySelector("#signal-list");
   container.replaceChildren();
-  const signals = validSignals(status).slice(0, 20);
+  const signals = latestMonitorSignals.filter((signal) => signalMatchesFilter(signal, activeSignalFilter));
   if (!signals.length) {
-    container.append(el("p", "empty", "尚无实时信号；可能仍在首次建基线。"));
+    container.append(el("p", "empty", "这个筛选下暂无节点。个人反馈为 0 时，只表示当前监控窗口没有收录，不代表所有账号都正常。"));
     return;
   }
   signals.forEach((signal) => {
-    const row = el("article", "signal-row");
-    row.append(el("time", "", formatTime(signal.created_at)));
-    const body = el("div");
-    body.append(el("h3", "", eventLabel(signal)));
-    body.append(el("p", "", `${signal.text} · ${signal.reason}`));
-    row.append(body, link("看原帖 →", signal.url));
+    const lane = signalLane(signal);
+    const [levelLabel, levelClass] = signalLevel(signal);
+    const row = el("article", `monitor-node ${lane}`);
+    row.append(el("span", "monitor-marker"));
+    const time = el("time", "monitor-time", formatTime(signal.created_at, true));
+    const body = el("div", "monitor-body");
+    const header = el("div", "monitor-header");
+    header.append(el("span", `pill ${levelClass}`, levelLabel), el("h3", "", signalTitle(signal)), el("span", "monitor-author", `@${signal.author}`));
+    body.append(header, el("p", "", compactText(signal.text)));
+    const meta = el("div", "monitor-meta");
+    meta.append(el("span", "", `信源 ${signal.source_tier}`), el("span", "", signal.evidence_basis === "derivative" ? "来自同一上游" : signal.evidence_basis === "account_observation" ? "个人账户观察" : "独立说法 / 待核验"));
+    if (signal.url) meta.append(link("打开原帖 →", signal.url));
+    body.append(meta);
+    row.append(time, body);
     container.append(row);
   });
 }
 
+function setupSignalFilters() {
+  const controls = document.querySelector("#signal-filters");
+  if (controls.dataset.ready) return;
+  controls.dataset.ready = "true";
+  controls.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-filter]");
+    if (!button) return;
+    activeSignalFilter = button.dataset.filter;
+    controls.querySelectorAll("button").forEach((candidate) => candidate.classList.toggle("active", candidate === button));
+    renderSignalRows();
+  });
+}
+
+function renderSignals(status) {
+  latestMonitorSignals = monitorSignals(status);
+  renderSignalSummary(status, latestMonitorSignals);
+  setupSignalFilters();
+  renderSignalRows();
+}
+
+function recordedPostsLabel(source) {
+  const value = source.metrics?.recorded_posts;
+  if (!Number.isFinite(value)) return "不足";
+  return source.metrics.recorded_posts_qualifier?.startsWith("at_least") ? `≥${value}` : String(value);
+}
+
+function sourceQualityMetric(source) {
+  const metrics = source.metrics;
+  if (Number.isFinite(metrics.clear_advance_events)) return ["清楚预警", `${metrics.clear_advance_events}/${metrics.evaluated_events}`];
+  if (Number.isFinite(metrics.stale_events)) return ["漏掉 / 迟到", `${metrics.missed_events || 0} / ${metrics.stale_events}`];
+  if (Number.isFinite(metrics.contradiction_events)) return ["矛盾样本", String(metrics.contradiction_events)];
+  return ["清楚预警", "未完整标注"];
+}
+
 function renderSources(scorecard) {
+  const method = document.querySelector("#source-method");
+  method.replaceChildren();
+  method.append(
+    el("strong", "", "先看两件不同的事"),
+    el("p", "", `${scorecard.rating_method.source_dimension_zh} ${scorecard.rating_method.content_dimension_zh}`),
+    el("p", "", scorecard.sample_scope.warning_zh)
+  );
+
   const container = document.querySelector("#source-list");
+  const watchContainer = document.querySelector("#watch-source-list");
   container.replaceChildren();
+  watchContainer.replaceChildren();
   scorecard.sources.forEach((source) => {
+    if (source.display_group === "watch_only") {
+      const watch = el("article", "watch-source");
+      watch.append(el("strong", "", `@${source.handle}`), el("span", "", source.role_label_zh), el("p", "", source.conclusion_zh));
+      watchContainer.append(watch);
+      return;
+    }
+    const metrics = source.metrics;
     const card = el("article", "source-card");
     const header = el("header");
-    header.append(el("h3", "", `@${source.handle}`), el("span", `pill ${source.tier}`, `${source.tier} · ${source.role}`));
-    card.append(header, el("p", "", source.conclusion_zh));
+    const identity = el("div");
+    identity.append(el("h3", "", `@${source.handle}`), el("small", "", `${source.role_label_zh} · ${source.reliability_label_zh}`));
+    header.append(identity, el("span", `pill ${source.tier}`, source.tier));
+    const stats = el("div", "source-stats");
+    const [qualityLabel, qualityValue] = sourceQualityMetric(source);
+    const usefulAdvanceValue = metrics.false_positive_denominator_complete === false && metrics.evaluated_events === 1
+      ? "1 个样本"
+      : `${metrics.useful_advance_events}/${metrics.evaluated_events}`;
+    const metricRows = [
+      ["收录信号", recordedPostsLabel(source)],
+      ["有用提前", usefulAdvanceValue],
+      [qualityLabel, qualityValue],
+      ["通常提前", formatDuration(metrics.median_advance_lead_minutes)]
+    ];
+    metricRows.forEach(([label, value]) => {
+      const metric = el("div");
+      metric.append(el("strong", "", value), el("span", "", label));
+      stats.append(metric);
+    });
+    card.append(header, stats, el("p", "source-conclusion", source.conclusion_zh), el("p", "source-caveat", source.caveat_zh));
     container.append(card);
   });
 }

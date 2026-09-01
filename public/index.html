@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="description" content="追踪 Codex 全局额度重置信号：一手预告、社区风声、最近十次历史与邮件提醒。">
     <title>Codex Reset Watcher</title>
+    <link rel="icon" href="logo.svg" type="image/svg+xml">
     <link rel="stylesheet" href="styles.css">
-    <script type="module" src="app.js"></script>
+    <script type="module" src="app.js?v=20260901-2"></script>
   </head>
   <body>
     <header class="site-header">
       <a class="brand" href="./" aria-label="Codex Reset Watcher 首页">
-        <span class="brand-mark">CR</span>
+        <img class="brand-mark" src="logo.svg" alt="皮鞭形 Codex Reset Watcher 标志">
         <span><strong>Codex Reset Watcher</strong><small>非官方 · 证据优先</small></span>
       </a>
       <nav aria-label="页面导航">
@@ -41,32 +42,44 @@
           <div><span class="section-index">01</span><h2 id="history-title">最近 10 次，历史到底说明了什么</h2></div>
           <p>结论来自逐条 X 原帖回看，不是根据时间间隔硬猜下一次。</p>
         </div>
-        <div class="metric-grid">
-          <article><strong>10/10</strong><span>一手来源最终确认</span><small>适合判断“是否真的发生”</small></article>
-          <article><strong>9/10</strong><span>出现过某种提前信号</span><small>其中包含暗语和模糊说法</small></article>
-          <article class="accent"><strong>6/10</strong><span>足够清楚、可操作</span><small>这是更值得关注的数字</small></article>
-          <article><strong>1/10</strong><span>没有可用一手预告</span><small>社区猜中，但只是单账号样本</small></article>
-        </div>
+        <div id="history-metrics" class="metric-grid" aria-live="polite"></div>
         <div class="plain-conclusion">
-          <strong>一句话：</strong>提前通知经常存在，但“任何风声 9/10”不能写成“可靠预告 9/10”；清楚可操作的覆盖只有 6/10。
+          <strong>一句话：</strong>提前通知经常存在，但“任何风声 9/10”不能写成“可靠预告 9/10”；清楚可操作的覆盖只有 6/10，中位提前约 16 小时。
         </div>
+        <p class="history-help">每一行先给结果；展开后查看“谁最先说、社区如何放大、何时确认、最后是否到账”。没有精确原帖的环节会明确写成证据缺口。</p>
         <div id="history-list" class="timeline" aria-live="polite"></div>
       </section>
 
       <section id="signals" aria-labelledby="signals-title">
         <div class="section-heading">
           <div><span class="section-index">02</span><h2 id="signals-title">最新信号</h2></div>
-          <p>低置信风声也会留档，但不会伪装成官方排期。</p>
+          <p>个人到账或异常反馈也会展示，但默认是弱观察，不会伪装成全局排期。</p>
         </div>
-        <div id="signal-list" class="signal-list"><p class="empty">正在读取…</p></div>
+        <div id="signal-summary" class="signal-summary" aria-live="polite"></div>
+        <div id="signal-filters" class="signal-filters" role="group" aria-label="筛选事件等级">
+          <button type="button" class="active" data-filter="all">全部节点</button>
+          <button type="button" data-filter="core">关键节点</button>
+          <button type="button" data-filter="official">一手来源</button>
+          <button type="button" data-filter="personal">个人到账 / 异常</button>
+          <button type="button" data-filter="rumor">社区风声</button>
+        </div>
+        <div class="monitor-legend" aria-label="事件等级说明">
+          <span><i class="legend-dot official"></i>一手确认 / 预告</span>
+          <span><i class="legend-dot relay"></i>侦察与转发</span>
+          <span><i class="legend-dot rumor"></i>社区风声</span>
+          <span><i class="legend-dot personal"></i>个人到账 / 异常（弱）</span>
+        </div>
+        <div id="signal-list" class="monitor-timeline"><p class="empty">正在读取…</p></div>
       </section>
 
       <section id="sources" aria-labelledby="sources-title">
         <div class="section-heading">
           <div><span class="section-index">03</span><h2 id="sources-title">谁更值得听</h2></div>
-          <p>来源等级衡量的是证据角色，不是对人的评价。</p>
+          <p>账号长期角色和单条帖子的内容强度分开打级；靠谱账号也可能发模糊话。</p>
         </div>
+        <div id="source-method" class="source-method"></div>
         <div id="source-list" class="source-grid"></div>
+        <div id="watch-source-list" class="watch-source-list"></div>
       </section>
 
       <section class="system" aria-labelledby="system-title">
@@ -84,7 +97,7 @@
     </main>
 
     <footer>
-      <p>开源、非官方，与 OpenAI、X 或任何被追踪账号无隶属关系。</p>
+      <p>开源、非官方，与 OpenAI、X 或任何被追踪账号无隶属关系。皮鞭图标改编自 <a href="https://game-icons.net/1x1/lorc/whip.html" target="_blank" rel="noreferrer noopener">Lorc / Game-icons.net</a>（CC BY 3.0）。</p>
       <div><a id="status-api-link" href="api/status">JSON API</a><a id="history-api-link" href="api/history">历史数据</a><a href="feed.xml">RSS</a></div>
     </footer>
   </body>

@@ -23,6 +23,10 @@ No direct project had both a public evidence dashboard, official X API cursors, 
 | [`dgtlmoon/changedetection.io`](https://github.com/dgtlmoon/changedetection.io) | 33.4k stars | Notification queue/outbox, send errors and retry state stay separate from successful detection. |
 | [`healthchecks/healthchecks`](https://github.com/healthchecks/healthchecks) | 10.3k stars | Expected period + grace time, last-success visibility and a live event log. |
 | [`DIYgod/RSSHub`](https://github.com/DIYgod/RSSHub) | 45.9k stars | Source adapters normalize different inputs before consumers; RSS stays a first-class output. |
+| [`google/timesketch`](https://github.com/google/timesketch) | 3.3k stars | Normalize multi-source events onto one chronological timeline, while retaining tags, comments and raw evidence. |
+| [`MISP/misp-taxonomies`](https://github.com/MISP/misp-taxonomies/tree/main/admiralty-scale) | 296 stars | Admiralty Scale separates source reliability from information credibility; the dashboard uses plain-language equivalents. |
+| [`OpenCTI-Platform/opencti`](https://github.com/OpenCTI-Platform/opencti/blob/master/docs/docs/reference/data-processing.md) | mature CTI platform | Dedupe and merge without losing relationship integrity; confidence and provenance stay attached to each item. |
+| [`bellingcat/auto-archiver`](https://github.com/bellingcat/auto-archiver) | 1.1k stars | Preserve original evidence and archive status. This project currently retains post IDs/URLs; full content archiving remains a policy-reviewed follow-up. |
 
 ## Similar web products
 
@@ -38,5 +42,8 @@ No direct project had both a public evidence dashboard, official X API cursors, 
 - Page order: current decision, ten-event proof, live signals, source credibility, watcher health.
 - No exact next-reset probability until a complete prediction ledger provides false positives and calibration.
 - No personal auth ingestion in the hosted service.
+- Personal arrival or account-anomaly reports stay visible in a separate weak-observation lane. They can increase attention, but cannot alone create a global-reset conclusion.
+- Live and historical views use the same event progression: earliest signal → relay/amplification → first-party confirmation → delivery/anomaly observation.
+- Source history and per-post content strength are separate. A useful scout can still produce a stale or ambiguous post.
 - Email defaults to medium/high, while low rumors remain visible through web/API/RSS.
 - Every signal keeps a canonical source link and an explicit data-state label.

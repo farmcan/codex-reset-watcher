@@ -29,7 +29,22 @@ Every query has its own `since_id`, cadence, `primed_at`, last attempt/success, 
 - `independent_rumor`: community prediction with no first-party dependency found.
 - `account_observation`: one user reports their own account; never generalized to provider-wide reset.
 
+The dashboard assigns every live node a presentation lane independent of account tier:
+
+- `official`: first-party confirmation, scheduled reset, or weak first-party hint.
+- `relay`: derivative scout/aggregator content that points back to the same upstream evidence.
+- `rumor`: an independent or not-yet-linked community claim.
+- `personal`: one account's arrival or anomaly observation; always weak by default.
+
+This is a two-dimensional model: account history estimates source reliability, while the current post determines content strength. A B-tier scout's stale post remains stale; a C-tier personal arrival report remains useful execution evidence without becoming global confirmation.
+
 Two independent B/C community authors within six hours and the same event-day cluster can upgrade the newest compatible rumor to medium. A matching official scheduled/confirmed signal inhibits community rumors in that cluster. D-tier full-network discovery remains an internal candidate pool: it is stored for review but excluded from the public dashboard, API and RSS.
+
+### Historical event timeline
+
+`data/reset-events.json` is a reviewed, append-only audit snapshot rather than a D1 mirror. Each event has one `outcome_at` and chronological `timeline[]` nodes with stage, source role, post ID, publication time, relationship to upstream evidence, signal strength and distance to the outcome. `timeline_gaps[]` records older relay facts whose exact post ID or timestamp was not retained. The renderer never manufactures a timestamp to fill those gaps.
+
+`data/source-scorecard.json` keeps event coverage, exact sample scope, lead-time sample counts, stale/miss/contradiction counts and a false-positive-denominator flag. The public page therefore says “event coverage” and “historical median lead,” never “prediction accuracy.”
 
 ### Idempotency
 

@@ -27,10 +27,12 @@
 npm run backtest
 ```
 
+每一条历史现在都带“最早线索 → 社区放大 → 官方确认 → 到账或异常 → 最终结果”的证据时间轴，以及该节点距离最终结果的提前 / 滞后量。信源评估口径见 [`docs/credibility-methodology.md`](docs/credibility-methodology.md)。
+
 ## 它解决什么
 
 1. **现在是否有值得行动的消息**：首页先给自然语言判断，不先铺日志。
-2. **消息属于哪一种**：future hard reset、confirmed hard reset、banked reset、弱暗示、社区风声严格分开。
+2. **消息属于哪一种**：future hard reset、confirmed hard reset、banked reset、弱暗示、社区风声、个人到账或异常严格分开。
 3. **为什么可信**：每条信号保留作者等级、原帖、时间、分类理由和是否被更强证据覆盖。
 4. **提醒是否可靠**：首次启动静默建基线；同一事件去重；官方确认抑制旧传闻；邮件使用 outbox、退避重试和 idempotency key。
 5. **监控是否真的在工作**：网页公开最近成功轮询、错误、stale/down 和邮件配置状态。
@@ -43,6 +45,8 @@ npm run backtest
 | B 侦察 | `@hqmank`、`@UsageReset` | 5 分钟 | 发现隐藏回复；同一原帖转述不算独立证据 |
 | C 传闻 | `@rezoundous` 等已知账号 | 10 分钟 | 单账号保持低置信；两名独立作者才可升级 |
 | D 发现池 | X 全网相关英文帖子 | 30 分钟 | 只入候选池，不直接推送 |
+
+个人账户反馈不是新的来源等级，而是单条内容的弱证据类型：网页会显示并可单独筛选，但它不能独自证明全局 reset。
 
 X Bearer Token 只存在 Cloudflare Secret 中，不会进入网页、D1 原始响应之外的公开配置或 Git。
 
@@ -122,9 +126,10 @@ npx wrangler secret put ALERT_EMAIL_TO
 - 已经确认的重置只提示检查个人 Usage；不会说“赶紧用”。
 - banked reset 不等同自动 hard reset。
 - 社区重复转发同一原帖不是交叉印证。
+- 个人到账或异常只能说明一个账户；默认停留在弱观察泳道。
 - 没有完整非事件日误报分母，因此不输出“社区预测准确率”或精确概率。
 - 本项目不隶属于或代表 OpenAI、X、Thibault Sottiaux 或任何社区账号。
 
 ## 开源
 
-MIT License。安全问题请看 [`SECURITY.md`](SECURITY.md)，贡献流程见 [`CONTRIBUTING.md`](CONTRIBUTING.md)，参考项目与许可证边界见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)。
+代码使用 MIT License。皮鞭标识改编自 Lorc 的 Game-icons.net 作品，使用 CC BY 3.0；完整署名见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)。安全问题请看 [`SECURITY.md`](SECURITY.md)，贡献流程见 [`CONTRIBUTING.md`](CONTRIBUTING.md)。

@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "as_of": "2026-08-31T03:20:00Z",
   "computed": {
     "events": 10,
@@ -13,9 +13,166 @@
   "lead_time": {
     "minimum_minutes": 604,
     "maximum_minutes": 3113,
-    "typical_observed_range_hours": "10–23",
-    "note": "The maximum is a hidden-reply case; the range is descriptive, not a forecast."
+    "median_any_first_party_minutes": 1121,
+    "median_clear_first_party_minutes": 964,
+    "note": "The maximum is a hidden-reply case. Medians describe this ten-event sample; they are not a next-reset forecast."
   },
+  "event_lead_times": [
+    {
+      "event_id": "reset-2026-08-31-hard",
+      "outcome_at": "2026-08-31T02:29:25.303Z",
+      "first_source": "thsottiaux",
+      "first_source_role": "first_party",
+      "first_signal_at": "2026-08-29T05:38:31.065Z",
+      "first_lead_minutes": 2691,
+      "clear_first_party_lead_minutes": 425,
+      "advance_quality": "clear",
+      "timeline_nodes": 8,
+      "evidence_gaps": 0
+    },
+    {
+      "event_id": "reset-2026-08-30-hard",
+      "outcome_at": "2026-08-29T20:43:34.878Z",
+      "first_source": "thsottiaux",
+      "first_source_role": "first_party",
+      "first_signal_at": "2026-08-29T04:07:10.715Z",
+      "first_lead_minutes": 996,
+      "clear_first_party_lead_minutes": null,
+      "advance_quality": "weak",
+      "timeline_nodes": 6,
+      "evidence_gaps": 0
+    },
+    {
+      "event_id": "reset-2026-08-28-hard",
+      "outcome_at": "2026-08-27T16:35:05.348Z",
+      "first_source": "thsottiaux",
+      "first_source_role": "first_party",
+      "first_signal_at": "2026-08-27T06:31:31.187Z",
+      "first_lead_minutes": 604,
+      "clear_first_party_lead_minutes": 604,
+      "advance_quality": "clear",
+      "timeline_nodes": 5,
+      "evidence_gaps": 0
+    },
+    {
+      "event_id": "reset-2026-08-24-hard",
+      "outcome_at": "2026-08-24T00:46:51.902Z",
+      "first_source": "thsottiaux",
+      "first_source_role": "first_party",
+      "first_signal_at": "2026-08-23T06:11:36.368Z",
+      "first_lead_minutes": 1115,
+      "clear_first_party_lead_minutes": 1115,
+      "advance_quality": "clear",
+      "timeline_nodes": 2,
+      "evidence_gaps": 1
+    },
+    {
+      "event_id": "reset-2026-08-21-banked",
+      "outcome_at": "2026-08-22T01:16:00Z",
+      "first_source": "thsottiaux",
+      "first_source_role": "first_party",
+      "first_signal_at": "2026-08-21T11:43:19.287Z",
+      "first_lead_minutes": 813,
+      "clear_first_party_lead_minutes": 813,
+      "advance_quality": "clear",
+      "timeline_nodes": 2,
+      "evidence_gaps": 1
+    },
+    {
+      "event_id": "reset-2026-08-13-hard",
+      "outcome_at": "2026-08-13T01:01:37.748Z",
+      "first_source": "thsottiaux",
+      "first_source_role": "first_party",
+      "first_signal_at": "2026-08-12T06:20:37.793Z",
+      "first_lead_minutes": 1121,
+      "clear_first_party_lead_minutes": 1121,
+      "advance_quality": "clear",
+      "timeline_nodes": 2,
+      "evidence_gaps": 1
+    },
+    {
+      "event_id": "reset-2026-08-11-hard",
+      "outcome_at": "2026-08-11T00:28:16.101Z",
+      "first_source": "thsottiaux",
+      "first_source_role": "first_party",
+      "first_signal_at": "2026-08-08T20:34:50.549Z",
+      "first_lead_minutes": 3113,
+      "clear_first_party_lead_minutes": 3113,
+      "advance_quality": "clear",
+      "timeline_nodes": 2,
+      "evidence_gaps": 1
+    },
+    {
+      "event_id": "reset-2026-08-09-hard",
+      "outcome_at": "2026-08-08T20:29:22.056Z",
+      "first_source": "thsottiaux",
+      "first_source_role": "first_party",
+      "first_signal_at": "2026-08-07T21:46:56.639Z",
+      "first_lead_minutes": 1362,
+      "clear_first_party_lead_minutes": null,
+      "advance_quality": "weak",
+      "timeline_nodes": 2,
+      "evidence_gaps": 0
+    },
+    {
+      "event_id": "reset-2026-08-01-hard",
+      "outcome_at": "2026-08-01T03:32:37.508Z",
+      "first_source": "thsottiaux",
+      "first_source_role": "first_party",
+      "first_signal_at": "2026-07-31T04:53:19.170Z",
+      "first_lead_minutes": 1359,
+      "clear_first_party_lead_minutes": null,
+      "advance_quality": "weak",
+      "timeline_nodes": 2,
+      "evidence_gaps": 1
+    },
+    {
+      "event_id": "reset-2026-07-29-hard",
+      "outcome_at": "2026-07-29T04:09:02.981Z",
+      "first_source": "rezoundous",
+      "first_source_role": "rumor",
+      "first_signal_at": "2026-07-27T11:36:15.359Z",
+      "first_lead_minutes": 2433,
+      "clear_first_party_lead_minutes": null,
+      "advance_quality": "none",
+      "timeline_nodes": 2,
+      "evidence_gaps": 0
+    }
+  ],
+  "source_scorecard": [
+    {
+      "handle": "thsottiaux",
+      "evaluated_events": 10,
+      "useful_advance_events": 9,
+      "recorded_posts": 19,
+      "median_advance_lead_minutes": 1121,
+      "false_positive_denominator_complete": false
+    },
+    {
+      "handle": "hqmank",
+      "evaluated_events": 10,
+      "useful_advance_events": 7,
+      "recorded_posts": 7,
+      "median_advance_lead_minutes": 823,
+      "false_positive_denominator_complete": false
+    },
+    {
+      "handle": "UsageReset",
+      "evaluated_events": 5,
+      "useful_advance_events": 3,
+      "recorded_posts": 7,
+      "median_advance_lead_minutes": 833,
+      "false_positive_denominator_complete": false
+    },
+    {
+      "handle": "rezoundous",
+      "evaluated_events": 1,
+      "useful_advance_events": 1,
+      "recorded_posts": 1,
+      "median_advance_lead_minutes": 2433,
+      "false_positive_denominator_complete": false
+    }
+  ],
   "conclusion_zh": "一手源在 10 次中全部完成确认；9 次出现某种提前信号，但只有 6 次足够清楚。社区层补回的第 10 次只是单账号低置信猜测，不能与官方排期等价。",
   "limitations": [
     "Event-conditioned samples do not provide the full false-positive denominator for community accounts.",

@@ -1,8 +1,16 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "as_of": "2026-08-31T03:20:00Z",
   "timezone": "Asia/Shanghai",
-  "method": "Official X API full-archive/recent search. Confirmation is a first-party @thsottiaux post. Lead time is measured from the earliest usable signal to the stated confirmation or observed delivery time.",
+  "method": "Official X API full-archive/recent search. Each reset is the unit of analysis. Timeline nodes retain source, post time, evidence relationship and distance to the observed outcome. First-party confirmation is ground truth; individual account reports remain weak observations unless stronger evidence upgrades the event.",
+  "methodology": {
+    "unit": "confirmed_reset_event",
+    "ground_truth": "A first-party @thsottiaux confirmation or an explicitly recorded banked-reset delivery observation.",
+    "timeline_order": "Exact timestamps are sorted chronologically. Approximate or missing relay timestamps are disclosed as evidence gaps and never invented.",
+    "lead_time": "Minutes from a signal's publication time to the event outcome. Positive values mean advance notice; post-event observations use lag minutes.",
+    "source_assessment": "Source reliability and post credibility are separate dimensions. A usually useful scout can still publish a weak or stale post.",
+    "accuracy_boundary": "This ten-event audit measures event-conditioned coverage. It cannot estimate prediction precision because non-event-day false positives are not fully archived."
+  },
   "summary": {
     "events": 10,
     "first_party_confirmation": 10,
@@ -11,14 +19,18 @@
     "weak_or_ambiguous_advance_signal": 3,
     "no_usable_first_party_advance_signal": 1,
     "community_incremental_recall": 1,
-    "community_incremental_recall_quality": "single-account-low-confidence"
+    "community_incremental_recall_quality": "single-account-low-confidence",
+    "median_any_first_party_lead_minutes": 1121,
+    "median_clear_first_party_lead_minutes": 964
   },
   "events": [
     {
       "sequence": 1,
       "id": "reset-2026-08-31-hard",
       "kind": "hard_reset",
-      "confirmed_at": "2026-08-31T02:29:00Z",
+      "confirmed_at": "2026-08-31T02:29:25.303Z",
+      "outcome_at": "2026-08-31T02:29:25.303Z",
+      "outcome_summary_zh": "官方确认：付费 ChatGPT Work 与 Codex 用户的全局额度重置已经开始传播。",
       "confirmation": {
         "post_id": "2094251180121854309",
         "url": "https://x.com/thsottiaux/status/2094251180121854309",
@@ -39,13 +51,122 @@
         "lead_minutes": 425
       },
       "advance_quality": "clear",
+      "timeline": [
+        {
+          "stage": "earliest_signal",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2093573991965557198",
+          "published_at": "2026-08-29T05:38:31.065Z",
+          "url": "https://x.com/thsottiaux/status/2093573991965557198",
+          "summary_zh": "先提到即将达到新里程碑并让大家“hold on to your Codex”，方向正确，但没有给出 reset 时间。",
+          "signal_quality": "weak",
+          "evidence_relation": "original",
+          "timing": "before",
+          "distance_minutes": 2691
+        },
+        {
+          "stage": "community_inference",
+          "role": "relay",
+          "author": "UsageReset",
+          "post_id": "2094037516391198915",
+          "published_at": "2026-08-30T12:20:23.000Z",
+          "url": "https://x.com/UsageReset/status/2094037516391198915",
+          "summary_zh": "根据一手里程碑和 reset-button 语境推断次日会重置；属于转述推断，不是独立证据。",
+          "signal_quality": "weak",
+          "evidence_relation": "derivative",
+          "timing": "before",
+          "distance_minutes": 849
+        },
+        {
+          "stage": "community_inference",
+          "role": "scout",
+          "author": "hqmank",
+          "post_id": "2094039588113432669",
+          "published_at": "2026-08-30T12:28:37.000Z",
+          "url": "https://x.com/hqmank/status/2094039588113432669",
+          "summary_zh": "直白转述“明天重置”，便于用户发现消息，但仍依赖同一条一手线索。",
+          "signal_quality": "medium",
+          "evidence_relation": "derivative",
+          "timing": "before",
+          "distance_minutes": 841
+        },
+        {
+          "stage": "actionable_signal",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2094144275957350900",
+          "published_at": "2026-08-30T19:24:37.364Z",
+          "url": "https://x.com/thsottiaux/status/2094144275957350900",
+          "summary_zh": "一手消息明确给出当天 6pm PST，第一次达到可操作的提前提醒标准。",
+          "signal_quality": "clear",
+          "evidence_relation": "original",
+          "timing": "before",
+          "distance_minutes": 425
+        },
+        {
+          "stage": "relay",
+          "role": "relay",
+          "author": "UsageReset",
+          "post_id": "2094144533923602740",
+          "published_at": "2026-08-30T19:25:38.000Z",
+          "url": "https://x.com/UsageReset/status/2094144533923602740",
+          "summary_zh": "转发明确预告，比分发源晚约 61 秒。",
+          "signal_quality": "clear",
+          "evidence_relation": "derivative",
+          "timing": "before",
+          "distance_minutes": 424
+        },
+        {
+          "stage": "official_confirmation",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2094251180121854309",
+          "published_at": "2026-08-31T02:29:25.303Z",
+          "url": "https://x.com/thsottiaux/status/2094251180121854309",
+          "summary_zh": "官方确认全局重置已经执行。",
+          "signal_quality": "confirmed",
+          "evidence_relation": "original",
+          "timing": "outcome",
+          "distance_minutes": 0
+        },
+        {
+          "stage": "individual_observation",
+          "role": "personal_observation",
+          "author": "hqmank",
+          "post_id": "2094254074711732469",
+          "published_at": "2026-08-31T02:40:55.000Z",
+          "url": "https://x.com/hqmank/status/2094254074711732469",
+          "summary_zh": "个人账户反馈自己也已经到账；能补充执行观察，但不能单独证明全局覆盖。",
+          "signal_quality": "weak_observation",
+          "evidence_relation": "observation",
+          "timing": "after",
+          "distance_minutes": 11
+        },
+        {
+          "stage": "verification_relay",
+          "role": "relay",
+          "author": "UsageReset",
+          "post_id": "2094255997170630819",
+          "published_at": "2026-08-31T02:48:33.000Z",
+          "url": "https://x.com/UsageReset/status/2094255997170630819",
+          "summary_zh": "确认型转发，说明已观察到执行结果。",
+          "signal_quality": "confirmed_relay",
+          "evidence_relation": "derivative",
+          "timing": "after",
+          "distance_minutes": 19
+        }
+      ],
+      "timeline_gaps": [],
       "community_note_zh": "@UsageReset 对明确预告的转发只慢 61 秒；更早推断仍来自同一条一手线索。"
     },
     {
       "sequence": 2,
       "id": "reset-2026-08-30-hard",
       "kind": "hard_reset",
-      "confirmed_at": "2026-08-29T20:43:00Z",
+      "confirmed_at": "2026-08-29T20:43:34.878Z",
+      "outcome_at": "2026-08-29T20:43:34.878Z",
+      "outcome_summary_zh": "官方确认：修复多项额度消耗问题后，付费用户额度被重置。",
       "confirmation": {
         "post_id": "2093801758665715784",
         "url": "https://x.com/thsottiaux/status/2093801758665715784",
@@ -60,13 +181,96 @@
       },
       "actionable_first_party_signal": null,
       "advance_quality": "weak",
+      "timeline": [
+        {
+          "stage": "earliest_signal",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2093551005711679557",
+          "published_at": "2026-08-29T04:07:10.715Z",
+          "url": "https://x.com/thsottiaux/status/2093551005711679557",
+          "summary_zh": "只说“soon, but not today”，可能指本次，也可能指下一次，不能当成明确排期。",
+          "signal_quality": "weak",
+          "evidence_relation": "original",
+          "timing": "before",
+          "distance_minutes": 996
+        },
+        {
+          "stage": "relay",
+          "role": "relay",
+          "author": "UsageReset",
+          "post_id": "2093592104383512849",
+          "published_at": "2026-08-29T06:50:29.000Z",
+          "url": "https://x.com/UsageReset/status/2093592104383512849",
+          "summary_zh": "把一手的 soon 转成可能重置提醒，但事件归属仍有歧义。",
+          "signal_quality": "weak",
+          "evidence_relation": "derivative",
+          "timing": "before",
+          "distance_minutes": 833
+        },
+        {
+          "stage": "community_inference",
+          "role": "scout",
+          "author": "hqmank",
+          "post_id": "2093594757683613833",
+          "published_at": "2026-08-29T07:01:01.000Z",
+          "url": "https://x.com/hqmank/status/2093594757683613833",
+          "summary_zh": "转述为“明天重置”；更直白，但并没有新增一手证据。",
+          "signal_quality": "weak",
+          "evidence_relation": "derivative",
+          "timing": "before",
+          "distance_minutes": 823
+        },
+        {
+          "stage": "community_inference",
+          "role": "rumor",
+          "author": "kimmonismus",
+          "post_id": "2093605406719279562",
+          "published_at": "2026-08-29T07:43:20.000Z",
+          "url": "https://x.com/kimmonismus/status/2093605406719279562",
+          "summary_zh": "继续放大“明天重置”，并附带动机推测；后者没有一手证据。",
+          "signal_quality": "weak",
+          "evidence_relation": "derivative",
+          "timing": "before",
+          "distance_minutes": 780
+        },
+        {
+          "stage": "community_inference",
+          "role": "rumor",
+          "author": "argofowl",
+          "post_id": "2093667781904679375",
+          "published_at": "2026-08-29T11:51:12.000Z",
+          "url": "https://x.com/argofowl/status/2093667781904679375",
+          "summary_zh": "再次转述会重置并猜测里程碑数值；属于同源放大。",
+          "signal_quality": "weak",
+          "evidence_relation": "derivative",
+          "timing": "before",
+          "distance_minutes": 532
+        },
+        {
+          "stage": "official_confirmation",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2093801758665715784",
+          "published_at": "2026-08-29T20:43:34.878Z",
+          "url": "https://x.com/thsottiaux/status/2093801758665715784",
+          "summary_zh": "官方确认修复并重置。",
+          "signal_quality": "confirmed",
+          "evidence_relation": "original",
+          "timing": "outcome",
+          "distance_minutes": 0
+        }
+      ],
+      "timeline_gaps": [],
       "community_note_zh": "@UsageReset 约提前 14 小时转述，但事件归属有歧义。"
     },
     {
       "sequence": 3,
       "id": "reset-2026-08-28-hard",
       "kind": "hard_reset",
-      "confirmed_at": "2026-08-27T16:35:00Z",
+      "confirmed_at": "2026-08-27T16:35:05.348Z",
+      "outcome_at": "2026-08-27T16:35:05.348Z",
+      "outcome_summary_zh": "官方确认：ChatGPT Work 与 Codex 用户获得新的额度。",
       "confirmation": {
         "post_id": "2093014447833116908",
         "url": "https://x.com/thsottiaux/status/2093014447833116908",
@@ -87,13 +291,83 @@
         "lead_minutes": 604
       },
       "advance_quality": "clear",
+      "timeline": [
+        {
+          "stage": "earliest_signal",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2092862554632826968",
+          "published_at": "2026-08-27T06:31:31.187Z",
+          "url": "https://x.com/thsottiaux/status/2092862554632826968",
+          "summary_zh": "一手的 reset-button 暗示；结合连续历史可识别，但原文仍不是正式排期。",
+          "signal_quality": "clear_contextual",
+          "evidence_relation": "original",
+          "timing": "before",
+          "distance_minutes": 604
+        },
+        {
+          "stage": "relay",
+          "role": "scout",
+          "author": "hqmank",
+          "post_id": "2092888428392444384",
+          "published_at": "2026-08-27T08:14:19.000Z",
+          "url": "https://x.com/hqmank/status/2092888428392444384",
+          "summary_zh": "把暗示转成“明天可能重置”，方便发现，但仍明确保留 probably。",
+          "signal_quality": "medium",
+          "evidence_relation": "derivative",
+          "timing": "before",
+          "distance_minutes": 501
+        },
+        {
+          "stage": "official_confirmation",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2093014447833116908",
+          "published_at": "2026-08-27T16:35:05.348Z",
+          "url": "https://x.com/thsottiaux/status/2093014447833116908",
+          "summary_zh": "官方确认已经获得 brand new usage。",
+          "signal_quality": "confirmed",
+          "evidence_relation": "original",
+          "timing": "outcome",
+          "distance_minutes": 0
+        },
+        {
+          "stage": "verification_relay",
+          "role": "relay",
+          "author": "UsageReset",
+          "post_id": "2093041141138526615",
+          "published_at": "2026-08-27T18:21:09.000Z",
+          "url": "https://x.com/UsageReset/status/2093041141138526615",
+          "summary_zh": "确认型转发，晚于官方确认 1 小时 46 分。",
+          "signal_quality": "confirmed_relay",
+          "evidence_relation": "derivative",
+          "timing": "after",
+          "distance_minutes": 106
+        },
+        {
+          "stage": "stale_signal",
+          "role": "relay",
+          "author": "UsageReset",
+          "post_id": "2093051462834172132",
+          "published_at": "2026-08-27T19:02:10.000Z",
+          "url": "https://x.com/UsageReset/status/2093051462834172132",
+          "summary_zh": "又发出“明天可能重置”的 incoming 提醒，但本次已经发生，因此记为 stale。",
+          "signal_quality": "stale",
+          "evidence_relation": "derivative",
+          "timing": "after",
+          "distance_minutes": 147
+        }
+      ],
+      "timeline_gaps": [],
       "community_note_zh": "@hqmank 提前约 8 小时转述；@UsageReset 的 incoming 出现在重置后，属于 stale。"
     },
     {
       "sequence": 4,
       "id": "reset-2026-08-24-hard",
       "kind": "hard_reset",
-      "confirmed_at": "2026-08-24T00:46:00Z",
+      "confirmed_at": "2026-08-24T00:46:51.902Z",
+      "outcome_at": "2026-08-24T00:46:51.902Z",
+      "outcome_summary_zh": "官方确认：修复已传播，随后完成全局额度重置。",
       "confirmation": {
         "post_id": "2091688655828246890",
         "url": "https://x.com/thsottiaux/status/2091688655828246890",
@@ -114,14 +388,47 @@
         "lead_minutes": 1115
       },
       "advance_quality": "clear",
+      "timeline": [
+        {
+          "stage": "earliest_signal",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2091407991736332689",
+          "published_at": "2026-08-23T06:11:36.368Z",
+          "url": "https://x.com/thsottiaux/status/2091407991736332689",
+          "summary_zh": "一手明确说明次日会进行 full reset。",
+          "signal_quality": "clear",
+          "evidence_relation": "original",
+          "timing": "before",
+          "distance_minutes": 1115
+        },
+        {
+          "stage": "official_confirmation",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2091688655828246890",
+          "published_at": "2026-08-24T00:46:51.902Z",
+          "url": "https://x.com/thsottiaux/status/2091688655828246890",
+          "summary_zh": "官方确认修复已传播并完成重置。",
+          "signal_quality": "confirmed",
+          "evidence_relation": "original",
+          "timing": "outcome",
+          "distance_minutes": 0
+        }
+      ],
+      "timeline_gaps": [
+        "审计笔记记录 @UsageReset 约提前 14 小时转述、比一手晚约 4.5 小时，但当前数据切片没有保留可核验的 post ID 与秒级时间，因此不补造时间轴节点。"
+      ],
       "community_note_zh": "@UsageReset 约提前 14 小时转述，但比一手消息晚约 4.5 小时。"
     },
     {
       "sequence": 5,
       "id": "reset-2026-08-21-banked",
       "kind": "banked_reset",
-      "confirmed_at": "2026-08-21T11:43:00Z",
+      "confirmed_at": "2026-08-21T11:43:19.287Z",
       "observed_available_at": "2026-08-22T01:16:00Z",
+      "outcome_at": "2026-08-22T01:16:00Z",
+      "outcome_summary_zh": "社区随后观察到 banked reset 已可用；它需要保存或手动使用，不等同自动 hard reset。",
       "confirmation": {
         "post_id": "2090766694897619318",
         "url": "https://x.com/thsottiaux/status/2090766694897619318",
@@ -142,13 +449,47 @@
         "lead_minutes": 813
       },
       "advance_quality": "clear",
+      "timeline": [
+        {
+          "stage": "official_announcement",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2090766694897619318",
+          "published_at": "2026-08-21T11:43:19.287Z",
+          "url": "https://x.com/thsottiaux/status/2090766694897619318",
+          "summary_zh": "宣布当天发放 20M 里程碑 banked reset。",
+          "signal_quality": "clear",
+          "evidence_relation": "original",
+          "timing": "before",
+          "distance_minutes": 813
+        },
+        {
+          "stage": "observed_delivery",
+          "role": "personal_observation",
+          "author": "hqmank",
+          "post_id": null,
+          "published_at": "2026-08-22T01:16:00Z",
+          "url": null,
+          "summary_zh": "社区账户观察到 banked reset 已经可用。该节点保留到账观察时间，但当前切片没有原帖 ID。",
+          "signal_quality": "weak_observation",
+          "evidence_relation": "observation",
+          "evidence_status": "timestamp_without_post_id",
+          "timing": "outcome",
+          "distance_minutes": 0
+        }
+      ],
+      "timeline_gaps": [
+        "到账观察缺少当前可核验的 post ID，因此只作为执行侧弱证据，不升级为新的官方确认。"
+      ],
       "community_note_zh": "@UsageReset 未覆盖；@hqmank 后续提供到账观察，不是提前预测。"
     },
     {
       "sequence": 6,
       "id": "reset-2026-08-13-hard",
       "kind": "hard_reset",
-      "confirmed_at": "2026-08-13T01:01:00Z",
+      "confirmed_at": "2026-08-13T01:01:37.748Z",
+      "outcome_at": "2026-08-13T01:01:37.748Z",
+      "outcome_summary_zh": "官方确认：15M 里程碑对应的重置在下一小时落地。",
       "confirmation": {
         "post_id": "2087706104814023111",
         "url": "https://x.com/thsottiaux/status/2087706104814023111",
@@ -169,13 +510,46 @@
         "lead_minutes": 1121
       },
       "advance_quality": "clear",
+      "timeline": [
+        {
+          "stage": "earliest_signal",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2087423996115681767",
+          "published_at": "2026-08-12T06:20:37.793Z",
+          "url": "https://x.com/thsottiaux/status/2087423996115681767",
+          "summary_zh": "说明“明天有惊喜”；结合此前里程碑与 reset 语境，记为语境型清楚提示。",
+          "signal_quality": "clear_contextual",
+          "evidence_relation": "original",
+          "timing": "before",
+          "distance_minutes": 1121
+        },
+        {
+          "stage": "official_confirmation",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2087706104814023111",
+          "published_at": "2026-08-13T01:01:37.748Z",
+          "url": "https://x.com/thsottiaux/status/2087706104814023111",
+          "summary_zh": "明确说明 15M，并称重置将在下一小时落地。",
+          "signal_quality": "confirmed",
+          "evidence_relation": "original",
+          "timing": "outcome",
+          "distance_minutes": 0
+        }
+      ],
+      "timeline_gaps": [
+        "审计笔记记录 @hqmank 约提前 14 小时转述，但没有保留可核验的 post ID 与精确时间。"
+      ],
       "community_note_zh": "@hqmank 约提前 14 小时转述；@UsageReset 当时尚未上线。"
     },
     {
       "sequence": 7,
       "id": "reset-2026-08-11-hard",
       "kind": "hard_reset",
-      "confirmed_at": "2026-08-11T00:28:00Z",
+      "confirmed_at": "2026-08-11T00:28:16.101Z",
+      "outcome_at": "2026-08-11T00:28:16.101Z",
+      "outcome_summary_zh": "官方确认：所有付费用户的额度已经重置。",
       "confirmation": {
         "post_id": "2086972933566857393",
         "url": "https://x.com/thsottiaux/status/2086972933566857393",
@@ -196,13 +570,46 @@
         "lead_minutes": 3113
       },
       "advance_quality": "clear",
+      "timeline": [
+        {
+          "stage": "earliest_signal",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2086189414292865249",
+          "published_at": "2026-08-08T20:34:50.549Z",
+          "url": "https://x.com/thsottiaux/status/2086189414292865249",
+          "summary_zh": "在回复中明确说周一会再次重置；这是隐藏回复型的高价值提前信号。",
+          "signal_quality": "clear",
+          "evidence_relation": "original",
+          "timing": "before",
+          "distance_minutes": 3113
+        },
+        {
+          "stage": "official_confirmation",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2086972933566857393",
+          "published_at": "2026-08-11T00:28:16.101Z",
+          "url": "https://x.com/thsottiaux/status/2086972933566857393",
+          "summary_zh": "官方确认所有付费用户已重置。",
+          "signal_quality": "confirmed",
+          "evidence_relation": "original",
+          "timing": "outcome",
+          "distance_minutes": 0
+        }
+      ],
+      "timeline_gaps": [
+        "@hqmank 很快放大了隐藏回复，审计估算约提前 47 小时；当前切片未保留精确原帖，因此不生成伪精确节点。"
+      ],
       "community_note_zh": "@hqmank 很快放大隐藏回复，约提前 47 小时，是社区侦察员最有价值的样本。"
     },
     {
       "sequence": 8,
       "id": "reset-2026-08-09-hard",
       "kind": "hard_reset",
-      "confirmed_at": "2026-08-08T20:29:00Z",
+      "confirmed_at": "2026-08-08T20:29:22.056Z",
+      "outcome_at": "2026-08-08T20:29:22.056Z",
+      "outcome_summary_zh": "官方确认：GPT-5.6 Sol 相关庆祝重置已经执行。",
       "confirmation": {
         "post_id": "2086188036493344823",
         "url": "https://x.com/thsottiaux/status/2086188036493344823",
@@ -217,13 +624,44 @@
       },
       "actionable_first_party_signal": null,
       "advance_quality": "weak",
+      "timeline": [
+        {
+          "stage": "earliest_signal",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2085845171363791135",
+          "published_at": "2026-08-07T21:46:56.639Z",
+          "url": "https://x.com/thsottiaux/status/2085845171363791135",
+          "summary_zh": "“Theo needs a reset” 是双关暗示，事后方向正确，事前不能写成正式排期。",
+          "signal_quality": "weak",
+          "evidence_relation": "original",
+          "timing": "before",
+          "distance_minutes": 1362
+        },
+        {
+          "stage": "official_confirmation",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2086188036493344823",
+          "published_at": "2026-08-08T20:29:22.056Z",
+          "url": "https://x.com/thsottiaux/status/2086188036493344823",
+          "summary_zh": "官方确认庆祝重置。",
+          "signal_quality": "confirmed",
+          "evidence_relation": "original",
+          "timing": "outcome",
+          "distance_minutes": 0
+        }
+      ],
+      "timeline_gaps": [],
       "community_note_zh": "大多数社区账号只在确认后转发；不能把双关直接标成排期。"
     },
     {
       "sequence": 9,
       "id": "reset-2026-08-01-hard",
       "kind": "hard_reset",
-      "confirmed_at": "2026-08-01T03:32:00Z",
+      "confirmed_at": "2026-08-01T03:32:37.508Z",
+      "outcome_at": "2026-08-01T03:32:37.508Z",
+      "outcome_summary_zh": "官方确认：效率周末重置已经执行。",
       "confirmation": {
         "post_id": "2083395449814229287",
         "url": "https://x.com/thsottiaux/status/2083395449814229287",
@@ -238,13 +676,46 @@
       },
       "actionable_first_party_signal": null,
       "advance_quality": "weak",
+      "timeline": [
+        {
+          "stage": "earliest_signal",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2083053369351090257",
+          "published_at": "2026-07-31T04:53:19.170Z",
+          "url": "https://x.com/thsottiaux/status/2083053369351090257",
+          "summary_zh": "把 resets 列为迹象，方向正确，但没有给出明确排期。",
+          "signal_quality": "weak",
+          "evidence_relation": "original",
+          "timing": "before",
+          "distance_minutes": 1359
+        },
+        {
+          "stage": "official_confirmation",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2083395449814229287",
+          "published_at": "2026-08-01T03:32:37.508Z",
+          "url": "https://x.com/thsottiaux/status/2083395449814229287",
+          "summary_zh": "官方确认效率周末重置。",
+          "signal_quality": "confirmed",
+          "evidence_relation": "original",
+          "timing": "outcome",
+          "distance_minutes": 0
+        }
+      ],
+      "timeline_gaps": [
+        "@hqmank 曾先转述 7 月 31 日会重置，随后又猜本周不重置；当前切片没有保留两条帖子的 ID 和精确时间，只保留矛盾样本结论。"
+      ],
       "community_note_zh": "@hqmank 先转述 31 日会重置，随后又猜本周不重置，说明发现能力有用、判断不稳定。"
     },
     {
       "sequence": 10,
       "id": "reset-2026-07-29-hard",
       "kind": "hard_reset",
-      "confirmed_at": "2026-07-29T04:09:00Z",
+      "confirmed_at": "2026-07-29T04:09:02.981Z",
+      "outcome_at": "2026-07-29T04:09:02.981Z",
+      "outcome_summary_zh": "官方确认：Sol 使用效率修复后完成重置。",
       "confirmation": {
         "post_id": "2082317452755751098",
         "url": "https://x.com/thsottiaux/status/2082317452755751098",
@@ -262,7 +733,36 @@
         "lead_minutes": 2433,
         "quality": "single-account-low-confidence"
       },
-      "community_note_zh": "社区猜中日期，但缺少一手证据和完整误报分母，只能作为弱信号样本。"
+      "community_note_zh": "社区猜中日期，但缺少一手证据和完整误报分母，只能作为弱信号样本。",
+      "timeline": [
+        {
+          "stage": "earliest_signal",
+          "role": "rumor",
+          "author": "rezoundous",
+          "post_id": "2081705220174930026",
+          "published_at": "2026-07-27T11:36:15.359Z",
+          "url": "https://x.com/rezoundous/status/2081705220174930026",
+          "summary_zh": "单一社区账号估计 7 月 29 日会重置；它猜中了日期，但没有一手证据支撑。",
+          "signal_quality": "weak",
+          "evidence_relation": "independent",
+          "timing": "before",
+          "distance_minutes": 2433
+        },
+        {
+          "stage": "official_confirmation",
+          "role": "first_party",
+          "author": "thsottiaux",
+          "post_id": "2082317452755751098",
+          "published_at": "2026-07-29T04:09:02.981Z",
+          "url": "https://x.com/thsottiaux/status/2082317452755751098",
+          "summary_zh": "官方确认 Sol 修复并重置。",
+          "signal_quality": "confirmed",
+          "evidence_relation": "original",
+          "timing": "outcome",
+          "distance_minutes": 0
+        }
+      ],
+      "timeline_gaps": []
     }
   ]
 }
