@@ -16,9 +16,9 @@
         <span><strong>Codex Reset Watcher</strong><small>非官方 · 证据优先</small></span>
       </a>
       <nav aria-label="页面导航">
-        <a href="#history">十次历史</a>
         <a href="#signals">最新信号</a>
         <a href="#sources">信源</a>
+        <a href="#history">十次历史</a>
         <a href="feed.xml">RSS</a>
       </nav>
     </header>
@@ -26,8 +26,8 @@
     <main>
       <section class="hero" aria-labelledby="page-title">
         <div class="eyebrow"><span id="health-dot" class="status-dot pending"></span><span id="health-label">正在读取监控状态</span></div>
-        <h1 id="page-title">先判断有没有值得行动的消息，<br>再看它为什么可信。</h1>
-        <p class="hero-copy">只追踪公开 X 信号，不读取你的 Codex 账号。官方预告、已经重置、banked reset 和社区风声会分开显示。</p>
+        <h1 id="page-title">Codex Reset，<br>尽可能早知道。</h1>
+        <p class="hero-copy">追踪 X 上的一手预告、社区风声与到账反馈；每条消息按来源、证据和历史表现分级。</p>
         <div id="current-card" class="current-card loading" aria-live="polite">
           <div>
             <span class="signal-kicker">当前判断</span>
@@ -37,22 +37,9 @@
         </div>
       </section>
 
-      <section class="takeaway" id="history" aria-labelledby="history-title">
-        <div class="section-heading">
-          <div><span class="section-index">01</span><h2 id="history-title">最近 10 次，历史到底说明了什么</h2></div>
-          <p>结论来自逐条 X 原帖回看，不是根据时间间隔硬猜下一次。</p>
-        </div>
-        <div id="history-metrics" class="metric-grid" aria-live="polite"></div>
-        <div class="plain-conclusion">
-          <strong>一句话：</strong>提前通知经常存在，但“任何风声 9/10”不能写成“可靠预告 9/10”；清楚可操作的覆盖只有 6/10，中位提前约 16 小时。
-        </div>
-        <p class="history-help">每一行先给结果；展开后查看“谁最先说、社区如何放大、何时确认、最后是否到账”。没有精确原帖的环节会明确写成证据缺口。</p>
-        <div id="history-list" class="timeline" aria-live="polite"></div>
-      </section>
-
       <section id="signals" aria-labelledby="signals-title">
         <div class="section-heading">
-          <div><span class="section-index">02</span><h2 id="signals-title">最新信号</h2></div>
+          <div><span class="section-index">01</span><h2 id="signals-title">最新信号</h2></div>
           <p>个人到账或异常反馈也会展示，但默认是弱观察，不会伪装成全局排期。</p>
         </div>
         <div id="signal-summary" class="signal-summary" aria-live="polite"></div>
@@ -74,12 +61,25 @@
 
       <section id="sources" aria-labelledby="sources-title">
         <div class="section-heading">
-          <div><span class="section-index">03</span><h2 id="sources-title">谁更值得听</h2></div>
+          <div><span class="section-index">02</span><h2 id="sources-title">谁更值得听</h2></div>
           <p>账号长期角色和单条帖子的内容强度分开打级；靠谱账号也可能发模糊话。</p>
         </div>
         <div id="source-method" class="source-method"></div>
         <div id="source-list" class="source-grid"></div>
         <div id="watch-source-list" class="watch-source-list"></div>
+      </section>
+
+      <section class="takeaway" id="history" aria-labelledby="history-title">
+        <div class="section-heading">
+          <div><span class="section-index">03</span><h2 id="history-title">最近 10 次，历史到底说明了什么</h2></div>
+          <p>结论来自逐条 X 原帖回看，不是根据时间间隔硬猜下一次。</p>
+        </div>
+        <div id="history-metrics" class="metric-grid" aria-live="polite"></div>
+        <div class="plain-conclusion">
+          <strong>一句话：</strong>提前通知经常存在，但“任何风声 9/10”不能写成“可靠预告 9/10”；清楚可操作的覆盖只有 6/10，中位提前约 16 小时。
+        </div>
+        <p class="history-help">每一行先给结果；展开后查看“谁最先说、社区如何放大、何时确认、最后是否到账”。没有精确原帖的环节会明确写成证据缺口。</p>
+        <div id="history-list" class="timeline" aria-live="polite"></div>
       </section>
 
       <section class="system" aria-labelledby="system-title">
