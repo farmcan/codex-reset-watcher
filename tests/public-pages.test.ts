@@ -11,6 +11,11 @@ describe("public bilingual dashboard", () => {
     expect(chinese).toContain('href="en/"');
     expect(english).toContain("Catch the Reset window.<br>Crack the whip.");
     expect(english).toContain('href="../" lang="zh-CN"');
+    for (const page of [chinese, english]) {
+      expect(page).toContain('class="github-star"');
+      expect(page).toContain('href="https://github.com/farmcan/codex-reset-watcher"');
+      expect(page).toContain("GitHub Star");
+    }
   });
 
   it("renders the cadence context on both pages", () => {
