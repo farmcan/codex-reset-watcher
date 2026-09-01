@@ -1,10 +1,8 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import history from "../data/reset-events.json";
-
-const chinese = readFileSync(new URL("../public/index.html", import.meta.url), "utf8");
-const english = readFileSync(new URL("../public/en/index.html", import.meta.url), "utf8");
-const app = readFileSync(new URL("../public/app.js", import.meta.url), "utf8");
+import app from "../public/app.js?raw";
+import english from "../public/en/index.html?raw";
+import chinese from "../public/index.html?raw";
 
 describe("public bilingual dashboard", () => {
   it("keeps the requested homepage copy and language switches", () => {
@@ -31,9 +29,9 @@ describe("public bilingual dashboard", () => {
       .filter((event) => event.kind === "hard_reset")
       .map((event) => Date.parse(event.outcome_at))
       .sort((left, right) => left - right);
-    const gaps = outcomes.slice(1).map((timestamp, index) => timestamp - outcomes[index]).sort((left, right) => left - right);
+    const gaps = outcomes.slice(1).map((timestamp, index) => timestamp - outcomes[index]!).sort((left, right) => left - right);
     const middle = gaps.length / 2;
-    const medianHours = (gaps[middle - 1] + gaps[middle]) / 2 / 3_600_000;
+    const medianHours = (gaps[middle - 1]! + gaps[middle]!) / 2 / 3_600_000;
     expect(medianHours).toBeCloseTo(61.77, 1);
   });
 });
