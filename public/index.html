@@ -7,7 +7,7 @@
     <title>Codex Reset Watcher</title>
     <link rel="icon" href="logo.svg" type="image/svg+xml">
     <link rel="stylesheet" href="styles.css">
-    <script type="module" src="app.js?v=20260901-2"></script>
+    <script type="module" src="app.js?v=20260901-3"></script>
   </head>
   <body>
     <header class="site-header">
@@ -28,12 +28,19 @@
         <div class="eyebrow"><span id="health-dot" class="status-dot pending"></span><span id="health-label">正在读取监控状态</span></div>
         <h1 id="page-title">找到 Reset 机会，<br>站起来猛蹬。</h1>
         <p class="hero-copy">追踪 X 上的一手预告、社区风声与到账反馈；每条消息按来源、证据和历史表现分级。</p>
-        <div id="current-card" class="current-card loading" aria-live="polite">
-          <div>
-            <span class="signal-kicker">当前判断</span>
-            <h2>正在加载最新信号…</h2>
-            <p>不会把缺失数据画成“没有消息”。</p>
+        <div class="hero-status-grid">
+          <div id="current-card" class="current-card loading" aria-live="polite">
+            <div>
+              <span class="signal-kicker">当前判断</span>
+              <h2>正在加载最新信号…</h2>
+              <p>不会把缺失数据画成“没有消息”。</p>
+            </div>
           </div>
+          <aside id="reset-clock" class="reset-clock loading" aria-label="距离上次已确认全局 Reset 的时间" aria-live="off">
+            <span class="signal-kicker">距离上次全局 Reset</span>
+            <strong id="reset-clock-value">正在校准…</strong>
+            <small id="reset-clock-anchor">等待读取一手确认记录</small>
+          </aside>
         </div>
       </section>
 

@@ -107,6 +107,65 @@ function currentSignals(status) {
   });
 }
 
+let resetClockTimer;
+
+function latestConfirmedGlobalReset(status, history) {
+  const candidates = [];
+  (status.live.signals || []).forEach((signal) => {
+    if (signal.event_type !== "explicit_reset" || signal.reset_mode !== "hard_reset") return;
+    if (!String(signal.source_tier || "").startsWith("A")) return;
+    const timestamp = Date.parse(signal.created_at);
+    if (Number.isFinite(timestamp) && timestamp <= Date.now()) candidates.push(timestamp);
+  });
+  (history.events || []).forEach((event) => {
+    if (event.kind !== "hard_reset") return;
+    const timestamp = Date.parse(event.outcome_at || event.confirmed_at);
+    if (Number.isFinite(timestamp) && timestamp <= Date.now()) candidates.push(timestamp);
+  });
+  candidates.sort((left, right) => left - right);
+  const eventStarts = [];
+  candidates.forEach((timestamp) => {
+    const current = eventStarts.at(-1);
+    if (current && timestamp - current.latest <= 2 * 60 * 60 * 1000) {
+      current.latest = timestamp;
+      return;
+    }
+    eventStarts.push({ first: timestamp, latest: timestamp });
+  });
+  return eventStarts.at(-1)?.first || null;
+}
+
+function formatElapsed(milliseconds) {
+  const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${days} 天 ${pad(hours)} 小时 ${pad(minutes)} 分 ${pad(seconds)} 秒`;
+}
+
+function renderResetClock(status, history) {
+  window.clearInterval(resetClockTimer);
+  const card = document.querySelector("#reset-clock");
+  const value = document.querySelector("#reset-clock-value");
+  const anchor = document.querySelector("#reset-clock-anchor");
+  const resetAt = latestConfirmedGlobalReset(status, history);
+  if (!resetAt) {
+    card.className = "reset-clock error";
+    value.textContent = "暂无确认记录";
+    anchor.textContent = "不会用社区传闻代替一手确认";
+    return;
+  }
+  card.className = "reset-clock";
+  anchor.textContent = `上次确认：${formatTime(new Date(resetAt).toISOString(), true)} · 全局 hard reset`;
+  const update = () => {
+    value.textContent = formatElapsed(Date.now() - resetAt);
+  };
+  update();
+  resetClockTimer = window.setInterval(update, 1000);
+}
+
 function renderHealth(status) {
   const snapshotAgeMs = PAGES_SNAPSHOT ? Date.now() - Date.parse(status.live.generated_at) : 0;
   const health = PAGES_SNAPSHOT && snapshotAgeMs > 20 * 60_000 ? "stale" : status.live.overall || "initializing";
@@ -483,6 +542,7 @@ async function load() {
     ]);
     renderHealth(status);
     renderCurrent(status);
+    renderResetClock(status, history);
     renderHistory(history);
     renderSignals(status);
     renderSources(sources);
@@ -493,6 +553,10 @@ async function load() {
     const card = document.querySelector("#current-card");
     card.className = "current-card high";
     card.replaceChildren(el("div", "", PAGES_SNAPSHOT ? "备用快照加载失败。请稍后刷新。" : "加载失败。请稍后刷新，或查看 /healthz。"));
+    const clock = document.querySelector("#reset-clock");
+    clock.className = "reset-clock error";
+    document.querySelector("#reset-clock-value").textContent = "计时不可用";
+    document.querySelector("#reset-clock-anchor").textContent = "历史记录未能加载";
   }
 }
 
