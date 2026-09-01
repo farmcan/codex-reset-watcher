@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="Track global Codex usage-reset signals: first-party warnings, community chatter, ten audited events, and alert delivery.">
+    <title>Codex Reset Watcher</title>
+    <link rel="icon" href="../logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../styles.css">
+    <script type="module" src="../app.js?v=20260901-4"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="Codex Reset Watcher home">
+        <img class="brand-mark" src="../logo.svg" alt="Whip-shaped Codex Reset Watcher mark">
+        <span><strong>Codex Reset Watcher</strong><small>Unofficial · Evidence first</small></span>
+      </a>
+      <nav aria-label="Page navigation">
+        <a href="#signals">Latest signals</a>
+        <a href="#sources">Sources</a>
+        <a href="#history">10-event history</a>
+        <a href="../feed.xml">RSS</a>
+        <a href="../" lang="zh-CN">中文</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <div class="eyebrow"><span id="health-dot" class="status-dot pending"></span><span id="health-label">Loading monitoring status</span></div>
+        <h1 id="page-title">Catch the Reset window.<br>Crack the whip.</h1>
+        <p class="hero-copy">Track first-party X posts, community signals, and account-delivery reports. Every item is graded by source, evidence, and historical performance.</p>
+        <div class="hero-status-grid">
+          <div id="current-card" class="current-card loading" aria-live="polite">
+            <div>
+              <span class="signal-kicker">Current assessment</span>
+              <h2>Loading the latest signals…</h2>
+              <p>Missing data is never presented as an all-clear.</p>
+            </div>
+          </div>
+          <aside id="reset-clock" class="reset-clock loading" aria-label="Time since the last confirmed global reset" aria-live="off">
+            <span class="signal-kicker">Codex has been running for</span>
+            <strong id="reset-clock-value">Calibrating…</strong>
+            <small id="reset-clock-anchor">Waiting for first-party confirmation records</small>
+            <div class="reset-phase"><span id="reset-clock-phase">Assessing phase</span><span id="reset-clock-progress"></span></div>
+            <div class="reset-progress" aria-hidden="true"><i id="reset-progress-fill"></i></div>
+            <small id="reset-clock-context">Historical cadence is context, not a forecast</small>
+          </aside>
+        </div>
+      </section>
+
+      <section id="signals" aria-labelledby="signals-title">
+        <div class="section-heading">
+          <div><span class="section-index">01</span><h2 id="signals-title">Latest signals</h2></div>
+          <p>Personal delivery or anomaly reports remain visible but weak; they never masquerade as a global schedule.</p>
+        </div>
+        <div id="signal-summary" class="signal-summary" aria-live="polite"></div>
+        <div id="signal-filters" class="signal-filters" role="group" aria-label="Filter by event level">
+          <button type="button" class="active" data-filter="all">All nodes</button>
+          <button type="button" data-filter="core">Key nodes</button>
+          <button type="button" data-filter="official">First party</button>
+          <button type="button" data-filter="personal">Personal delivery / anomaly</button>
+          <button type="button" data-filter="rumor">Community chatter</button>
+        </div>
+        <div class="monitor-legend" aria-label="Event-level legend">
+          <span><i class="legend-dot official"></i>First-party confirmation / warning</span>
+          <span><i class="legend-dot relay"></i>Scout and relay</span>
+          <span><i class="legend-dot rumor"></i>Community chatter</span>
+          <span><i class="legend-dot personal"></i>Personal delivery / anomaly (weak)</span>
+        </div>
+        <div id="signal-list" class="monitor-timeline"><p class="empty">Loading…</p></div>
+      </section>
+
+      <section id="sources" aria-labelledby="sources-title">
+        <div class="section-heading">
+          <div><span class="section-index">02</span><h2 id="sources-title">Who is worth hearing</h2></div>
+          <p>Long-run source reliability and the strength of each individual post are graded separately.</p>
+        </div>
+        <div id="source-method" class="source-method"></div>
+        <div id="source-list" class="source-grid"></div>
+        <div id="watch-source-list" class="watch-source-list"></div>
+      </section>
+
+      <section class="takeaway" id="history" aria-labelledby="history-title">
+        <div class="section-heading">
+          <div><span class="section-index">03</span><h2 id="history-title">What the last 10 events actually show</h2></div>
+          <p>Every conclusion comes from original X posts, not a guess based on intervals.</p>
+        </div>
+        <div id="history-metrics" class="metric-grid" aria-live="polite"></div>
+        <div class="plain-conclusion">
+          <strong>Bottom line:</strong> Advance notice is common, but “some hint in 9/10” is not “a reliable warning in 9/10.” Only 6/10 were clear enough to act on, with a median lead of about 16 hours.
+        </div>
+        <p class="history-help">Each row starts with the outcome. Expand it to see who spoke first, how the community amplified it, when confirmation arrived, and whether delivery was observed.</p>
+        <div id="history-list" class="timeline" aria-live="polite"></div>
+      </section>
+
+      <section class="system" aria-labelledby="system-title">
+        <div class="section-heading">
+          <div><span class="section-index">04</span><h2 id="system-title">Is the monitor actually working?</h2></div>
+          <p>Last success time, failures, and email configuration are visible.</p>
+        </div>
+        <div id="system-grid" class="system-grid"></div>
+      </section>
+
+      <aside class="boundary">
+        <strong>Scope</strong>
+        <p>This project tracks public, provider-wide reset signals. It does not read your personal five-hour or weekly window and does not predict your private reset time. Only a clear first-party future hard reset can produce a “bring forward existing work” note; community rumors never become usage instructions.</p>
+      </aside>
+    </main>
+
+    <footer>
+      <p>Open source, unofficial, and unaffiliated with OpenAI, X, or any monitored account. The logo is an original project SVG.</p>
+      <div><a id="status-api-link" href="../snapshots/status.json">JSON API</a><a id="history-api-link" href="../snapshots/history.json">History data</a><a href="../feed.xml">RSS</a></div>
+    </footer>
+  </body>
+</html>

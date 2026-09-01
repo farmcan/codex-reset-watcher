@@ -7,6 +7,7 @@
 在线查看：
 
 - 实时入口：[`codex-reset-watcher.weican16hit.workers.dev`](https://codex-reset-watcher.weican16hit.workers.dev/)，X 一手源约每 2 分钟检查；
+- English：[`codex-reset-watcher.weican16hit.workers.dev/en/`](https://codex-reset-watcher.weican16hit.workers.dev/en/)；
 - 网络受限备用入口：[`farmcan.github.io/codex-reset-watcher`](https://farmcan.github.io/codex-reset-watcher/)，约每 10 分钟从实时入口同步公开快照。
 
 两个入口使用同一份 D1 证据账本。备用入口不保存凭据，也不会从浏览器跨域读取 `workers.dev`，因此在该域名被本地网络污染时仍可显示最近快照。
@@ -36,6 +37,8 @@ npm run backtest
 3. **为什么可信**：每条信号保留作者等级、原帖、时间、分类理由和是否被更强证据覆盖。
 4. **提醒是否可靠**：首次启动静默建基线；同一事件去重；官方确认抑制旧传闻；邮件使用 outbox、退避重试和 idempotency key。
 5. **监控是否真的在工作**：网页公开最近成功轮询、错误、stale/down 和邮件配置状态。
+
+首页计时卡会显示“上次全量重置后已经运行多久”，并以最近审计样本的中位间隔标注冷却、升温、常见窗口或超出常见节奏。进度条只用于描述历史节奏，不是概率，也不会预测下一次重置时间。
 
 ## 数据通道
 
@@ -132,4 +135,4 @@ npx wrangler secret put ALERT_EMAIL_TO
 
 ## 开源
 
-代码使用 MIT License。皮鞭标识改编自 Lorc 的 Game-icons.net 作品，使用 CC BY 3.0；完整署名见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)。安全问题请看 [`SECURITY.md`](SECURITY.md)，贡献流程见 [`CONTRIBUTING.md`](CONTRIBUTING.md)。
+代码与本项目原创 Logo 使用 MIT License；设计参考见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)。安全问题请看 [`SECURITY.md`](SECURITY.md)，贡献流程见 [`CONTRIBUTING.md`](CONTRIBUTING.md)。

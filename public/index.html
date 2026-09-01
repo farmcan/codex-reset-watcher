@@ -4,29 +4,30 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="description" content="追踪 Codex 全局额度重置信号：一手预告、社区风声、最近十次历史与邮件提醒。">
-    <title>Codex Reset Watcher</title>
+    <title>Codex 重置雷达</title>
     <link rel="icon" href="logo.svg" type="image/svg+xml">
     <link rel="stylesheet" href="styles.css">
-    <script type="module" src="app.js?v=20260901-3"></script>
+    <script type="module" src="app.js?v=20260901-4"></script>
   </head>
   <body>
     <header class="site-header">
-      <a class="brand" href="./" aria-label="Codex Reset Watcher 首页">
-        <img class="brand-mark" src="logo.svg" alt="皮鞭形 Codex Reset Watcher 标志">
-        <span><strong>Codex Reset Watcher</strong><small>非官方 · 证据优先</small></span>
+      <a class="brand" href="./" aria-label="Codex 重置雷达首页">
+        <img class="brand-mark" src="logo.svg" alt="皮鞭形 Codex 重置雷达标志">
+        <span><strong>Codex 重置雷达</strong><small>非官方 · 证据优先</small></span>
       </a>
       <nav aria-label="页面导航">
         <a href="#signals">最新信号</a>
         <a href="#sources">信源</a>
         <a href="#history">十次历史</a>
         <a href="feed.xml">RSS</a>
+        <a href="en/" lang="en">EN</a>
       </nav>
     </header>
 
     <main>
       <section class="hero" aria-labelledby="page-title">
         <div class="eyebrow"><span id="health-dot" class="status-dot pending"></span><span id="health-label">正在读取监控状态</span></div>
-        <h1 id="page-title">找到 Reset 机会，<br>站起来猛蹬。</h1>
+        <h1 id="page-title">找到重置机会，<br>站起来猛蹬。</h1>
         <p class="hero-copy">追踪 X 上的一手预告、社区风声与到账反馈；每条消息按来源、证据和历史表现分级。</p>
         <div class="hero-status-grid">
           <div id="current-card" class="current-card loading" aria-live="polite">
@@ -36,10 +37,13 @@
               <p>不会把缺失数据画成“没有消息”。</p>
             </div>
           </div>
-          <aside id="reset-clock" class="reset-clock loading" aria-label="距离上次已确认全局 Reset 的时间" aria-live="off">
-            <span class="signal-kicker">距离上次全局 Reset</span>
+          <aside id="reset-clock" class="reset-clock loading" aria-label="距离上次已确认全局重置的时间" aria-live="off">
+            <span class="signal-kicker">上次重置后，Codex 已跑了</span>
             <strong id="reset-clock-value">正在校准…</strong>
             <small id="reset-clock-anchor">等待读取一手确认记录</small>
+            <div class="reset-phase"><span id="reset-clock-phase">正在判断阶段</span><span id="reset-clock-progress"></span></div>
+            <div class="reset-progress" aria-hidden="true"><i id="reset-progress-fill"></i></div>
+            <small id="reset-clock-context">历史节奏只作参照，不预测下次重置</small>
           </aside>
         </div>
       </section>
@@ -99,12 +103,12 @@
 
       <aside class="boundary">
         <strong>边界说明</strong>
-        <p>本项目追踪公开的全局重置消息，不读取个人 5 小时/周窗口，也不预测你的私人重置时间。只有一手明确的未来 hard reset 才会出现“可提前安排原有任务”的提示；社区传闻不会升级为使用指令。</p>
+        <p>本项目追踪公开的全局重置消息，不读取个人 5 小时/周窗口，也不预测你的私人重置时间。只有一手明确的未来全量重置才会出现“可提前安排原有任务”的提示；社区传闻不会升级为使用指令。</p>
       </aside>
     </main>
 
     <footer>
-      <p>开源、非官方，与 OpenAI、X 或任何被追踪账号无隶属关系。皮鞭图标改编自 <a href="https://game-icons.net/1x1/lorc/whip.html" target="_blank" rel="noreferrer noopener">Lorc / Game-icons.net</a>（CC BY 3.0）。</p>
+      <p>开源、非官方，与 OpenAI、X 或任何被追踪账号无隶属关系。Logo 为本项目原创 SVG。</p>
       <div><a id="status-api-link" href="api/status">JSON API</a><a id="history-api-link" href="api/history">历史数据</a><a href="feed.xml">RSS</a></div>
     </footer>
   </body>

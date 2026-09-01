@@ -2,10 +2,6 @@
 
 This repository is an original TypeScript/Cloudflare implementation. It does not vendor source code from the projects below.
 
-## Whip mark
-
-The whip mark in `public/logo.svg` is adapted from **Whip** by Lorc, distributed by [Game-icons.net](https://game-icons.net/1x1/lorc/whip.html) under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/). The adaptation adds the rounded background and project-specific accessible labeling. The same artwork was suggested through an Icon-Icons mirror listing it as “Slavery whip.”
-
 Conceptual and product references:
 
 - [`yuenovaw/tibo-codex-reset-watcher`](https://github.com/yuenovaw/tibo-codex-reset-watcher), reviewed at commit `82b25d`; MIT-licensed at the reviewed revision.

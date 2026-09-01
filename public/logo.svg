@@ -1,6 +1,58 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-  <title id="title">Codex Reset Watcher whip mark</title>
-  <desc id="desc">A coiled whip used as a playful symbol for accelerating existing Codex work before a confirmed reset.</desc>
-  <rect width="512" height="512" rx="118" fill="#15201a"/>
-  <path fill="#f6f8f5" d="M258.885 29.48c-8.57-.04-17.296.356-26.164 1.2-1.407.033-2.816.06-4.222.117-20.63.848-41.087 4.36-60.744 10.795-52.42 17.156-98.946 55.478-126.432 118.11-48.427 110.354 2.248 219.542 82.684 274.032 40.218 27.246 88.14 41.196 135.228 34.795 47.088-6.4 92.92-33.513 127.748-86.108 26.368-39.818 22.913-82.72-3.59-105.356-26.506-22.635-72.54-22.532-123.77 12.938-25.962 17.976-47.77 20.706-65.667 15.812s-32.506-18.044-41.904-34.398c-9.397-16.354-13.216-35.697-10.407-51.14 2.53-13.91 9.352-24.512 23.197-30.036 40.302-2.047 54.377 32.316 41.76 56.715h.002c37.934-22.406 21.153-56.542-8.457-65.39 38.397-3.073 55.48 24.433 57.042 44.046 14.265-25.26 2.38-55.33-37.642-61.36 18.195-7.832 55.78 1.215 70.412 20.767-1.002-52.434-83.122-50.04-133.248-10.643-17.66 8.572-28.226 24.805-31.454 42.557-3.79 20.842 1.183 43.942 12.592 63.795 11.408 19.85 29.618 36.67 53.177 43.112 23.56 6.442 51.848 1.875 81.237-18.473 47.052-32.58 82.676-29.734 100.992-14.093 18.316 15.642 22.844 46.55.146 80.827-32.332 48.826-72.883 72.226-114.683 77.908-41.8 5.682-85.27-6.712-122.23-31.75-73.918-50.076-120.74-149.214-76.05-251.05 25.518-58.15 67.353-92.223 115.13-107.86 35.64-11.665 74.71-12.85 112.345-5.17 103.925 25.726 164.447 102.694 170.205 174.32a42.652 42.652 0 0 1 12.926-2.48c2.845-.094 5.74.095 8.648.593a42.5 42.5 0 0 1 13.822 4.932C484.332 130.812 389.88 30.1 258.885 29.48zm211.937 215.202a24.706 24.706 0 0 0-1.218.006c-11.326.334-21.075 8.513-23.07 20.162-.89 5.197-.09 10.253 2.003 14.627a34.482 34.482 0 0 1 8.832-1.086c4.192.022 8.406.76 12.468 2.092 5.166 1.696 10.164 4.566 14.482 8.42 5.135-3.57 8.877-9.136 10.03-15.863 2.28-13.314-6.502-25.725-19.815-28.005a24.703 24.703 0 0 0-3.713-.353zm-13.51 52.453c-2.118-.01-4.047.312-5.576.9-2.977 1.144-4.625 2.623-5.547 6.277-5.098 60.167-43.147 110.48-89.987 157.077-1.075 4.273-.507 7.62 1.336 11.167 2.092 4.028 6.15 8.153 11.288 11.525 8.543 5.606 20.148 8.14 25.963 8.385 16.255-25.115 35.394-59.53 51.42-91.71 16.707-33.547 30.02-65.31 32.87-78.148 1.78-14.092-6.032-21.404-15.068-24.37a22.058 22.058 0 0 0-6.7-1.105z"/>
+  <title id="title">Codex reset watcher whip-strike mark</title>
+  <desc id="desc">A playful golden whip visibly striking a white Codex-style knot, with a bright impact spark.</desc>
+  <defs>
+    <linearGradient id="bg" x1="46" y1="38" x2="462" y2="474" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#203329"/>
+      <stop offset="1" stop-color="#101914"/>
+    </linearGradient>
+    <linearGradient id="leather" x1="79" y1="430" x2="421" y2="78" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8b5423"/>
+      <stop offset=".42" stop-color="#e8ad57"/>
+      <stop offset="1" stop-color="#ffcf78"/>
+    </linearGradient>
+    <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#07100b" flood-opacity=".38"/>
+    </filter>
+    <filter id="spark-glow" x="-90%" y="-90%" width="280%" height="280%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="118" fill="url(#bg)"/>
+  <path d="M42 161C81 103 132 65 194 47" fill="none" stroke="#335044" stroke-width="9" stroke-linecap="round" opacity=".55"/>
+  <path d="M46 193C83 146 124 115 170 98" fill="none" stroke="#335044" stroke-width="6" stroke-linecap="round" opacity=".42"/>
+
+  <g filter="url(#soft-shadow)">
+    <circle cx="326" cy="299" r="130" fill="#1d2d25" stroke="#3c5849" stroke-width="5"/>
+    <circle cx="326" cy="299" r="108" fill="#15231b" stroke="#294438" stroke-width="3"/>
+    <g fill="none" stroke="#f7faf7" stroke-width="19" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="299" y="207" width="54" height="184" rx="27" transform="rotate(0 326 299)"/>
+      <rect x="299" y="207" width="54" height="184" rx="27" transform="rotate(60 326 299)"/>
+      <rect x="299" y="207" width="54" height="184" rx="27" transform="rotate(120 326 299)"/>
+    </g>
+    <circle cx="326" cy="299" r="28" fill="#15231b" stroke="#f7faf7" stroke-width="11"/>
+  </g>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M139 350C84 281 87 181 158 116C226 54 344 50 407 109C447 146 446 201 415 226C385 250 349 240 327 222C309 207 292 210 278 229" stroke="#3b2412" stroke-width="22" opacity=".72"/>
+    <path d="M139 345C87 278 92 186 161 122C229 60 338 57 400 114C437 148 437 194 410 216C384 237 354 229 333 212C309 192 286 202 269 226" stroke="url(#leather)" stroke-width="12"/>
+    <path d="M271 224C260 231 253 238 247 247" stroke="#ffd683" stroke-width="7"/>
+  </g>
+
+  <g transform="rotate(-43 123 372)" filter="url(#soft-shadow)">
+    <rect x="96" y="326" width="54" height="135" rx="24" fill="#75431d" stroke="#f0b35b" stroke-width="7"/>
+    <path d="M108 343H139M105 364H142M104 385H143M105 406H142M109 427H138" stroke="#311f12" stroke-width="9" stroke-linecap="round"/>
+    <rect x="104" y="441" width="38" height="43" rx="16" fill="#d28a38"/>
+  </g>
+
+  <g transform="translate(251 239)" filter="url(#spark-glow)">
+    <path d="M0-32L9-11L31-17L15 1L34 14L10 12L5 35L-5 14L-27 24L-14 4L-36-5L-11-8Z" fill="#c9ff68" stroke="#fff4a6" stroke-width="4" stroke-linejoin="round"/>
+  </g>
+  <g fill="none" stroke="#d9ff84" stroke-width="8" stroke-linecap="round">
+    <path d="M225 209L207 187"/>
+    <path d="M217 239L187 238"/>
+    <path d="M236 265L220 289"/>
+  </g>
 </svg>

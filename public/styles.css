@@ -67,6 +67,16 @@ h1 { max-width: 1120px; margin: 24px 0 22px; font-size: clamp(40px, 5.2vw, 68px)
 .reset-clock strong { display: block; margin: 12px 0 9px; font-size: clamp(24px, 3vw, 32px); line-height: 1.2; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
 .reset-clock small { color: #b9c6be; line-height: 1.45; }
 .reset-clock.error strong { font-size: 19px; }
+.reset-phase { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 20px; font-size: 11px; font-weight: 750; }
+.reset-phase span:first-child { padding: 4px 9px; border: 1px solid rgba(255,255,255,.12); border-radius: 999px; background: rgba(255,255,255,.07); }
+.reset-phase span:last-child { color: #b9c6be; white-space: nowrap; }
+.reset-progress { overflow: hidden; height: 6px; margin: 9px 0 10px; border-radius: 999px; background: rgba(255,255,255,.12); }
+.reset-progress i { display: block; width: 0; height: 100%; border-radius: inherit; background: #7bd59d; transition: width .8s ease, background-color .25s ease; }
+.reset-clock[data-phase="warming"] .reset-progress i { background: #d8c36a; }
+.reset-clock[data-phase="window"] .reset-progress i { background: #eeaa55; }
+.reset-clock[data-phase="overdue"] .reset-progress i { background: #ef796e; }
+.reset-clock[data-phase="overdue"] .reset-phase span:first-child { border-color: rgba(239,121,110,.35); background: rgba(239,121,110,.12); color: #ffb1aa; }
+#reset-clock-context { font-size: 10px; }
 .card-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
 .pill { display: inline-flex; align-items: center; min-height: 28px; padding: 3px 10px; border-radius: 999px; background: #edf1ee; color: #405047; font-size: 12px; font-weight: 700; }
 .pill.high { background: var(--red-soft); color: var(--red); }
