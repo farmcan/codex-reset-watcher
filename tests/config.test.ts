@@ -6,8 +6,9 @@ describe("monitor configuration", () => {
   it("polls first-party X faster than community discovery", () => {
     const official = QUERY_SPECS.find((spec) => spec.lane === "official");
     const discovery = QUERY_SPECS.find((spec) => spec.lane === "discovery");
-    expect(official?.pollSeconds).toBe(120);
-    expect(discovery?.pollSeconds).toBe(1800);
+    expect(official?.pollSeconds).toBe(3600);
+    expect(discovery?.pollSeconds).toBe(3600);
+    expect(new Set(QUERY_SPECS.map((spec) => spec.pollSeconds))).toEqual(new Set([3600]));
   });
 
   it("requires canonical first-party author on the primary query", () => {

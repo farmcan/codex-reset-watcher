@@ -4,7 +4,7 @@ export const QUERY_SPECS: QuerySpec[] = [
   {
     name: "official-first-party",
     lane: "official",
-    pollSeconds: 120,
+    pollSeconds: 3600,
     maxResults: 50,
     allowedAuthors: ["thsottiaux"],
     query:
@@ -13,7 +13,7 @@ export const QUERY_SPECS: QuerySpec[] = [
   {
     name: "community-scouts",
     lane: "scout",
-    pollSeconds: 300,
+    pollSeconds: 3600,
     maxResults: 50,
     allowedAuthors: ["UsageReset", "hqmank"],
     query:
@@ -22,7 +22,7 @@ export const QUERY_SPECS: QuerySpec[] = [
   {
     name: "known-rumor-accounts",
     lane: "rumor",
-    pollSeconds: 600,
+    pollSeconds: 3600,
     maxResults: 50,
     allowedAuthors: ["kimmonismus", "rezoundous", "TokenGremlin", "argofowl"],
     query:
@@ -31,7 +31,7 @@ export const QUERY_SPECS: QuerySpec[] = [
   {
     name: "discovery-pool",
     lane: "discovery",
-    pollSeconds: 1800,
+    pollSeconds: 3600,
     maxResults: 100,
     query:
       '(Codex OR "ChatGPT Work") (reset OR "usage limits" OR "rate limits" OR quota OR tokens OR allowance) -is:retweet -is:reply lang:en'

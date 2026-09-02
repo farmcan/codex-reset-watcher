@@ -15,7 +15,7 @@
     "EMAIL_MIN_SEVERITY": "medium"
   },
   "triggers": {
-    "crons": ["*/2 * * * *"]
+    "crons": ["0 * * * *"]
   },
   "d1_databases": [
     {

@@ -21,7 +21,7 @@ async function healthSnapshot(env: Env): Promise<Record<string, unknown>> {
   const sources = live.sources as Array<Record<string, unknown>>;
   const official = sources.find((source) => source.name === "official-first-party");
   const lastSuccess = typeof official?.last_success_at === "string" ? Date.parse(official.last_success_at) : null;
-  const pollSeconds = Number(official?.poll_seconds ?? 120);
+  const pollSeconds = Number(official?.poll_seconds ?? 3600);
   const staleAfterMs = pollSeconds * 3 * 1000 + 60_000;
   const ageMs = lastSuccess === null ? null : Date.now() - lastSuccess;
   const sourceStatus = lastSuccess === null
