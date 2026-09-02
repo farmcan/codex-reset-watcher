@@ -22,8 +22,9 @@ export default {
     return withSecurityHeaders(await env.ASSETS.fetch(request));
   },
 
-  async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
-    ctx.waitUntil(runPoll(env).catch((error) => {
+  async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    const scheduledAt = new Date(controller.scheduledTime);
+    ctx.waitUntil(runPoll(env, scheduledAt).catch((error) => {
       console.error("Scheduled poll failed", error);
     }));
   }
