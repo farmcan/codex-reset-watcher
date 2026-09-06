@@ -68,6 +68,12 @@ function matches(text: string, phrases: string[]): string[] {
   return phrases.filter((phrase) => text.includes(phrase));
 }
 
+function hasAccountObservation(text: string): boolean {
+  if (matches(text, OBSERVATIONS).length) return true;
+  return /\b(?:banked\s+)?reset\b.{0,40}\b(?:landed in my account|showed up|appeared in my account)\b/.test(text) ||
+    /\b(?:got|received)\b.{0,30}\b(?:a\s+|another\s+)?(?:banked\s+)?reset\b/.test(text);
+}
+
 function clamp(value: number): number {
   return Math.max(0, Math.min(1, Number(value.toFixed(3))));
 }
@@ -103,7 +109,7 @@ function evidenceBasis(post: RawPost, text: string): EvidenceBasis {
   const referencesFirstParty = post.referencedAuthors.some((author) => author.toLowerCase() === "thsottiaux") ||
     post.linkedUrls.some((url) => /(?:x|twitter)\.com\/thsottiaux\/status\//i.test(url));
   if (referencesFirstParty) return "derivative";
-  if (matches(text, OBSERVATIONS).length) return "account_observation";
+  if (hasAccountObservation(text)) return "account_observation";
   if (post.sourceTier === "B" || post.sourceTier === "C" || post.sourceTier === "D") return "independent_rumor";
   return "unknown";
 }

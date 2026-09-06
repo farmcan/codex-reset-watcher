@@ -12,7 +12,7 @@ Research snapshot: 2026-08-31. Star counts are only adoption signals, not qualit
 | [`yuenovaw/tibo-codex-reset-watcher`](https://github.com/yuenovaw/tibo-codex-reset-watcher) | 0 stars | Small X search/classifier/storage/notification baseline | Original is one-author oriented; multi-source independence and event grouping are added here |
 | [`beeswaxcrazylover-design/tibo-codex-reset-watcher`](https://github.com/beeswaxcrazylover-design/tibo-codex-reset-watcher) | 0 stars | Email after successful match; state advances carefully | Local SMTP/Task Scheduler design does not provide a shared web history or source credibility layer |
 
-No direct project had both a public evidence dashboard, official X API cursors, a ten-event audit, independent-rumor grouping, visible health and server-side email. That combination is why a separate repository is justified.
+No direct project had both a public evidence dashboard, official X API cursors, an event-by-event audit, independent-rumor grouping, visible health and server-side email. That combination is why a separate repository is justified.
 
 ## Mature patterns borrowed conceptually
 
@@ -32,7 +32,7 @@ No direct project had both a public evidence dashboard, official X API cursors, 
 
 | Page | Strong point | Gap / decision here |
 | --- | --- | --- |
-| [`codex-reset.com`](https://codex-reset.com/) | Polished tracker, public APIs, personal reset calculator and clear caveats | Broad feature surface. This dashboard stays focused on “current signal → evidence → ten-event history → health”. |
+| [`codex-reset.com`](https://codex-reset.com/) | Polished tracker, public APIs, personal reset calculator and clear caveats | Broad feature surface. This dashboard stays focused on “current signal → evidence → audited history → health”. |
 | [`codexreset.app`](https://codexreset.app/) | Clean separation of personal weekly, global public and earned/banked reset; history and methodology are easy to find | Forecast remains the headline. This project makes confidence class and source evidence more prominent than a probability. |
 | [`codex-reset-radar.pages.dev`](https://codex-reset-radar.pages.dev/en/) | Large community dashboard and historical time distribution | Reset information competes with model IQ, pricing and configuration content. This project intentionally has one job. |
 | [`tibo-reset-watch` PWA](https://chloride233.github.io/tibo-reset-watch/) | Possible vs confirmed is simple; browser notifications are approachable | Browser notifications work only while the page is active. This project adds server-side email and persistent delivery audit. |
@@ -43,7 +43,7 @@ The reset clock deliberately borrows interaction patterns from monitoring dashbo
 
 | Reference | Pattern retained | Adaptation here |
 | --- | --- | --- |
-| [`semichcsc-byte/ha-countdown-card`](https://github.com/semichcsc-byte/ha-countdown-card) | Count-up mode, progress bar, and phase-aware styling | The clock counts up from the latest first-party confirmation and shows progress against the audited historical median gap. |
+| [`semichcsc-byte/ha-countdown-card`](https://github.com/semichcsc-byte/ha-countdown-card) | Count-up mode, progress bar, and phase-aware styling | The clock counts up from the latest confirmed reset benefit, labels hard versus banked, and shows progress against the audited historical median gap. |
 | [`shlokkokk/Chronicle`](https://github.com/shlokkokk/Chronicle) | A compact status card whose color and label change near operational thresholds | Four plain-language phases make the elapsed interval scannable without inventing a reset probability. |
 | [`openstatusHQ/openstatus`](https://github.com/openstatusHQ/openstatus) | Monitoring state and incident communication belong together | The card keeps the last confirmed anchor and the monitor health visible next to the elapsed time. |
 | [`Zayan-Mohamed/homepage-dev-dashboard`](https://github.com/Zayan-Mohamed/homepage-dev-dashboard) | A timer can change state instead of remaining a passive stopwatch | The phase moves from cooling to warming, typical window, and beyond the usual cadence. |
@@ -52,9 +52,9 @@ The progress bar is **cadence context, not probability**. It is capped visually 
 
 ## Final product choices
 
-- Page order: current decision, ten-event proof, live signals, source credibility, watcher health.
+- Page order: current decision, audited proof, live signals, source credibility, watcher health.
 - No exact next-reset probability until a complete prediction ledger provides false positives and calibration.
-- The count-up clock uses the median interval between audited hard-reset outcomes as a descriptive yardstick, not a forecast or action trigger.
+- The primary count-up clock uses the median interval across all audited reset benefits as a descriptive yardstick, not a forecast or action trigger. Time since the latest hard reset remains visible separately.
 - No personal auth ingestion in the hosted service.
 - Personal arrival or account-anomaly reports stay visible in a separate weak-observation lane. They can increase attention, but cannot alone create a global-reset conclusion.
 - Live and historical views use the same event progression: earliest signal → relay/amplification → first-party confirmation → delivery/anomaly observation.

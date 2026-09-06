@@ -46,6 +46,8 @@ Two independent B/C community authors within six hours and the same event-day cl
 
 `data/source-scorecard.json` keeps event coverage, exact sample scope, lead-time sample counts, stale/miss/contradiction counts and a false-positive-denominator flag. The public page therefore says “event coverage” and “historical median lead,” never “prediction accuracy.”
 
+The primary clock anchors to the latest confirmed reset benefit: a first-party hard-reset confirmation, or a banked-reset delivery backed by an explicit first-party grant and a retained account observation. It labels the event kind and separately reports time since the latest hard reset. A scheduled banked grant does not move the clock before delivery evidence arrives.
+
 ### Idempotency
 
 - `posts.post_id` is unique.

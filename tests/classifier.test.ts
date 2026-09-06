@@ -67,6 +67,20 @@ describe("classifyPost", () => {
     expect(signal.shouldNotify).toBe(false);
   });
 
+  it("recognizes a banked reset card showing up as a personal delivery observation", () => {
+    const signal = classifyPost(post({
+      author: "hqmank",
+      lane: "scout",
+      sourceTier: "B",
+      sourceWeight: 0.72,
+      text: "OMG, another banked reset just showed up. That's three now."
+    }));
+    expect(signal.eventType).toBe("community_observation");
+    expect(signal.resetMode).toBe("banked_reset");
+    expect(signal.evidenceBasis).toBe("account_observation");
+    expect(signal.shouldNotify).toBe(false);
+  });
+
   it("inhibits a community relay of the same first-party post", () => {
     const signal = classifyPost(post({
       author: "UsageReset",

@@ -124,9 +124,11 @@ function median(values) {
   return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
 }
 
-function historicalMedianGap(history) {
+function historicalMedianGap(history, kind = null) {
+  const published = kind ? null : Number(history.summary?.median_all_reset_gap_minutes);
+  if (Number.isFinite(published) && published > 0) return published * 60_000;
   const outcomes = (history.events || [])
-    .filter((event) => event.kind === "hard_reset")
+    .filter((event) => !kind || event.kind === kind)
     .map((event) => Date.parse(event.outcome_at || event.confirmed_at))
     .filter(Number.isFinite)
     .sort((left, right) => left - right);
@@ -134,36 +136,49 @@ function historicalMedianGap(history) {
 }
 
 function resetPhase(ratio) {
-  if (ratio < 0.5) return ["cooling", ui("刚重置完 · 冷却中", "Fresh reset · cooling")];
+  if (ratio < 0.5) return ["cooling", ui("刚获得重置权益 · 冷却中", "Fresh reset benefit · cooling")];
   if (ratio < 1) return ["warming", ui("节奏升温 · 可以留意", "Cadence warming up")];
   if (ratio < 1.5) return ["window", ui("进入历史常见窗口", "Inside the typical window")];
   return ["overdue", ui("已超出常见节奏", "Beyond the typical cadence")];
 }
 
-function latestConfirmedGlobalReset(status, history) {
-  const candidates = [];
-  (status.live.signals || []).forEach((signal) => {
-    if (signal.event_type !== "explicit_reset" || signal.reset_mode !== "hard_reset") return;
-    if (!String(signal.source_tier || "").startsWith("A")) return;
-    const timestamp = Date.parse(signal.created_at);
-    if (Number.isFinite(timestamp) && timestamp <= Date.now()) candidates.push(timestamp);
-  });
-  (history.events || []).forEach((event) => {
-    if (event.kind !== "hard_reset") return;
-    const timestamp = Date.parse(event.outcome_at || event.confirmed_at);
-    if (Number.isFinite(timestamp) && timestamp <= Date.now()) candidates.push(timestamp);
-  });
-  candidates.sort((left, right) => left - right);
+function collapseResetCandidates(candidates) {
+  candidates.sort((left, right) => left.timestamp - right.timestamp);
   const eventStarts = [];
-  candidates.forEach((timestamp) => {
+  candidates.forEach((candidate) => {
     const current = eventStarts.at(-1);
-    if (current && timestamp - current.latest <= 2 * 60 * 60 * 1000) {
-      current.latest = timestamp;
+    if (current && current.kind === candidate.kind && candidate.timestamp - current.latest <= 2 * 60 * 60 * 1000) {
+      current.latest = candidate.timestamp;
+      if (candidate.basis === "history") current.basis = candidate.basis;
       return;
     }
-    eventStarts.push({ first: timestamp, latest: timestamp });
+    eventStarts.push({ ...candidate, first: candidate.timestamp, latest: candidate.timestamp });
   });
-  return eventStarts.at(-1)?.first || null;
+  return eventStarts.at(-1) || null;
+}
+
+function latestConfirmedReset(status, history, kind = null) {
+  const candidates = [];
+  (status.live.signals || []).forEach((signal) => {
+    const isHardConfirmation = signal.event_type === "explicit_reset"
+      && signal.reset_mode === "hard_reset"
+      && String(signal.source_tier || "").startsWith("A");
+    const isBankedObservation = signal.event_type === "community_observation"
+      && signal.reset_mode === "banked_reset"
+      && signal.evidence_basis === "account_observation";
+    if (!isHardConfirmation && !isBankedObservation) return;
+    if (kind && signal.reset_mode !== kind) return;
+    const timestamp = Date.parse(signal.created_at);
+    if (Number.isFinite(timestamp) && timestamp <= Date.now()) {
+      candidates.push({ timestamp, kind: signal.reset_mode, basis: isHardConfirmation ? "first_party" : "account_observation" });
+    }
+  });
+  (history.events || []).forEach((event) => {
+    if (kind && event.kind !== kind) return;
+    const timestamp = Date.parse(event.outcome_at || event.confirmed_at);
+    if (Number.isFinite(timestamp) && timestamp <= Date.now()) candidates.push({ timestamp, kind: event.kind, basis: "history" });
+  });
+  return collapseResetCandidates(candidates);
 }
 
 function formatElapsed(milliseconds) {
@@ -187,7 +202,9 @@ function renderResetClock(status, history) {
   const progress = document.querySelector("#reset-clock-progress");
   const progressFill = document.querySelector("#reset-progress-fill");
   const context = document.querySelector("#reset-clock-context");
-  const resetAt = latestConfirmedGlobalReset(status, history);
+  const resetEvent = latestConfirmedReset(status, history);
+  const resetAt = resetEvent?.first || null;
+  const latestHardResetAt = latestConfirmedReset(status, history, "hard_reset")?.first || null;
   const medianGap = historicalMedianGap(history);
   if (!resetAt) {
     card.className = "reset-clock error";
@@ -200,14 +217,15 @@ function renderResetClock(status, history) {
     return;
   }
   card.className = "reset-clock";
-  anchor.textContent = ui(
-    `上次确认：${formatTime(new Date(resetAt).toISOString(), true)} · 全局全量重置`,
-    `Last confirmed: ${formatTime(new Date(resetAt).toISOString(), true)} · global hard reset`
-  );
+  const resetKind = resetEvent.kind === "banked_reset"
+    ? ui("可储存重置卡到账", "banked reset delivered")
+    : ui("全局全量重置", "global hard reset");
+  anchor.textContent = ui(`上次确认：${formatTime(new Date(resetAt).toISOString(), true)} · ${resetKind}`, `Last confirmed: ${formatTime(new Date(resetAt).toISOString(), true)} · ${resetKind}`);
+  const hardResetAge = latestHardResetAt ? formatDuration((Date.now() - latestHardResetAt) / 60_000) : null;
   context.textContent = Number.isFinite(medianGap)
     ? ui(
-      `历史中位间隔 ${formatDuration(medianGap / 60_000)} · 只作节奏参照，不预测下次重置`,
-      `Historical median gap ${formatDuration(medianGap / 60_000)} · cadence context, not a forecast`
+      `全部重置权益的历史中位间隔 ${formatDuration(medianGap / 60_000)}${hardResetAge ? ` · 距上次全量重置 ${hardResetAge}` : ""} · 不预测下次重置`,
+      `Median gap across all reset benefits ${formatDuration(medianGap / 60_000)}${hardResetAge ? ` · Last hard reset ${hardResetAge} ago` : ""} · context, not a forecast`
     )
     : ui("历史样本不足，暂不显示节奏", "Not enough history to show cadence");
   const update = () => {
@@ -284,9 +302,18 @@ function renderHistoryMetrics(history) {
     card.append(el("strong", "", value), el("span", "", label), el("small", "", note));
     container.append(card);
   });
+  const conclusion = document.querySelector("#history-conclusion");
+  if (conclusion) {
+    conclusion.textContent = ui(
+      `${summary.events} 次都找到一手公告或确认；${summary.any_first_party_advance_signal}/${summary.events} 曾提前出现线索，${summary.clear_actionable_advance_signal}/${summary.events} 清楚可操作，中位提前 ${formatDuration(summary.median_clear_first_party_lead_minutes)}。`,
+      `All ${summary.events} events have a first-party announcement or confirmation. ${summary.any_first_party_advance_signal}/${summary.events} had an advance signal; ${summary.clear_actionable_advance_signal}/${summary.events} were clear enough to act on, with a median lead of ${formatDuration(summary.median_clear_first_party_lead_minutes)}.`
+    );
+  }
 }
 
 const EVENT_OUTCOMES_EN = {
+  "reset-2026-09-05-banked": "A community account observed the second consecutive Astra-compensation banked reset. The first-party scope had expanded to all Plus, Pro, and Business users.",
+  "reset-2026-09-04-banked": "A community account observed the first Astra-rollout compensation reset in its account. This was a bankable benefit, not an automatic hard reset.",
   "reset-2026-08-31-hard": "First-party confirmation: the global usage reset began rolling out to paid ChatGPT Work and Codex users.",
   "reset-2026-08-30-hard": "First-party confirmation: paid-user usage was reset after several usage-consumption fixes.",
   "reset-2026-08-28-hard": "First-party confirmation: ChatGPT Work and Codex users received fresh usage.",
@@ -300,6 +327,14 @@ const EVENT_OUTCOMES_EN = {
 };
 
 const NODE_SUMMARIES_EN = {
+  "2095979536043401428": "First promised a banked reset to some Plus and Business users who still lacked Astra by the end of the day.",
+  "2096035437299237298": "Expanded the grant to all Plus, Pro, and Business users and said it would land by the end of the day.",
+  "2096042415769501778": "Relayed that everyone would receive another banked reset. The post depended on the same first-party announcement.",
+  "2096045774505136257": "Observed another banked reset in one account and said it was the third received. This confirms at least one delivery, not simultaneous delivery to everyone.",
+  "2095651088502591861": "Promised one banked reset for every day without Astra and said the first would begin landing in about three hours.",
+  "2095677033384956221": "Relayed the choice as receiving Astra or one banked reset for each waiting day. It improved discovery without adding independent evidence.",
+  "2095692497527734325": "Relayed the first-party promise as a likely incoming delivery. It still depended on the same upstream source.",
+  "2095730340065317303": "Reported that the banked reset had landed in one account. This is delivery evidence for that account, not proof of universal delivery.",
   "2093573991965557198": "Mentioned an approaching milestone and told users to “hold on to your Codex.” The direction was right, but no reset time was given.",
   "2094037516391198915": "Inferred a next-day reset from the milestone and reset-button context. This was a derivative inference, not independent evidence.",
   "2094039588113432669": "Relayed the message plainly as “reset tomorrow,” which improved discovery but still depended on the same first-party hint.",
@@ -336,6 +371,8 @@ const NODE_SUMMARIES_EN = {
 };
 
 const COMMUNITY_NOTES_EN = {
+  "reset-2026-09-05-banked": "@hqmank supplied the delivery observation. @argofowl's earlier post relayed the same first-party announcement and is not an independent prediction.",
+  "reset-2026-09-04-banked": "@hqmank and @UsageReset both relayed the same first-party promise before delivery. They improved distribution speed but did not provide two independent confirmations.",
   "reset-2026-08-31-hard": "@UsageReset relayed the explicit warning only 61 seconds later; its earlier inference still came from the same first-party clue.",
   "reset-2026-08-30-hard": "@UsageReset relayed the claim about 14 hours early, but attribution to this specific event was ambiguous.",
   "reset-2026-08-28-hard": "@hqmank relayed it about eight hours early; @UsageReset posted an incoming alert after the reset and is marked stale.",
@@ -392,6 +429,7 @@ const historicalStageLabels = ENGLISH ? {
   community_inference: "Community inference",
   relay: "Fast relay",
   official_announcement: "Official announcement",
+  scope_expansion: "Scope expanded",
   official_confirmation: "Official confirmation",
   verification_relay: "Confirmation relay",
   individual_observation: "Personal delivery",
@@ -403,6 +441,7 @@ const historicalStageLabels = ENGLISH ? {
   community_inference: "社区判断",
   relay: "快速转发",
   official_announcement: "官方宣布",
+  scope_expansion: "范围扩大",
   official_confirmation: "官方确认",
   verification_relay: "确认转发",
   individual_observation: "个人到账",
@@ -499,7 +538,7 @@ function personalSignal(signal) {
 
 function signalLane(signal) {
   if (String(signal.source_tier).startsWith("A")) return "official";
-  if (personalSignal(signal)) return "personal";
+  if (signal.evidence_basis === "account_observation" || personalSignal(signal)) return "personal";
   if (signal.evidence_basis === "derivative" || signal.event_type === "community_observation") return "relay";
   return "rumor";
 }
@@ -632,20 +671,20 @@ const SOURCE_COPY_EN = {
   thsottiaux: {
     role: "First-party confirmation",
     reliability: "Most reliable for outcomes",
-    conclusion: "Use this account to determine whether a reset actually happened: it confirmed all 10 events. Advance signals were common, but only 6 of 9 were clear enough to act on.",
+    conclusion: "Use this account to determine whether a reset was announced or confirmed: it covered all 12 events. Eleven had advance signals, and eight were clear enough to act on. The latest two were banked resets, not automatic hard resets.",
     caveat: "Both posts and replies must be monitored. A weak hint is not a schedule."
   },
   hqmank: {
     role: "Community scout",
     reliability: "Often discovers signals early",
-    conclusion: "Provided an earlier, plainer relay in at least 7 of 10 events. Across three samples with exact timestamps, the median lead was about 13h 43m. Hidden-reply discovery is its main value.",
+    conclusion: "Provided a useful early relay in at least 8 of 12 events and delivery observations for the latest two banked resets. Across four exact samples, the median lead was about 11h 02m.",
     caveat: "The account has produced contradictory judgments, and many posts relay the same official clue. Relay volume is not independent confirmation."
   },
   UsageReset: {
     role: "Automated relay and delivery",
     reliability: "Useful notification backstop",
-    conclusion: "Of five evaluable events since launch, three had useful early alerts. Those samples appeared about 13h 53m before confirmation. Its strength is rapid distribution, not independent discovery.",
-    caveat: "It missed one event and posted one stale incoming alert. Same-source relays do not add independent credibility."
+    conclusion: "Of seven evaluable events since launch, four had useful early alerts. Across four exact samples, the median lead was about 10h 29m. Its strength is rapid distribution, not independent discovery.",
+    caveat: "It missed two events and posted one stale incoming alert. Same-source relays do not add independent credibility."
   },
   rezoundous: {
     role: "Community rumor",

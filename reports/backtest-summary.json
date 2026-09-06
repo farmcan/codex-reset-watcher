@@ -1,23 +1,56 @@
 {
   "schema_version": 2,
-  "as_of": "2026-08-31T03:20:00Z",
+  "as_of": "2026-09-06T03:21:44Z",
   "computed": {
-    "events": 10,
-    "first_party_confirmation": 10,
-    "any_first_party_advance_signal": 9,
-    "clear_actionable_advance_signal": 6,
+    "events": 12,
+    "first_party_confirmation": 12,
+    "any_first_party_advance_signal": 11,
+    "clear_actionable_advance_signal": 8,
     "weak_or_ambiguous_advance_signal": 3,
     "no_usable_first_party_advance_signal": 1,
     "community_incremental_recall": 1
   },
   "lead_time": {
-    "minimum_minutes": 604,
+    "minimum_minutes": 263,
     "maximum_minutes": 3113,
-    "median_any_first_party_minutes": 1121,
-    "median_clear_first_party_minutes": 964,
-    "note": "The maximum is a hidden-reply case. Medians describe this ten-event sample; they are not a next-reset forecast."
+    "median_any_first_party_minutes": 1115,
+    "median_clear_first_party_minutes": 709,
+    "note": "The maximum is a hidden-reply case. Medians describe this 12-event sample; they are not a next-reset forecast."
+  },
+  "cadence": {
+    "all_reset_events": 12,
+    "all_reset_mean_gap_minutes": 4959,
+    "all_reset_median_gap_minutes": 3128,
+    "hard_reset_events": 9,
+    "hard_reset_mean_gap_minutes": 5928,
+    "hard_reset_median_gap_minutes": 3706,
+    "note": "Banked resets are counted as reset benefits but remain distinct from automatic hard resets."
   },
   "event_lead_times": [
+    {
+      "event_id": "reset-2026-09-05-banked",
+      "outcome_at": "2026-09-05T01:20:29.000Z",
+      "first_source": "thsottiaux",
+      "first_source_role": "first_party",
+      "first_signal_at": "2026-09-04T20:57:17.000Z",
+      "first_lead_minutes": 263,
+      "clear_first_party_lead_minutes": 41,
+      "advance_quality": "clear",
+      "timeline_nodes": 4,
+      "evidence_gaps": 0
+    },
+    {
+      "event_id": "reset-2026-09-04-banked",
+      "outcome_at": "2026-09-04T04:27:04.000Z",
+      "first_source": "thsottiaux",
+      "first_source_role": "first_party",
+      "first_signal_at": "2026-09-03T23:12:09.000Z",
+      "first_lead_minutes": 315,
+      "clear_first_party_lead_minutes": 315,
+      "advance_quality": "clear",
+      "timeline_nodes": 4,
+      "evidence_gaps": 0
+    },
     {
       "event_id": "reset-2026-08-31-hard",
       "outcome_at": "2026-08-31T02:29:25.303Z",
@@ -142,26 +175,26 @@
   "source_scorecard": [
     {
       "handle": "thsottiaux",
-      "evaluated_events": 10,
-      "useful_advance_events": 9,
-      "recorded_posts": 19,
-      "median_advance_lead_minutes": 1121,
+      "evaluated_events": 12,
+      "useful_advance_events": 11,
+      "recorded_posts": 22,
+      "median_advance_lead_minutes": 1115,
       "false_positive_denominator_complete": false
     },
     {
       "handle": "hqmank",
-      "evaluated_events": 10,
-      "useful_advance_events": 7,
-      "recorded_posts": 7,
-      "median_advance_lead_minutes": 823,
+      "evaluated_events": 12,
+      "useful_advance_events": 8,
+      "recorded_posts": 9,
+      "median_advance_lead_minutes": 662,
       "false_positive_denominator_complete": false
     },
     {
       "handle": "UsageReset",
-      "evaluated_events": 5,
-      "useful_advance_events": 3,
-      "recorded_posts": 7,
-      "median_advance_lead_minutes": 833,
+      "evaluated_events": 7,
+      "useful_advance_events": 4,
+      "recorded_posts": 8,
+      "median_advance_lead_minutes": 629,
       "false_positive_denominator_complete": false
     },
     {
@@ -173,7 +206,7 @@
       "false_positive_denominator_complete": false
     }
   ],
-  "conclusion_zh": "一手源在 10 次中全部完成确认；9 次出现某种提前信号，但只有 6 次足够清楚。社区层补回的第 10 次只是单账号低置信猜测，不能与官方排期等价。",
+  "conclusion_zh": "一手源在 12 次中全部提供公告或确认；11 次出现某种提前信号，其中 8 次足够清楚。最新两次是可储存重置卡，不能与自动全量重置混为一谈。",
   "limitations": [
     "Event-conditioned samples do not provide the full false-positive denominator for community accounts.",
     "Lead time is not a probability and should not be extrapolated into an exact next-reset timestamp."

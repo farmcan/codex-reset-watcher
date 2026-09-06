@@ -3,20 +3,20 @@ import history from "../data/reset-events.json";
 import scorecard from "../data/source-scorecard.json";
 
 describe("historical audit", () => {
-  it("contains exactly ten individually linked reset records", () => {
-    expect(history.events).toHaveLength(10);
-    expect(new Set(history.events.map((event) => event.id)).size).toBe(10);
+  it("contains twelve individually linked reset records", () => {
+    expect(history.events).toHaveLength(12);
+    expect(new Set(history.events.map((event) => event.id)).size).toBe(12);
     for (const event of history.events) {
       expect(event.confirmation.url).toMatch(/^https:\/\/x\.com\/thsottiaux\/status\/\d+$/);
       expect(event.confirmation.post_id).toMatch(/^\d+$/);
     }
   });
 
-  it("reproduces the published 10/10, 9/10, 6/10, 3/10, 1/10 conclusions", () => {
+  it("reproduces the published 12/12, 11/12, 8/12, 3/12, 1/12 conclusions", () => {
     const events = history.events;
-    expect(events.filter((event) => event.confirmation).length).toBe(10);
-    expect(events.filter((event) => event.earliest_first_party_signal).length).toBe(9);
-    expect(events.filter((event) => event.advance_quality === "clear").length).toBe(6);
+    expect(events.filter((event) => event.confirmation).length).toBe(12);
+    expect(events.filter((event) => event.earliest_first_party_signal).length).toBe(11);
+    expect(events.filter((event) => event.advance_quality === "clear").length).toBe(8);
     expect(events.filter((event) => event.advance_quality === "weak").length).toBe(3);
     expect(events.filter((event) => event.advance_quality === "none").length).toBe(1);
   });
@@ -29,7 +29,10 @@ describe("historical audit", () => {
   });
 
   it("keeps banked reset distinct", () => {
-    expect(history.events.filter((event) => event.kind === "banked_reset")).toHaveLength(1);
+    expect(history.events.filter((event) => event.kind === "banked_reset")).toHaveLength(3);
+    expect(history.events.slice(0, 2).every((event) => event.kind === "banked_reset")).toBe(true);
+    expect(history.events[0]?.timeline.at(-1)?.post_id).toBe("2096045774505136257");
+    expect(history.events[1]?.timeline.at(-1)?.post_id).toBe("2095730340065317303");
   });
 
   it("keeps every event timeline chronological and tied to an outcome", () => {
@@ -63,8 +66,8 @@ describe("historical audit", () => {
     expect(scorecard.warning.toLowerCase()).toContain("no prediction precision");
     expect(JSON.stringify(scorecard).toLowerCase()).not.toContain('"accuracy"');
     const firstParty = scorecard.sources.find((source) => source.handle === "thsottiaux");
-    expect(firstParty?.metrics?.confirmed_events).toBe(10);
-    expect(firstParty?.metrics?.median_advance_lead_minutes).toBe(1121);
+    expect(firstParty?.metrics?.confirmed_events).toBe(12);
+    expect(firstParty?.metrics?.median_advance_lead_minutes).toBe(1115);
     const relay = scorecard.sources.find((source) => source.handle === "UsageReset");
     expect(relay?.metrics?.stale_events).toBe(1);
   });

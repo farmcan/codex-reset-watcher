@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
-  "as_of": "2026-09-01T07:20:00Z",
+  "as_of": "2026-09-06T03:21:44Z",
   "sample_scope": {
-    "events": "The latest 10 confirmed reset events from 2026-07-29 through 2026-08-31.",
+    "events": "The latest 12 confirmed or observed reset events from 2026-07-29 through 2026-09-05, including nine hard resets and three banked resets.",
     "live_ledger": "The hosted watcher ledger began on 2026-08-25; live-ledger post counts are labeled separately.",
     "unit": "One confirmed reset event, not one post.",
     "warning_zh": "这里显示的是已发生事件里的覆盖情况，不是预测准确率。没有完整收录“没重置时发过多少误报”，就不能算准确率。"
@@ -23,20 +23,20 @@
       "display_group": "measured",
       "weight": 1,
       "metrics": {
-        "recorded_posts": 19,
-        "recorded_posts_qualifier": "exact_in_ten_event_timeline",
-        "evaluated_events": 10,
-        "confirmed_events": 10,
-        "useful_advance_events": 9,
-        "clear_advance_events": 6,
+        "recorded_posts": 22,
+        "recorded_posts_qualifier": "exact_in_twelve_event_timeline",
+        "evaluated_events": 12,
+        "confirmed_events": 12,
+        "useful_advance_events": 11,
+        "clear_advance_events": 8,
         "weak_advance_events": 3,
         "missed_advance_events": 1,
-        "median_advance_lead_minutes": 1121,
-        "median_clear_lead_minutes": 964,
-        "lead_sample_events": 9,
+        "median_advance_lead_minutes": 1115,
+        "median_clear_lead_minutes": 709,
+        "lead_sample_events": 11,
         "false_positive_denominator_complete": false
       },
-      "conclusion_zh": "判断“是否真的发生”应以它为准：10 次全部完成一手确认。提前通知也常有，但 9 次提前线索里只有 6 次足够清楚。",
+      "conclusion_zh": "判断“官方是否承诺或确认”应以它为准：12 次都有一手公告或确认。11 次出现提前线索，其中 8 次足够清楚；最新两次是可储存重置卡，不是自动全量重置。",
       "caveat_zh": "必须同时抓主帖和回复；弱暗示不能自动当成排期。"
     },
     {
@@ -48,20 +48,20 @@
       "display_group": "measured",
       "weight": 0.72,
       "metrics": {
-        "recorded_posts": 7,
+        "recorded_posts": 9,
         "recorded_posts_qualifier": "at_least_one_useful_post_in_each_covered_event",
-        "evaluated_events": 10,
-        "confirmed_events": 7,
-        "useful_advance_events": 7,
+        "evaluated_events": 12,
+        "confirmed_events": 9,
+        "useful_advance_events": 8,
         "clear_advance_events": null,
         "contradiction_events": 1,
-        "median_advance_lead_minutes": 823,
-        "lead_sample_events": 3,
-        "exact_lead_minimum_minutes": 501,
+        "median_advance_lead_minutes": 662,
+        "lead_sample_events": 4,
+        "exact_lead_minimum_minutes": 212,
         "exact_lead_maximum_minutes": 841,
         "false_positive_denominator_complete": false
       },
-      "conclusion_zh": "至少 7/10 次提供较早、较直白的转述；在 3 个保留精确时间的样本中，中位提前约 13 小时 43 分。最有价值的是发现藏在回复里的预告。",
+      "conclusion_zh": "12 次中至少 8 次提供较早、较直白的转述；4 个保留精确提前量的样本中位约 11 小时 2 分。最新两次还提供了到账观察。",
       "caveat_zh": "出现过前后矛盾判断，且很多内容来自同一条官方线索，不能把转发数量当独立验证。"
     },
     {
@@ -73,20 +73,22 @@
       "display_group": "measured",
       "weight": 0.62,
       "metrics": {
-        "recorded_posts": 7,
+        "recorded_posts": 8,
         "recorded_posts_qualifier": "exact_in_live_ledger_since_2026_08_25",
-        "evaluated_events": 5,
-        "confirmed_events": 3,
-        "useful_advance_events": 3,
+        "evaluated_events": 7,
+        "confirmed_events": 4,
+        "useful_advance_events": 4,
         "clear_advance_events": null,
-        "missed_events": 1,
+        "missed_events": 2,
         "stale_events": 1,
-        "median_advance_lead_minutes": 833,
-        "lead_sample_events": 3,
+        "median_advance_lead_minutes": 629,
+        "lead_sample_events": 4,
+        "exact_lead_minimum_minutes": 150,
+        "exact_lead_maximum_minutes": 849,
         "false_positive_denominator_complete": false
       },
-      "conclusion_zh": "上线后可评估的 5 次里，3 次有用提前提醒；这些样本通常在确认前约 13 小时 53 分出现。它的优势是快分发，不是独立发现。",
-      "caveat_zh": "有 1 次漏掉、1 次在事件后仍发 incoming；同源转述不能增加独立可信度。"
+      "conclusion_zh": "上线后可评估的 7 次里，4 次有用提前提醒；4 个精确样本的中位提前约 10 小时 29 分。它的优势是快分发，不是独立发现。",
+      "caveat_zh": "有 2 次漏掉、1 次在事件后仍发 incoming；同源转述不能增加独立可信度。"
     },
     {
       "handle": "rezoundous",

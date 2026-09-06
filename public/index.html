@@ -3,11 +3,11 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="description" content="追踪 Codex 全局额度重置信号：一手预告、社区风声、最近十次历史与邮件提醒。">
+    <meta name="description" content="追踪 Codex 额度重置信号：一手预告、社区风声、到账反馈、历史审计与邮件提醒。">
     <title>Codex 重置雷达</title>
     <link rel="icon" href="brand-zh.png" type="image/png">
     <link rel="stylesheet" href="styles.css">
-    <script type="module" src="app.js?v=20260901-4"></script>
+    <script type="module" src="app.js?v=20260906-1"></script>
   </head>
   <body>
     <header class="site-header">
@@ -19,7 +19,7 @@
         <nav aria-label="页面导航">
           <a href="#signals">最新信号</a>
           <a href="#sources">信源</a>
-          <a href="#history">十次历史</a>
+          <a href="#history">历史审计</a>
           <a href="feed.xml">RSS</a>
           <a href="en/" lang="en">EN</a>
         </nav>
@@ -55,8 +55,8 @@
               <p>不会把缺失数据画成“没有消息”。</p>
             </div>
           </div>
-          <aside id="reset-clock" class="reset-clock loading" aria-label="距离上次已确认全局重置的时间" aria-live="off">
-            <span class="signal-kicker">上次重置后，Codex 已跑了</span>
+          <aside id="reset-clock" class="reset-clock loading" aria-label="距离上次已确认重置权益的时间" aria-live="off">
+            <span class="signal-kicker">上次获得重置权益后，Codex 已跑了</span>
             <strong id="reset-clock-value">正在校准…</strong>
             <small id="reset-clock-anchor">等待读取一手确认记录</small>
             <div class="reset-phase"><span id="reset-clock-phase">正在判断阶段</span><span id="reset-clock-progress"></span></div>
@@ -100,12 +100,12 @@
 
       <section class="takeaway" id="history" aria-labelledby="history-title">
         <div class="section-heading">
-          <div><span class="section-index">03</span><h2 id="history-title">最近 10 次，历史到底说明了什么</h2></div>
+          <div><span class="section-index">03</span><h2 id="history-title">已审计历史，真正说明了什么</h2></div>
           <p>结论来自逐条 X 原帖回看，不是根据时间间隔硬猜下一次。</p>
         </div>
         <div id="history-metrics" class="metric-grid" aria-live="polite"></div>
         <div class="plain-conclusion">
-          <strong>一句话：</strong>提前通知经常存在，但“任何风声 9/10”不能写成“可靠预告 9/10”；清楚可操作的覆盖只有 6/10，中位提前约 16 小时。
+          <strong>一句话：</strong><span id="history-conclusion">正在根据历史数据计算结论…</span>
         </div>
         <p class="history-help">每一行先给结果；展开后查看“谁最先说、社区如何放大、何时确认、最后是否到账”。没有精确原帖的环节会明确写成证据缺口。</p>
         <div id="history-list" class="timeline" aria-live="polite"></div>

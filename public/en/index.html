@@ -3,11 +3,11 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="description" content="Track global Codex usage-reset signals: first-party warnings, community chatter, ten audited events, and alert delivery.">
+    <meta name="description" content="Track Codex usage-reset signals: first-party warnings, community chatter, delivery reports, audited history, and alerts.">
     <title>Codex Reset Watcher</title>
     <link rel="icon" href="../brand-en.png" type="image/png">
     <link rel="stylesheet" href="../styles.css">
-    <script type="module" src="../app.js?v=20260901-4"></script>
+    <script type="module" src="../app.js?v=20260906-1"></script>
   </head>
   <body>
     <header class="site-header">
@@ -19,7 +19,7 @@
         <nav aria-label="Page navigation">
           <a href="#signals">Latest signals</a>
           <a href="#sources">Sources</a>
-          <a href="#history">10-event history</a>
+          <a href="#history">Audited history</a>
           <a href="../feed.xml">RSS</a>
           <a href="../" lang="zh-CN">中文</a>
         </nav>
@@ -55,8 +55,8 @@
               <p>Missing data is never presented as an all-clear.</p>
             </div>
           </div>
-          <aside id="reset-clock" class="reset-clock loading" aria-label="Time since the last confirmed global reset" aria-live="off">
-            <span class="signal-kicker">Codex has been running for</span>
+          <aside id="reset-clock" class="reset-clock loading" aria-label="Time since the last confirmed reset benefit" aria-live="off">
+            <span class="signal-kicker">Since the last reset benefit</span>
             <strong id="reset-clock-value">Calibrating…</strong>
             <small id="reset-clock-anchor">Waiting for first-party confirmation records</small>
             <div class="reset-phase"><span id="reset-clock-phase">Assessing phase</span><span id="reset-clock-progress"></span></div>
@@ -100,12 +100,12 @@
 
       <section class="takeaway" id="history" aria-labelledby="history-title">
         <div class="section-heading">
-          <div><span class="section-index">03</span><h2 id="history-title">What the last 10 events actually show</h2></div>
+          <div><span class="section-index">03</span><h2 id="history-title">What the audited history actually shows</h2></div>
           <p>Every conclusion comes from original X posts, not a guess based on intervals.</p>
         </div>
         <div id="history-metrics" class="metric-grid" aria-live="polite"></div>
         <div class="plain-conclusion">
-          <strong>Bottom line:</strong> Advance notice is common, but “some hint in 9/10” is not “a reliable warning in 9/10.” Only 6/10 were clear enough to act on, with a median lead of about 16 hours.
+          <strong>Bottom line:</strong> <span id="history-conclusion">Calculating from the historical dataset…</span>
         </div>
         <p class="history-help">Each row starts with the outcome. Expand it to see who spoke first, how the community amplified it, when confirmation arrived, and whether delivery was observed.</p>
         <div id="history-list" class="timeline" aria-live="polite"></div>

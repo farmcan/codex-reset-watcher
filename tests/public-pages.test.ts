@@ -24,6 +24,8 @@ describe("public bilingual dashboard", () => {
     expect(chinese).toContain('src="brand-zh.png"');
     expect(english).toContain('class="hero-visual"');
     expect(english).toContain('src="../brand-en.png"');
+    expect(chinese).toContain("距离上次已确认重置权益的时间");
+    expect(english).toContain("Time since the last confirmed reset benefit");
   });
 
   it("renders the cadence context on both pages", () => {
@@ -33,8 +35,8 @@ describe("public bilingual dashboard", () => {
       expect(page).toContain('id="reset-progress-fill"');
       expect(page).toContain('id="reset-clock-context"');
     }
-    expect(app).toContain("cadence context, not a forecast");
-    expect(app).toContain("只作节奏参照，不预测下次重置");
+    expect(app).toContain("context, not a forecast");
+    expect(app).toContain("不预测下次重置");
   });
 
   it("keeps an open dashboard synchronized with live status", () => {
@@ -43,16 +45,17 @@ describe("public bilingual dashboard", () => {
     expect(app).toContain('document.addEventListener("visibilitychange"');
     expect(app).toContain("最近轮询");
     expect(app).toContain("Auto-refresh failed · showing last data");
+    expect(app).toContain('signal.evidence_basis === "account_observation" || personalSignal(signal)');
   });
 
-  it("derives a stable historical median hard-reset gap", () => {
+  it("derives a stable historical median across all reset benefits", () => {
     const outcomes = history.events
-      .filter((event) => event.kind === "hard_reset")
       .map((event) => Date.parse(event.outcome_at))
       .sort((left, right) => left - right);
     const gaps = outcomes.slice(1).map((timestamp, index) => timestamp - outcomes[index]!).sort((left, right) => left - right);
-    const middle = gaps.length / 2;
-    const medianHours = (gaps[middle - 1]! + gaps[middle]!) / 2 / 3_600_000;
-    expect(medianHours).toBeCloseTo(61.77, 1);
+    const middle = Math.floor(gaps.length / 2);
+    const median = gaps.length % 2 ? gaps[middle]! : (gaps[middle - 1]! + gaps[middle]!) / 2;
+    const medianHours = median / 3_600_000;
+    expect(medianHours).toBeCloseTo(52.14, 1);
   });
 });
