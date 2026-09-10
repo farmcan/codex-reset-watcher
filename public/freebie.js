@@ -1,5 +1,15 @@
 const english = document.documentElement.lang.toLowerCase().startsWith('en');
 const feedback = document.querySelector('#copy-feedback');
+const panel = document.querySelector('.freebie-panel');
+
+function openLinkedGuide() {
+  if (location.hash === '#freebie' && panel) panel.open = true;
+}
+openLinkedGuide();
+window.addEventListener('hashchange', openLinkedGuide);
+document.querySelectorAll('a[href="#freebie"]').forEach(link => {
+  link.addEventListener('click', () => { if (panel) panel.open = true; });
+});
 
 document.querySelectorAll('[data-copy-target]').forEach(button => {
   button.addEventListener('click', async () => {

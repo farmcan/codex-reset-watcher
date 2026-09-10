@@ -305,8 +305,17 @@ footer div { display: flex; gap: 18px; }
 
 /* Copyable hourly greeting guide. */
 #freebie { scroll-margin-top: 88px; }
-.freebie-entry { color: var(--accent); font-size: 14px; font-weight: 750; text-underline-offset: 4px; }
-.hero-actions { flex-wrap: wrap; }
+.freebie-panel { border: 1px solid var(--line); border-radius: 20px; background: var(--surface); }
+.freebie-summary { display: flex; align-items: center; margin: 0; padding: 24px; cursor: pointer; list-style: none; }
+.freebie-summary::-webkit-details-marker { display: none; }
+.freebie-summary h2 { font-size: 24px; }
+.freebie-summary:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; border-radius: 20px; }
+.freebie-toggle { flex-shrink: 0; color: var(--accent); font-size: 13px; font-weight: 700; }
+.freebie-toggle::before { content: '+ '; }
+.freebie-panel[open] .freebie-toggle::before { content: '− '; }
+.freebie-panel .when-open, .freebie-panel[open] .when-closed { display: none; }
+.freebie-panel[open] .when-open { display: inline; }
+.freebie-body { padding: 12px 24px 24px; }
 .freebie-intro { max-width: 760px; margin: -12px 0 28px; font-size: 20px; line-height: 1.7; }
 .freebie-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 24px; align-items: start; }
 .freebie-guide, .freebie-context { min-width: 0; padding: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; }
@@ -334,6 +343,9 @@ footer div { display: flex; gap: 18px; }
 .site-credit { font-size: 12px; }
 footer { flex-wrap: wrap; }
 @media (max-width: 800px) {
+  .freebie-summary { flex-wrap: wrap; gap: 12px; padding: 20px; }
+  .freebie-summary p { flex-basis: 100%; order: 1; }
+  .freebie-body { padding: 12px; }
   .freebie-grid { grid-template-columns: minmax(0, 1fr); }
   .freebie-guide, .freebie-context { padding: 20px; }
   .freebie-intro { font-size: 17px; }
