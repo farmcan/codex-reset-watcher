@@ -4,6 +4,8 @@ import { dashboardData, ensureSourceState } from "./db";
 import { emailConfigured, sendTestEmail } from "./notifications";
 import { runPoll } from "./poll";
 import type { Env } from "./types";
+import { processReviews, reviewHealth } from "./model-review";
+import { acquirePollLock, releasePollLock } from "./db";
 
 const JSON_HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
@@ -39,6 +41,7 @@ async function healthSnapshot(env: Env): Promise<Record<string, unknown>> {
     expected_poll_seconds: pollSeconds,
     grace_seconds: Math.round(staleAfterMs / 1000),
     x_token_configured: Boolean(env.X_BEARER_TOKEN),
+    model_review: await reviewHealth(env),
     email: {
       configured: emailConfigured(env),
       provider: env.EMAIL_PROVIDER,
@@ -87,6 +90,16 @@ export async function handleApi(request: Request, env: Env): Promise<Response | 
   if (request.method === "POST" && url.pathname === "/api/admin/poll") {
     if (!await authorized(request, env)) return json({ error: "unauthorized" }, 401);
     return json(await runPoll(env));
+  }
+  if (request.method === "POST" && url.pathname === "/api/admin/review") {
+    if (!await authorized(request, env) && !await authorized(request, {...env, ADMIN_TOKEN:env.REVIEW_ADMIN_TOKEN})) return json({error:'unauthorized'},401);
+    const lock = crypto.randomUUID();
+    if (!await acquirePollLock(env.DB,lock,new Date().toISOString())) return json({error:'poll_in_progress'},409);
+    try {
+      const requestedLimit = Number(url.searchParams.get('limit') || 1);
+      await processReviews(env, Number.isInteger(requestedLimit) ? requestedLimit : 1);
+      return json(await reviewHealth(env));
+    } finally { await releasePollLock(env.DB,lock); }
   }
   if (request.method === "POST" && url.pathname === "/api/admin/test-email") {
     if (!await authorized(request, env)) return json({ error: "unauthorized" }, 401);

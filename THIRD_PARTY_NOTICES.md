@@ -17,3 +17,5 @@ Conceptual and product references:
 - [`bellingcat/auto-archiver`](https://github.com/bellingcat/auto-archiver), MIT.
 
 The historical dataset contains links, timestamps, IDs and short original summaries derived from public X posts. It does not archive bulk screenshots or a mirror of complete X timelines.
+
+The Freebie Master guide includes one screenshot of [Tibo's banked-reset compensation notice](https://x.com/thsottiaux/status/2097752790177370535), supplied in [Issue #1](https://github.com/farmcan/codex-reset-watcher/issues/1). The original screenshot is preserved at `public/issue-assets/tibo-banked-reset-compensation-20260910.png` and attributed beside the image in both languages. Third-party post content and platform branding remain the property of their respective owners.

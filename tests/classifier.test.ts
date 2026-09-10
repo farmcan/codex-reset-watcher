@@ -21,6 +21,27 @@ function post(overrides: Partial<RawPost> = {}): RawPost {
 }
 
 describe("classifyPost", () => {
+  it("recognizes the September 7 Astra global reset notice with a clock time", () => {
+    const signal = classifyPost(post({
+      text: "Thanks for reading. We will do a global reset of the usage for all paid subscriptions so that you can keep enjoying Astra after burning through all of it doing fun 3D modeling in blender. The work week is about to start. Lands around 6pm PST today.",
+      createdAt: "2026-09-07T19:24:57.000Z"
+    }));
+    expect(signal.eventType).toBe("scheduled_reset");
+    expect(signal.resetMode).toBe("hard_reset");
+    expect(signal.effectiveTime).toBe("2026-09-08T02:00:00.000Z");
+    expect(signal.approximateTime).toBe(true);
+  });
+
+  it("recognizes a reset will land notice without a relative time keyword", () => {
+    const signal = classifyPost(post({ text: "Your Codex reset will land at 6pm PDT.", createdAt: "2026-09-07T19:24:57.000Z" }));
+    expect(signal.eventType).toBe("scheduled_reset");
+    expect(signal.effectiveTime).toBe("2026-09-08T01:00:00.000Z");
+  });
+
+  it("does not treat Astra discussion or negated announcements as resets", () => {
+    expect(isRelevant(classifyPost(post({ text: "Astra is great for Blender." })))).toBe(false);
+    expect(isRelevant(classifyPost(post({ text: "We will not reset Astra usage tomorrow." })))).toBe(false);
+  });
   it("marks a clear first-party future hard reset as high severity", () => {
     const signal = classifyPost(post());
     expect(signal.eventType).toBe("scheduled_reset");

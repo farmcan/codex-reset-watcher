@@ -59,3 +59,31 @@ describe("public bilingual dashboard", () => {
     expect(medianHours).toBeCloseTo(52.14, 1);
   });
 });
+
+describe('reset event boundaries', () => {
+  const group = new Function(app.slice(app.indexOf('function groupResetSignals('), app.indexOf('const eventOpenState')) + '; return groupResetSignals;')();
+  const signal = (post_id: string, created_at: string, extra: Record<string, unknown> = {}) => ({post_id,created_at,event_type:'scheduled_reset',reset_mode:'hard_reset',source_tier:'A1', ...extra});
+  it('separates two reset announcements and attaches a referenced report', () => {
+    const a=signal('a','2026-09-07T10:00:00Z',{effective_time:'2026-09-07T12:00:00Z'});
+    const b=signal('b','2026-09-08T10:00:00Z',{effective_time:'2026-09-08T12:00:00Z'});
+    const report=signal('c','2026-09-08T12:20:00Z',{source_tier:'D',event_type:'community_observation',referenced_post_ids:'["b"]'});
+    const groups=group([report,b,a]);
+    expect(groups).toHaveLength(2);
+    expect(groups[0].signals.map((s: {post_id:string})=>s.post_id)).toContain('c');
+    expect(groups[0].signals.map((s: {post_id:string})=>s.post_id)).not.toContain('a');
+  });
+  it('does not merge banked resets with hard resets',()=>{
+    expect(group([signal('a','2026-09-08T10:00:00Z'),signal('b','2026-09-08T10:10:00Z',{reset_mode:'banked_reset'})])).toHaveLength(2);
+  });
+  it('leaves ambiguous reports unassigned',()=>{
+    const groups=group([signal('a','2026-09-08T02:00:00Z'),signal('b','2026-09-08T10:00:00Z'),signal('c','2026-09-08T06:00:00Z',{source_tier:'D',event_type:'community_observation'})]);
+    expect(groups.some((g:{id:string,signals:Array<{post_id:string}>})=>g.id.startsWith('unassigned:')&&g.signals.some(s=>s.post_id==='c'))).toBe(true);
+  });
+});
+
+it('keeps an official event anchor visible during a flood of delivery reports',()=>{
+  const select=new Function('monitorRelevant',app.slice(app.indexOf('function monitorSignals('),app.indexOf('function signalLevel('))+'; return monitorSignals;')(()=>true);
+  const signals=Array.from({length:80},(_,i)=>({post_id:String(i),created_at:'2026-09-08T02:00:00Z',source_tier:'D'}));
+  signals.push({post_id:'official',created_at:'2026-09-07T19:24:57Z',source_tier:'A1'});
+  expect(select({live:{signals}}).some((s:{post_id:string})=>s.post_id==='official')).toBe(true);
+});

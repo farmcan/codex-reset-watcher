@@ -19,6 +19,7 @@ import {
 import { processPendingDeliveries, severityAtLeast } from "./notifications";
 import type { Env, PollSummary, Signal, SourceStateRow } from "./types";
 import { fetchXQuery } from "./x-source";
+import { processReviews } from "./model-review";
 
 export async function runPoll(env: Env, now = new Date()): Promise<PollSummary> {
   const startedAt = now.toISOString();
@@ -103,6 +104,7 @@ async function runPollWithLock(env: Env, startedAt: string): Promise<PollSummary
     }
   }
 
+  await processReviews(env);
   const deliveries = await processPendingDeliveries(env, new Date().toISOString());
   const finishedAt = new Date().toISOString();
   const succeeded = states.length - errors.length;

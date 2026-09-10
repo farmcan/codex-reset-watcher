@@ -29,6 +29,10 @@ export interface Env {
   RESEND_API_KEY?: string;
   ALERT_EMAIL_FROM?: string;
   ALERT_EMAIL_TO?: string;
+  DASHSCOPE_API_KEY?: string;
+  QWEN_BASE_URL?: string;
+  QWEN_MODEL?: string;
+  REVIEW_ADMIN_TOKEN?: string;
 }
 
 export interface QuerySpec {

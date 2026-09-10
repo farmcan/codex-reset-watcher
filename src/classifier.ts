@@ -1,6 +1,6 @@
 import type { EvidenceBasis, EventType, RawPost, ResetMode, Severity, Signal } from "./types";
 
-const CONTEXT = ["codex", "chatgpt work", "usage limit", "usage limits", "rate limit", "quota", "allowance", "tokens"];
+const CONTEXT = ["codex", "chatgpt work", "astra", "usage limit", "usage limits", "rate limit", "quota", "allowance", "tokens"];
 const EXPLICIT = [
   "will reset",
   "going to reset",
@@ -8,6 +8,7 @@ const EXPLICIT = [
   "resetting usage",
   "reset usage",
   "full reset",
+  "global reset of the usage",
   "brand new usage",
   "reset will land",
   "reset has been propagated"
@@ -81,6 +82,7 @@ function clamp(value: number): number {
 function hasFutureResetIntent(text: string, futureHits: string[]): boolean {
   if (/\b(?:will|going to|about to|expected to)\b.{0,40}\breset\b/.test(text)) return true;
   if (/\breset\b.{0,20}\bincoming\b/.test(text)) return true;
+  if (/\breset\b.{0,20}\bwill land\b/.test(text)) return true;
   const resetIndexes = [...text.matchAll(/\breset(?:s|ting)?\b/g)].map((match) => match.index ?? -1);
   return futureHits.some((phrase) => {
     let index = text.indexOf(phrase);
@@ -95,6 +97,16 @@ function hasFutureResetIntent(text: string, futureHits: string[]): boolean {
 function inferEffectiveTime(text: string, createdAt: string): { at: string | null; approximate: boolean } {
   const created = Date.parse(createdAt);
   if (!Number.isFinite(created)) return { at: null, approximate: false };
+  // Honor explicitly named offsets; PST is not silently interpreted as PDT.
+  const clock = text.match(/\b(?:lands?\s+(?:around|at)|will land\s+(?:around|at))\s+(1[0-2]|[1-9])(?::([0-5]\d))?\s*(am|pm)\s+(pst|pdt|utc)\b/);
+  if (clock) {
+    const offset = clock[4] === "pst" ? -8 : clock[4] === "pdt" ? -7 : 0;
+    const local = new Date(created + offset * 3_600_000);
+    const hour = Number(clock[1]) % 12 + (clock[3] === "pm" ? 12 : 0);
+    const dayOffset = text.includes("tomorrow") ? 1 : 0;
+    const at = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate() + dayOffset, hour - offset, Number(clock[2] ?? 0));
+    return { at: new Date(at).toISOString(), approximate: text.includes("around") };
+  }
   const addHours = (hours: number) => ({ at: new Date(created + hours * 3_600_000).toISOString(), approximate: true });
   if (text.includes("next hour") || text.includes("in the next hour")) return addHours(1);
   if (text.includes("later today") || text.includes("tonight") || text.includes("this evening")) return addHours(8);
@@ -161,7 +173,7 @@ export function classifyPost(post: RawPost): Signal {
         resetMode = "banked_reset";
         severity = "medium";
         shouldNotify = true;
-      } else if (futureHits.length && resetWord && contextHits.length) {
+      } else if (futureIntent && resetWord && contextHits.length) {
         eventType = "scheduled_reset";
         resetMode = "hard_reset";
         severity = "high";

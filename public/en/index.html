@@ -7,7 +7,8 @@
     <title>Codex Reset Watcher</title>
     <link rel="icon" href="../brand-en.png" type="image/png">
     <link rel="stylesheet" href="../styles.css">
-    <script type="module" src="../app.js?v=20260906-1"></script>
+    <script type="module" src="../app.js?v=20260910-1"></script>
+    <script type="module" src="../freebie.js?v=20260910-1"></script>
   </head>
   <body>
     <header class="site-header">
@@ -19,6 +20,7 @@
         <nav aria-label="Page navigation">
           <a href="#signals">Latest signals</a>
           <a href="#sources">Sources</a>
+          <a href="#freebie">Freebie Master</a>
           <a href="#history">Audited history</a>
           <a href="../feed.xml">RSS</a>
           <a href="../" lang="zh-CN">中文</a>
@@ -37,6 +39,7 @@
             <h1 id="page-title">Catch the Reset window.<br>Crack the whip.</h1>
             <p class="hero-copy">Track first-party X posts, community signals, and account-delivery reports. Every item is graded by source, evidence, and historical performance.</p>
             <div class="hero-actions">
+              <a class="freebie-entry" href="#freebie">Try Freebie Master ↘</a>
               <a class="usage-link" href="https://chatgpt.com/codex/settings/usage" target="_blank" rel="noreferrer noopener" aria-label="Open ChatGPT to check my Codex usage">
                 <span>Check my Codex usage</span><span aria-hidden="true">↗</span>
               </a>
@@ -66,10 +69,50 @@
         </div>
       </section>
 
+
+      <section id="freebie" class="freebie" aria-labelledby="freebie-title">
+        <div class="section-heading">
+          <div><span class="section-index">＋</span><h2 id="freebie-title">Freebie Master</h2></div>
+          <p>An hourly hello, with the joke and the facts kept separate.</p>
+        </div>
+        <p class="freebie-intro">Say “hello” to Codex every hour. If you happen to catch a compensable outage, maybe score an extra reset from Tibo. 😄</p>
+        <div class="freebie-grid">
+          <article class="freebie-guide">
+            <h3>Set up the hourly hello</h3>
+            <ol><li>Install and sign in to Codex CLI. Keep your computer powered on and awake.</li>
+                <li>Open <code>crontab -e</code> and add the line below. It runs at the top of every hour in the machine’s time zone.</li>
+                <li><code>codex exec</code> exits when the response is complete; other Codex sessions stay open. Start time, response, end time, and exit code are appended to the log.</li></ol>
+            <div class="command-panel">
+              <div class="command-toolbar"><span>crontab</span><button type="button" class="copy-command" data-copy-target="hourly-cron">Copy cron</button></div>
+              <pre tabindex="0" aria-label="Hourly Codex cron command"><code id="hourly-cron">0 * * * * { echo &quot;===== $(date -Iseconds) START =====&quot;; codex exec --skip-git-repo-check &#x27;Hello&#x27;; run_exit=$?; echo &quot;===== $(date -Iseconds) END exit=$run_exit =====&quot;; } &gt;&gt; ~/.codex-hourly.log 2&gt;&amp;1</code></pre>
+            </div>
+            <p class="copy-feedback" id="copy-feedback" role="status" aria-live="polite"></p>
+            <p class="freebie-path"><strong>PATH</strong> · Cron must be able to find <code>codex</code> in its PATH. Run <code>command -v codex</code> in your usual terminal, then replace <code>codex</code> in the cron line with that absolute path (quote it if it contains spaces), or configure PATH in crontab.</p>
+            <div class="command-panel log-command">
+              <div class="command-toolbar"><span>View the log</span><button type="button" class="copy-command" data-copy-target="hourly-log">Copy log command</button></div>
+              <pre tabindex="0" aria-label="Log viewing command"><code id="hourly-log">tail -n 50 ~/.codex-hourly.log</code></pre>
+            </div>
+            <p class="freebie-stop"><code>exit=0</code> means Codex finished successfully. To stop future runs, open <code>crontab -e</code> and delete this entry.</p>
+            <a class="node-link" href="https://learn.chatgpt.com/docs/non-interactive-mode" target="_blank" rel="noreferrer noopener">Codex CLI documentation ↗</a>
+          </article>
+          <aside class="freebie-context">
+            <span class="freebie-context-label">Where the idea came from</span>
+            <figure>
+              <a href="../issue-assets/tibo-banked-reset-compensation-20260910.png" target="_blank" rel="noreferrer noopener" aria-label="Open the original announcement screenshot at full size"><img src="../issue-assets/tibo-banked-reset-compensation-20260910.png" width="1268" height="536" loading="lazy" alt="Tibo explains that people who used an affected banked reset will receive a replacement reset and an apology email; screenshot dated September 10, 2026."></a>
+              <figcaption>September 10, 2026 · Select the image to view full size</figcaption>
+            </figure>
+            <p>Tibo’s screenshot describes banked resets that did not fully apply in ChatGPT Work and Codex. People who used an affected reset during that incident will receive a replacement and an apology email. This is incident-specific compensation, not a global hard reset.</p>
+            <div class="freebie-boundary"><strong>A playful experiment, not a guarantee</strong><p>Ordinary prompts consume normal usage. Saying “hello” is not the same as using a banked reset and does not guarantee compensation. Eligibility depends on the incident announcement and your account’s actual situation.</p></div>
+            <p class="freebie-source"><a class="primary-link" href="https://x.com/thsottiaux/status/2097752790177370535" target="_blank" rel="noreferrer noopener">Read Tibo’s original X post ↗</a></p>
+            <a class="node-link" href="https://github.com/farmcan/codex-reset-watcher/issues/1" target="_blank" rel="noreferrer noopener">Original suggestion & screenshot source ↗</a>
+          </aside>
+        </div>
+      </section>
+
       <section id="signals" aria-labelledby="signals-title">
         <div class="section-heading">
-          <div><span class="section-index">01</span><h2 id="signals-title">Latest signals</h2></div>
-          <p>Personal delivery or anomaly reports remain visible but weak; they never masquerade as a global schedule.</p>
+          <div><span class="section-index">01</span><h2 id="signals-title">One reset at a time</h2></div>
+          <p>Each reset has its own record. Expand an event to follow its announcement and community delivery reports.</p>
         </div>
         <div id="signal-summary" class="signal-summary" aria-live="polite"></div>
         <div id="signal-filters" class="signal-filters" role="group" aria-label="Filter by event level">
@@ -126,6 +169,7 @@
     </main>
 
     <footer>
+      <p class="site-credit"><a href="https://github.com/farmcan/codex-reset-watcher" target="_blank" rel="noreferrer noopener">farmcan / Codex Reset Watcher</a> · Built with Codex · Updated <time datetime="2026-09-10">2026-09-10</time></p>
       <p>Open source, unofficial, and unaffiliated with OpenAI, X, or any monitored account. The logo is an original project SVG.</p>
       <div><a id="status-api-link" href="../snapshots/status.json">JSON API</a><a id="history-api-link" href="../snapshots/history.json">History data</a><a href="../feed.xml">RSS</a></div>
     </footer>

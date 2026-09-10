@@ -66,6 +66,7 @@ function compactText(value, maximum = 260) {
 }
 
 function eventLabel(signal) {
+  if (scheduledTimePassed(signal)) return ui("官方预告时间已过，待确认到账", "Announced reset time passed; awaiting confirmation");
   if (signal.event_type === "explicit_reset" && signal.reset_mode === "hard_reset") return ui("官方确认：重置已经发生", "Official confirmation: reset completed");
   if (signal.event_type === "scheduled_reset" && signal.reset_mode === "hard_reset") return ui("官方预告：未来全量重置", "Official notice: hard reset ahead");
   if (signal.reset_mode === "banked_reset") return ui("可储存重置消息", "Banked reset update");
@@ -75,7 +76,15 @@ function eventLabel(signal) {
   return ui("额度相关动态", "Usage-limit update");
 }
 
+function scheduledTimePassed(signal) {
+  return signal.event_type === "scheduled_reset" && signal.reset_mode === "hard_reset"
+    && signal.effective_time && Date.parse(signal.effective_time) <= Date.now();
+}
+
 function actionText(signal) {
+  if (scheduledTimePassed(signal)) {
+    return ui("预告的重置时间已经过去，请检查自己的 Codex Usage。系统尚未收录一手完成确认，不再建议提前消耗额度。", "The announced reset time has passed. Check your Codex Usage. No first-party completion confirmation has been recorded yet; there is no reason to front-load usage now.");
+  }
   if (signal.event_type === "scheduled_reset" && signal.reset_mode === "hard_reset" && String(signal.source_tier).startsWith("A")) {
     return ui("一手来源明确指向未来全量重置。如果本来就有任务，可以考虑提前安排；它仍不是执行保证。", "A first-party source points to an upcoming hard reset. You may want to bring forward work you already planned, but execution is not guaranteed.");
   }
@@ -206,6 +215,7 @@ function renderResetClock(status, history) {
   const resetAt = resetEvent?.first || null;
   const latestHardResetAt = latestConfirmedReset(status, history, "hard_reset")?.first || null;
   const medianGap = historicalMedianGap(history);
+  const pendingReset = currentSignals(status).find(s => scheduledTimePassed(s) && Date.parse(s.effective_time) > (resetAt || 0));
   if (!resetAt) {
     card.className = "reset-clock error";
     value.textContent = ui("暂无确认记录", "No confirmed reset");
@@ -231,6 +241,13 @@ function renderResetClock(status, history) {
   const update = () => {
     const elapsed = Date.now() - resetAt;
     value.textContent = formatElapsed(elapsed);
+    if (pendingReset) {
+      phase.textContent = ui("新一轮预告时间已过", "A newer announced reset is due");
+      progress.textContent = ui("待一手完成确认", "Awaiting first-party completion");
+      progressFill.style.width = "0";
+      context.textContent = ui("此计时仍以旧的确认记录为准；本次预告与到账反馈请看下方独立事件。", "This clock still uses the previous confirmed record; see the separate event below for the new announcement and delivery reports.");
+      return;
+    }
     if (!Number.isFinite(medianGap) || medianGap <= 0) return;
     const ratio = elapsed / medianGap;
     const percentage = Math.max(0, Math.round(ratio * 100));
@@ -277,7 +294,8 @@ function renderCurrent(status) {
     return;
   }
   card.className = `current-card ${signal.severity || "low"}`;
-  body.append(el("h2", "", eventLabel(signal)));
+  body.append(el("h2", "", signalTitle(signal)));
+  body.append(el("span", "pill", eventLabel(signal)));
   body.append(el("p", "", actionText(signal)));
   const meta = el("div", "card-meta");
   meta.append(el("span", `pill ${signal.severity}`, signal.severity === "high" ? ui("高优先级", "High priority") : signal.severity === "medium" ? ui("中等置信", "Medium confidence") : ui("低置信", "Low confidence")));
@@ -485,7 +503,7 @@ function renderHistory(history) {
     if (event.actionable_first_party_signal && event.earliest_first_party_signal?.post_id !== event.actionable_first_party_signal.post_id) {
       headline.append(el("small", "", ui(`真正明确的预告：提前 ${formatDuration(event.actionable_first_party_signal.lead_minutes)}`, `First truly actionable warning: ${formatDuration(event.actionable_first_party_signal.lead_minutes)} early`)));
     }
-    summary.append(date, headline, el("span", "timeline-toggle", ui("查看证据时间轴", "View evidence timeline")));
+    summary.append(date, headline, el("span", "timeline-toggle", ui("展开 / 收起证据", "Expand / collapse evidence")));
 
     const body = el("div", "timeline-body");
     const outcome = el("div", "outcome-box");
@@ -557,15 +575,18 @@ function monitorRelevant(signal) {
 
 function monitorSignals(status) {
   const seen = new Set();
-  return [...(status.live.signals || [])]
+  const relevant = [...(status.live.signals || [])]
     .filter(monitorRelevant)
     .sort((left, right) => Date.parse(right.created_at) - Date.parse(left.created_at))
     .filter((signal) => {
       if (seen.has(signal.post_id)) return false;
       seen.add(signal.post_id);
       return true;
-    })
-    .slice(0, 40);
+    });
+  // Delivery chatter must not push the event's official anchor out of view.
+  const official = relevant.filter(signal => String(signal.source_tier).startsWith("A"));
+  const community = relevant.filter(signal => !String(signal.source_tier).startsWith("A")).slice(0, 40);
+  return [...official, ...community].sort((a,b) => Date.parse(b.created_at)-Date.parse(a.created_at));
 }
 
 function signalLevel(signal) {
@@ -579,13 +600,15 @@ function signalLevel(signal) {
 }
 
 function signalTitle(signal) {
+  const generated = ENGLISH ? signal.title_en : signal.title_zh;
+  if (generated) return generated;
   const lane = signalLane(signal);
   if (lane === "personal") {
     return /error|missing|lost|failed|unable|not reset|异常|消失|没到账/i.test(signal.text)
       ? ui("个人账户异常反馈", "Personal account anomaly")
       : ui("个人账户到账反馈", "Personal account delivery report");
   }
-  if (lane === "relay") return signal.event_type === "community_observation" ? ui("确认后的社区转述", "Post-confirmation community relay") : ui("社区侦察 / 转发", "Community scout / relay");
+  if (lane === "relay") return signal.event_type === "community_observation" ? ui("社区重置反馈转述", "Community reset report relay") : ui("社区侦察 / 转发", "Community scout / relay");
   return eventLabel(signal);
 }
 
@@ -601,7 +624,7 @@ function renderSignalSummary(status, signals) {
   const today = localDay(new Date());
   const todaySignals = signals.filter((signal) => localDay(signal.created_at) === today);
   const personal = todaySignals.filter((signal) => signalLane(signal) === "personal").length;
-  const scheduled = todaySignals.filter((signal) => signal.event_type === "scheduled_reset" && String(signal.source_tier).startsWith("A")).length;
+  const scheduled = todaySignals.filter((signal) => signal.event_type === "scheduled_reset" && !scheduledTimePassed(signal) && String(signal.source_tier).startsWith("A")).length;
   const hasCurrentGlobal = currentSignals(status).some((signal) => ["explicit_reset", "scheduled_reset"].includes(signal.event_type) && signal.reset_mode === "hard_reset");
   const cards = [
     [String(todaySignals.length), ui("今日相关节点", "Relevant nodes today"), ui("去重后时间轴记录", "Deduplicated timeline records")],
@@ -617,6 +640,52 @@ function renderSignalSummary(status, signals) {
   });
 }
 
+// Stable boundaries come from audited events, references, or distinct official announcements.
+function groupResetSignals(signals, history = { events: [] }) {
+  const groups = new Map();
+  const membership = new Map();
+  const addGroup = (id, kind, at, title) => {
+    if (!groups.has(id)) groups.set(id, { id, kind, at, title, signals: [] });
+    return groups.get(id);
+  };
+  for (const event of history.events || []) {
+    const id = event.id;
+    addGroup(id, event.kind, Date.parse(event.outcome_at || event.confirmed_at), null);
+    for (const node of event.timeline || []) if (node.post_id) membership.set(node.post_id, id);
+    if (event.confirmation?.post_id) membership.set(event.confirmation.post_id, id);
+  }
+  const official = signals.filter(s => String(s.source_tier).startsWith("A") && ["scheduled_reset", "explicit_reset"].includes(s.event_type));
+  for (const signal of [...official].sort((a,b) => Date.parse(a.created_at)-Date.parse(b.created_at))) {
+    if (membership.has(signal.post_id)) continue;
+    const at = Date.parse(signal.effective_time || signal.created_at);
+    const closest = [...groups.values()].filter(g => g.kind === signal.reset_mode && Math.abs(g.at-at) <= 2*3600000)
+      .sort((a,b) => Math.abs(a.at-at)-Math.abs(b.at-at))[0];
+    const group = closest || addGroup(`event:${signal.post_id}`, signal.reset_mode, at, null);
+    membership.set(signal.post_id, group.id);
+  }
+  for (const signal of signals) {
+    let id = membership.get(signal.post_id);
+    let refs = [];
+    try { refs = JSON.parse(signal.referenced_post_ids || "[]"); } catch {}
+    if (!id) id = refs.map(ref => membership.get(ref)).find(Boolean);
+    if (!id && signal.reset_mode !== "unknown") {
+      const at = Date.parse(signal.effective_time || signal.created_at);
+      const candidates = [...groups.values()].filter(g => g.kind === signal.reset_mode && Math.abs(g.at-at) <= 12*3600000)
+        .sort((a,b) => Math.abs(a.at-at)-Math.abs(b.at-at));
+      // Ambiguous attribution stays outside reset events.
+      if (candidates.length === 1) id = candidates[0].id;
+    }
+    if (!id) {
+      id = `unassigned:${signal.created_at.slice(0,10)}`;
+      addGroup(id, "unknown", Date.parse(signal.created_at), null);
+    }
+    groups.get(id).signals.push(signal);
+  }
+  return [...groups.values()].filter(g => g.signals.length).sort((a,b) => b.at-a.at);
+}
+
+const eventOpenState = new Map();
+
 function renderSignalRows() {
   const container = document.querySelector("#signal-list");
   container.replaceChildren();
@@ -625,7 +694,26 @@ function renderSignalRows() {
     container.append(el("p", "empty", ui("这个筛选下暂无节点。个人反馈为 0 时，只表示当前监控窗口没有收录，不代表所有账号都正常。", "No nodes match this filter. Zero personal reports only means none were captured in the current window; it does not prove every account is healthy.")));
     return;
   }
-  signals.forEach((signal) => {
+  groupResetSignals(latestMonitorSignals, cachedHistory).forEach((group, index) => {
+    const visible = group.signals.filter(signal => signalMatchesFilter(signal, activeSignalFilter));
+    if (!visible.length) return;
+    const event = el("details", "reset-event");
+    event.open = eventOpenState.has(group.id) ? eventOpenState.get(group.id) : index === 0;
+    event.addEventListener("toggle", () => eventOpenState.set(group.id, event.open));
+    const summary = el("summary", "reset-event-summary");
+    const official = group.signals.filter(s => String(s.source_tier).startsWith("A"))
+      .sort((a,b) => Date.parse(b.created_at)-Date.parse(a.created_at));
+    const lead = official.find(s => s.event_type === "explicit_reset") || official.find(s => s.event_type === "scheduled_reset");
+    const title = lead ? signalTitle(lead) : group.kind === "unknown" ? ui("尚未归属的消息", "Unassigned updates") : ui("重置相关反馈", "Reset reports");
+    const heading = el("div");
+    heading.append(el("span", "event-eyebrow", `${formatTime(new Date(group.at).toISOString(), true)} · ${group.kind === "banked_reset" ? ui("重置卡", "Banked reset") : group.kind === "hard_reset" ? ui("全量重置", "Hard reset") : ui("待核验", "Unverified")}`), el("h3", "", title));
+    const observations = group.signals.filter(s => s.event_type === "community_observation").length;
+    heading.append(el("p", "", `${lead ? eventLabel(lead) : ui("暂无一手确认", "No first-party confirmation")} · ${group.signals.length} ${ui("条证据", "evidence nodes")}${observations ? ` · ${observations} ${ui("条社区反馈", "community reports")}` : ""}`));
+    summary.append(heading, el("span", "event-toggle", ui("展开 / 收起", "Expand / collapse")));
+    const track = el("div", "event-track");
+    event.append(summary, track);
+    container.append(event);
+    visible.sort((a,b) => Date.parse(a.created_at)-Date.parse(b.created_at)).forEach((signal) => {
     const lane = signalLane(signal);
     const [levelLabel, levelClass] = signalLevel(signal);
     const row = el("article", `monitor-node ${lane}`);
@@ -634,16 +722,17 @@ function renderSignalRows() {
     const body = el("div", "monitor-body");
     const header = el("div", "monitor-header");
     header.append(el("span", `pill ${levelClass}`, levelLabel), el("h3", "", signalTitle(signal)), el("span", "monitor-author", `@${signal.author}`));
-    body.append(header, el("p", "", compactText(signal.text)));
+    body.append(header, el("p", "", (ENGLISH ? signal.summary_en : signal.summary_zh) || compactText(signal.text)));
     const meta = el("div", "monitor-meta");
     meta.append(
       el("span", "", ui(`信源 ${signal.source_tier}`, `Source ${signal.source_tier}`)),
-      el("span", "", signal.evidence_basis === "derivative" ? ui("来自同一上游", "Same upstream source") : signal.evidence_basis === "account_observation" ? ui("个人账户观察", "Personal account observation") : ui("独立说法 / 待核验", "Independent claim / unverified"))
+      el("span", "", signal.evidence_basis === "first_party" ? ui("一手来源", "First-party source") : signal.evidence_basis === "derivative" ? ui("来自同一上游", "Same upstream source") : signal.evidence_basis === "account_observation" ? ui("社区账户反馈", "Community account report") : ui("独立说法 / 待核验", "Independent claim / unverified"))
     );
     if (signal.url) meta.append(link(ui("打开原帖 →", "Open original post →"), signal.url));
     body.append(meta);
     row.append(time, body);
-    container.append(row);
+    track.append(row);
+    });
   });
 }
 
@@ -768,7 +857,9 @@ function renderSystem(status) {
   const container = document.querySelector("#system-grid");
   container.replaceChildren();
   const official = (status.live.sources || []).find((source) => source.name === "official-first-party") || {};
+  const review = status.live.model_review || {};
   const cards = [
+    [ui("Tibo 内容复核", "Tibo content review"), review.configured ? ui(`${Number(review.completed || 0)}/${Number(review.total || 0)} 已完成${Number(review.retrying || 0) ? " · 有失败" : ""}`, `${Number(review.completed || 0)}/${Number(review.total || 0)} completed${Number(review.retrying || 0) ? " · failures" : ""}`) : ui("尚未启用", "Not enabled"), review.configured ? ui(`${review.model} · 排队 ${Number(review.pending || 0)} 条 · 失败待重试 ${Number(review.retrying || 0)} 条。其他账号使用规则筛选。`, `${review.model} · ${Number(review.pending || 0)} queued · ${Number(review.retrying || 0)} failed, awaiting retry. Other accounts use rules.`) : ui("使用规则识别", "Rule-based classification")],
     [ui("整体状态", "Overall status"), status.live.overall === "healthy" ? ui("正常", "Healthy") : status.live.overall === "initializing" ? ui("初始化", "Initializing") : ui("需关注", "Needs attention"), PAGES_SNAPSHOT ? ui(`备用页面约每 10 分钟同步；实时源每 ${status.live.expected_poll_seconds || 120} 秒检查`, `Fallback page syncs about every 10 minutes; live source checks every ${status.live.expected_poll_seconds || 120} seconds`) : ui(`官方源每 ${status.live.expected_poll_seconds || 120} 秒检查`, `First-party source checks every ${status.live.expected_poll_seconds || 120} seconds`)],
     [ui("官方源最后成功", "Last first-party success"), official.last_success_at ? formatTime(official.last_success_at, true) : ui("尚未成功", "No success yet"), official.last_error || ui("没有记录错误", "No recorded error")],
     [ui("邮件提醒", "Email alerts"), status.live.email.configured ? ui("已启用", "Enabled") : ui("未配置", "Not configured"), status.live.email.configured ? ui(`最低 ${status.live.email.minimum_severity} 才发送`, `Sends at ${status.live.email.minimum_severity} severity or above`) : ui("补收件人、发件域名和 Resend Secret 后启用", "Add recipient, verified sender domain, and Resend secret to enable")],

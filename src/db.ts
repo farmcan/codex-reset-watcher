@@ -202,7 +202,7 @@ export async function acquirePollLock(db: D1Database, token: string, now: string
   await db.prepare(`
     INSERT OR IGNORE INTO app_state (key, value, updated_at) VALUES ('poll_lock', ?, ?)
   `).bind(token, now).run();
-  const staleBefore = new Date(Date.parse(now) - 90_000).toISOString();
+  const staleBefore = new Date(Date.parse(now) - 10 * 60_000).toISOString();
   await db.prepare(`
     UPDATE app_state SET value = ?, updated_at = ?
     WHERE key = 'poll_lock' AND updated_at < ?
@@ -235,11 +235,15 @@ export async function dashboardData(db: D1Database): Promise<Record<string, unkn
   const batchResults = await db.batch([
     db.prepare("SELECT name, lane, poll_seconds, primed_at, last_attempt_at, last_success_at, last_error, consecutive_failures, next_poll_at FROM source_state ORDER BY CASE lane WHEN 'official' THEN 1 WHEN 'scout' THEN 2 WHEN 'rumor' THEN 3 ELSE 4 END"),
     db.prepare(`
-      SELECT s.*, p.author, p.text, p.url, p.source_tier, p.lane
-      FROM signals s JOIN posts p ON p.post_id = s.post_id
+      SELECT s.*, p.author, p.text, p.url, p.source_tier, p.lane, p.referenced_post_ids,
+        json_extract(r.result_json, '$.title_zh') AS title_zh,
+        json_extract(r.result_json, '$.title_en') AS title_en,
+        json_extract(r.result_json, '$.summary_zh') AS summary_zh,
+        json_extract(r.result_json, '$.summary_en') AS summary_en
+      FROM signals s JOIN posts p ON p.post_id = s.post_id LEFT JOIN model_reviews r ON r.post_id=p.post_id AND r.status='complete'
       WHERE s.event_type != 'unrelated'
-        AND p.source_tier != 'D'
-      ORDER BY s.created_at DESC LIMIT 100
+        AND (p.source_tier != 'D' OR (s.event_type = 'community_observation' AND r.status = 'complete' AND s.content_confidence >= 0.7))
+      ORDER BY CASE WHEN p.source_tier IN ('A1','A2') THEN 0 ELSE 1 END, s.created_at DESC LIMIT 100
     `),
     db.prepare("SELECT * FROM poll_runs ORDER BY started_at DESC LIMIT 20"),
     db.prepare("SELECT channel, status, COUNT(*) AS count FROM deliveries GROUP BY channel, status")

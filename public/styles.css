@@ -279,3 +279,62 @@ footer div { display: flex; gap: 18px; }
 }
 
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* Each reset has its own bounded, collapsible evidence track. */
+.reset-event { margin: 0 0 24px; border: 1px solid var(--line); border-radius: 18px; background: #fff; overflow: hidden; }
+.reset-event[open] { border-color: var(--accent); box-shadow: 0 5px 20px #b52e7010; }
+.reset-event-summary { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 24px; cursor: pointer; background: var(--accent-soft); list-style: none; }
+.reset-event-summary::-webkit-details-marker { display: none; }
+.reset-event-summary h3 { margin: 8px 0; font-size: 1.2rem; line-height: 1.45; }
+.reset-event-summary p { margin: 0; font-size: .85rem; color: var(--muted); }
+.event-eyebrow { font-size: .8rem; color: var(--accent); font-weight: 700; }
+.event-toggle { flex-shrink: 0; font-size: .8rem; color: var(--accent); }
+.event-toggle::before { content: '+ '; font-weight: 800; }
+.reset-event[open] .event-toggle::before { content: '− '; }
+.event-track { padding: 12px 24px 24px; }
+.monitor-timeline::before { display: none; }
+.timeline-item { margin-bottom: 24px; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+.timeline-item[open] { border-color: var(--accent); }
+.reset-event-summary:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+@media (max-width: 640px) { .reset-event-summary { padding: 18px; gap: 12px; } .event-track { padding: 8px 12px 18px; } .event-toggle { font-size: .7rem; } }
+@media (max-width: 640px) {
+  .signal-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .signal-summary article { padding: 14px; }
+  .signal-summary small { font-size: .72rem; }
+}
+
+/* Copyable hourly greeting guide. */
+#freebie { scroll-margin-top: 88px; }
+.freebie-entry { color: var(--accent); font-size: 14px; font-weight: 750; text-underline-offset: 4px; }
+.hero-actions { flex-wrap: wrap; }
+.freebie-intro { max-width: 760px; margin: -12px 0 28px; font-size: 20px; line-height: 1.7; }
+.freebie-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.freebie-guide, .freebie-context { min-width: 0; padding: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; }
+.freebie-guide h3 { margin: 0 0 16px; font-size: 22px; }
+.freebie-guide ol { padding-left: 22px; color: var(--muted); }
+.freebie-guide li { padding: 0 0 12px 4px; }
+.freebie code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .86em; }
+.command-panel { min-width: 0; overflow: hidden; color: #fff7fb; background: #2a1723; border-radius: 12px; }
+.command-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border-bottom: 1px solid #ffffff26; font-size: 12px; }
+.copy-command { flex-shrink: 0; padding: 7px 11px; border: 1px solid #ffffff50; border-radius: 7px; background: #ffffff12; color: inherit; font: inherit; cursor: pointer; }
+.copy-command:hover { background: #ffffff28; }
+.copy-command:focus-visible, .command-panel pre:focus-visible { outline: 2px solid #ff9ec8; outline-offset: -2px; }
+.command-panel pre { max-width: 100%; overflow-x: auto; margin: 0; padding: 18px; white-space: pre; font-size: 13px; line-height: 1.8; }
+.copy-feedback { min-height: 24px; margin: 8px 0; color: var(--accent); font-size: 13px; }
+.freebie-path, .freebie-stop { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.freebie-context { background: var(--accent-soft); }
+.freebie-context-label { font-size: 13px; font-weight: 800; color: var(--accent); }
+.freebie-context figure { margin: 18px 0; }
+.freebie-context img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; }
+.freebie-context figcaption { margin-top: 8px; font-size: 12px; color: var(--muted); }
+.freebie-context p { font-size: 14px; }
+.freebie-boundary { padding: 18px; margin: 20px 0; border-radius: 12px; background: white; }
+.freebie-boundary strong { color: var(--accent); }
+.freebie-boundary p { margin-bottom: 0; }
+.site-credit { font-size: 12px; }
+footer { flex-wrap: wrap; }
+@media (max-width: 800px) {
+  .freebie-grid { grid-template-columns: minmax(0, 1fr); }
+  .freebie-guide, .freebie-context { padding: 20px; }
+  .freebie-intro { font-size: 17px; }
+}

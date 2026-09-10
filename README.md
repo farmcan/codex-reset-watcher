@@ -138,3 +138,23 @@ npx wrangler secret put ALERT_EMAIL_TO
 ## 开源
 
 代码与本项目原创 Logo 使用 MIT License；设计参考见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)。安全问题请看 [`SECURITY.md`](SECURITY.md)，贡献流程见 [`CONTRIBUTING.md`](CONTRIBUTING.md)。
+
+## Qwen 内容复核与事件视图
+
+配置 `DASHSCOPE_API_KEY` 为 Cloudflare Secret 后，只有 Tibo（`@thsottiaux`）的帖子进入
+`model_reviews` 队列，包括被规则判为无关的 Tibo 内容。其他账号使用规则筛选。默认使用北京地域的
+`qwen3.7-plus`，可通过 `QWEN_BASE_URL` / `QWEN_MODEL` 调整。
+每 10 分钟处理一次复核队列，X 信源仍按每小时抓取。
+每轮最多复核 20 条，逐帖调用、最多两条并发，按时间从新到旧处理。
+失败保留规则结果、记录状态并退避重试，首页显示已完成、待处理和重试数量。
+复核存储模型、提示版本、标题、摘要及原文证据。补审不重发历史邮件。
+
+前端将消息按已审计事件、官方公告和引用关系分为独立的可折叠事件；
+模糊归属保留在“尚未归属的消息”中。中文和英文标题、摘要来自模型复核，
+未完成复核时使用原有标签。社区到账报告始终与一手完成确认分开，
+已经过时的预告不会自动升级为“已完成”。
+
+接口与地域说明：[百炼 OpenAI 兼容接口](https://help.aliyun.com/zh/model-studio/compatibility-of-openai-with-dashscope)、
+[Base URL 总览](https://help.aliyun.com/zh/model-studio/base-url)。
+
+受保护的 `POST /api/admin/review?limit=1` 可直接验证线上复核流程（上限 20 条），使用 `ADMIN_TOKEN` 或专用于复核的 `REVIEW_ADMIN_TOKEN`。失败原因区分模型调用与数据库写入，敏感凭据经过脱敏；首页分别显示排队和失败待重试数量。

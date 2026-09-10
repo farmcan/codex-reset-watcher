@@ -7,7 +7,8 @@
     <title>Codex 重置雷达</title>
     <link rel="icon" href="brand-zh.png" type="image/png">
     <link rel="stylesheet" href="styles.css">
-    <script type="module" src="app.js?v=20260906-1"></script>
+    <script type="module" src="app.js?v=20260910-1"></script>
+    <script type="module" src="freebie.js?v=20260910-1"></script>
   </head>
   <body>
     <header class="site-header">
@@ -19,6 +20,7 @@
         <nav aria-label="页面导航">
           <a href="#signals">最新信号</a>
           <a href="#sources">信源</a>
+          <a href="#freebie">羊毛大师</a>
           <a href="#history">历史审计</a>
           <a href="feed.xml">RSS</a>
           <a href="en/" lang="en">EN</a>
@@ -37,6 +39,7 @@
             <h1 id="page-title">找到重置机会，<br>站起来猛蹬。</h1>
             <p class="hero-copy">追踪 X 上的一手预告、社区风声与到账反馈；每条消息按来源、证据和历史表现分级。</p>
             <div class="hero-actions">
+              <a class="freebie-entry" href="#freebie">羊毛大师：每小时问个好 ↘</a>
               <a class="usage-link" href="https://chatgpt.com/codex/settings/usage" target="_blank" rel="noreferrer noopener" aria-label="前往 ChatGPT 查看我的 Codex 额度">
                 <span>查看我的 Codex 额度</span><span aria-hidden="true">↗</span>
               </a>
@@ -66,10 +69,50 @@
         </div>
       </section>
 
+
+      <section id="freebie" class="freebie" aria-labelledby="freebie-title">
+        <div class="section-heading">
+          <div><span class="section-index">＋</span><h2 id="freebie-title">羊毛大师</h2></div>
+          <p>定时问个好，梗归梗，补偿条件讲清楚。</p>
+        </div>
+        <p class="freebie-intro">每小时自动发一句“你好”，万一碰上故障补偿，争取白嫖 Tibo 一次。😄</p>
+        <div class="freebie-grid">
+          <article class="freebie-guide">
+            <h3>复制一行，定时问好</h3>
+            <ol><li>先安装并登录 Codex CLI，保持机器开机且未休眠。</li>
+                <li>打开 <code>crontab -e</code>，添加下面这一行。按机器时区，每小时整点运行。</li>
+                <li><code>codex exec</code> 处理完消息后自行退出，不会关闭其他 Codex 会话。开始时间、回复、结束时间和退出码都会追加到日志。</li></ol>
+            <div class="command-panel">
+              <div class="command-toolbar"><span>crontab</span><button type="button" class="copy-command" data-copy-target="hourly-cron">复制 cron</button></div>
+              <pre tabindex="0" aria-label="每小时 Codex 问候 cron 命令"><code id="hourly-cron">0 * * * * { echo &quot;===== $(date -Iseconds) START =====&quot;; codex exec --skip-git-repo-check &#x27;你好&#x27;; run_exit=$?; echo &quot;===== $(date -Iseconds) END exit=$run_exit =====&quot;; } &gt;&gt; ~/.codex-hourly.log 2&gt;&amp;1</code></pre>
+            </div>
+            <p class="copy-feedback" id="copy-feedback" role="status" aria-live="polite"></p>
+            <p class="freebie-path"><strong>PATH</strong> · cron 的 PATH 必须能找到 <code>codex</code>。在平时的终端运行 <code>command -v codex</code>，将 cron 中的 <code>codex</code> 换成查出的绝对路径（有空格时加引号），或在 crontab 中配置 PATH。</p>
+            <div class="command-panel log-command">
+              <div class="command-toolbar"><span>查看日志</span><button type="button" class="copy-command" data-copy-target="hourly-log">复制日志命令</button></div>
+              <pre tabindex="0" aria-label="日志查看命令"><code id="hourly-log">tail -n 50 ~/.codex-hourly.log</code></pre>
+            </div>
+            <p class="freebie-stop"><code>exit=0</code> 表示 Codex 正常结束。需要停用时，打开 <code>crontab -e</code> 删除这一行，停止后续定时调用。</p>
+            <a class="node-link" href="https://learn.chatgpt.com/docs/non-interactive-mode" target="_blank" rel="noreferrer noopener">Codex CLI 官方说明 ↗</a>
+          </article>
+          <aside class="freebie-context">
+            <span class="freebie-context-label">这个梗从哪来</span>
+            <figure>
+              <a href="issue-assets/tibo-banked-reset-compensation-20260910.png" target="_blank" rel="noreferrer noopener" aria-label="打开公告原始截图查看大图"><img src="issue-assets/tibo-banked-reset-compensation-20260910.png" width="1268" height="536" loading="lazy" alt="Tibo 表示，在故障时段使用了受影响重置卡的用户将获得补发重置卡和道歉邮件；截图日期为 2026 年 9 月 10 日。"></a>
+              <figcaption>2026 年 9 月 10 日 · 点击图片查看大图</figcaption>
+            </figure>
+            <p>Tibo 在截图中说明：部分重置卡在 ChatGPT Work 和 Codex 中没有完全生效。在受影响时段使用了这类 reset 的用户，会获得一次补发和道歉邮件。这是特定故障的重置卡补偿，不是全局全量重置。</p>
+            <div class="freebie-boundary"><strong>玩梗尝试，不是领取攻略</strong><p>普通调用会消耗正常额度。“发你好”不等于使用重置卡，也不保证获得补偿；资格以当次公告和账户实际情况为准。</p></div>
+            <p class="freebie-source"><a class="primary-link" href="https://x.com/thsottiaux/status/2097752790177370535" target="_blank" rel="noreferrer noopener">查看 Tibo 这条 X 原帖 ↗</a></p>
+            <a class="node-link" href="https://github.com/farmcan/codex-reset-watcher/issues/1" target="_blank" rel="noreferrer noopener">原始提议与截图来源 ↗</a>
+          </aside>
+        </div>
+      </section>
+
       <section id="signals" aria-labelledby="signals-title">
         <div class="section-heading">
-          <div><span class="section-index">01</span><h2 id="signals-title">最新信号</h2></div>
-          <p>个人到账或异常反馈也会展示，但默认是弱观察，不会伪装成全局排期。</p>
+          <div><span class="section-index">01</span><h2 id="signals-title">每次重置，单独看</h2></div>
+          <p>每轮重置独立呈现。从官方预告到社区到账反馈，展开查看这一轮的证据。</p>
         </div>
         <div id="signal-summary" class="signal-summary" aria-live="polite"></div>
         <div id="signal-filters" class="signal-filters" role="group" aria-label="筛选事件等级">
@@ -126,6 +169,7 @@
     </main>
 
     <footer>
+      <p class="site-credit"><a href="https://github.com/farmcan/codex-reset-watcher" target="_blank" rel="noreferrer noopener">farmcan / Codex Reset Watcher</a> · 由 Codex 协助构建 · 更新于 <time datetime="2026-09-10">2026-09-10</time></p>
       <p>开源、非官方，与 OpenAI、X 或任何被追踪账号无隶属关系。Logo 为本项目原创 SVG。</p>
       <div><a id="status-api-link" href="api/status">JSON API</a><a id="history-api-link" href="api/history">历史数据</a><a href="feed.xml">RSS</a></div>
     </footer>
