@@ -8,7 +8,6 @@
     <link rel="icon" href="../brand-en.png" type="image/png">
     <link rel="stylesheet" href="../styles.css?v=20260910-3">
     <script type="module" src="../app.js?v=20260910-1"></script>
-    <script type="module" src="../freebie.js?v=20260910-2"></script>
   </head>
   <body>
     <header class="site-header">
@@ -21,7 +20,6 @@
           <a href="#signals">Latest signals</a>
           <a href="#sources">Sources</a>
           <a href="#history">Audited history</a>
-          <a href="#freebie">Hello, AI Overlord</a>
           <a href="../feed.xml">RSS</a>
           <a href="../" lang="zh-CN">中文</a>
         </nav>
@@ -39,7 +37,6 @@
             <h1 id="page-title">Catch the Reset window.<br>Crack the whip.</h1>
             <p class="hero-copy">Track first-party X posts, community signals, and account-delivery reports. Every item is graded by source, evidence, and historical performance.</p>
             <div class="hero-actions">
-              <a class="freebie-entry" href="#freebie">Try the hourly hello ↘</a>
               <a class="usage-link" href="https://chatgpt.com/codex/settings/usage" target="_blank" rel="noreferrer noopener" aria-label="Open ChatGPT to check my Codex usage">
                 <span>Check my Codex usage</span><span aria-hidden="true">↗</span>
               </a>
@@ -115,6 +112,8 @@
         <div id="history-list" class="timeline" aria-live="polite"></div>
       </section>
 
+      <!-- Disabled hourly greeting guide: retain markup for possible reuse. -->
+      <template id="hourly-greeting-template">
       <section id="freebie" class="freebie" aria-labelledby="freebie-title">
         <details class="freebie-panel">
         <summary class="section-heading freebie-summary">
@@ -157,6 +156,7 @@
         </div>
         </details>
       </section>
+      </template>
 
       <section class="system" aria-labelledby="system-title">
         <div class="section-heading">
