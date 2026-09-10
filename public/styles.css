@@ -63,7 +63,8 @@ section { padding: 84px 0; border-bottom: 1px solid var(--line); }
 .status-dot.down { background: #c94b40; box-shadow: 0 0 0 5px rgba(201,75,64,.14); }
 h1 { max-width: 1120px; margin: 24px 0 22px; font-size: clamp(40px, 5.2vw, 68px); line-height: 1.08; letter-spacing: -.045em; }
 .hero-copy { max-width: 700px; margin: 0 0 20px; color: var(--muted); font-size: 18px; }
-.hero-actions { display: flex; align-items: center; gap: 14px; }
+.hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.freebie-entry { color: var(--accent); font-size: 14px; font-weight: 750; text-underline-offset: 4px; }
 .hero-actions small { color: var(--muted); font-size: 12px; }
 .usage-link { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 46px; padding: 0 18px; border: 1px solid var(--accent); border-radius: 13px; background: var(--accent); color: white; font-size: 14px; font-weight: 800; text-decoration: none; box-shadow: 0 8px 22px rgba(181, 46, 112, .2); transition: transform .15s ease, background-color .15s ease, box-shadow .15s ease; }
 .usage-link:hover { background: #97245d; box-shadow: 0 10px 26px rgba(181, 46, 112, .26); transform: translateY(-1px); }
@@ -344,7 +345,6 @@ footer div { display: flex; gap: 18px; }
 footer { flex-wrap: wrap; }
 @media (max-width: 800px) {
   .freebie-summary { flex-wrap: wrap; gap: 12px; padding: 20px; }
-  .freebie-summary p { flex-basis: 100%; order: 1; }
   .freebie-body { padding: 12px; }
   .freebie-grid { grid-template-columns: minmax(0, 1fr); }
   .freebie-guide, .freebie-context { padding: 20px; }
