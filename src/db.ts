@@ -21,7 +21,8 @@ export async function getDueSourceStates(db: D1Database, now: string): Promise<S
     WHERE next_poll_at IS NULL OR next_poll_at <= ?
     ORDER BY CASE lane WHEN 'official' THEN 1 WHEN 'scout' THEN 2 WHEN 'rumor' THEN 3 ELSE 4 END
   `).bind(now).all<SourceStateRow>();
-  return results;
+  // Retired source rows retain their cursors and audit history, but never run.
+  return results.filter((state) => QUERY_SPECS.some((spec) => spec.name === state.name));
 }
 
 export async function markSourceAttempt(db: D1Database, name: string, now: string): Promise<void> {
@@ -49,7 +50,7 @@ export async function markSourceSuccess(
 
 export async function markSourceFailure(db: D1Database, state: SourceStateRow, now: string, error: string): Promise<void> {
   const failures = state.consecutive_failures + 1;
-  const backoffSeconds = Math.min(1800, Math.max(state.poll_seconds, 60) * (2 ** Math.min(failures - 1, 4)));
+  const backoffSeconds = Math.min(Math.max(1800, state.poll_seconds), Math.max(state.poll_seconds, 60) * (2 ** Math.min(failures - 1, 4)));
   const next = new Date(Date.parse(now) + backoffSeconds * 1000).toISOString();
   await db.prepare(`
     UPDATE source_state
@@ -253,7 +254,10 @@ export async function dashboardData(db: D1Database): Promise<Record<string, unkn
   const runs = batchResults[2]!;
   const deliveryCounts = batchResults[3]!;
   return {
-    sources: sources.results,
+    sources: (sources.results as Array<Record<string, unknown>>).map((source) => ({
+      ...source,
+      enabled: QUERY_SPECS.some((spec) => spec.name === source.name)
+    })),
     signals: signals.results,
     poll_runs: runs.results,
     deliveries: deliveryCounts.results

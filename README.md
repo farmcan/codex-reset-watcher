@@ -6,7 +6,7 @@
 
 在线查看：
 
-- 实时入口：[`codex-reset-watcher.weican16hit.workers.dev`](https://codex-reset-watcher.weican16hit.workers.dev/)，X 信源约每小时检查；
+- 实时入口：[`codex-reset-watcher.weican16hit.workers.dev`](https://codex-reset-watcher.weican16hit.workers.dev/)，仅 Tibo 约每小时检查；
 - English：[`codex-reset-watcher.weican16hit.workers.dev/en/`](https://codex-reset-watcher.weican16hit.workers.dev/en/)；
 - 网络受限备用入口：[`farmcan.github.io/codex-reset-watcher`](https://farmcan.github.io/codex-reset-watcher/)，约每 10 分钟从实时入口同步公开快照。
 
@@ -45,9 +45,11 @@ npm run backtest
 | 通道 | 对象 | 默认频率 | 行为 |
 | --- | --- | ---: | --- |
 | A1 一手 | `@thsottiaux` 帖子与回复 | 1 小时 | 预告、确认、banked、弱暗示分开 |
-| B 侦察 | `@hqmank`、`@UsageReset` | 1 小时 | 发现隐藏回复；同一原帖转述不算独立证据 |
-| C 传闻 | `@rezoundous` 等已知账号 | 1 小时 | 单账号保持低置信；两名独立作者才可升级 |
-| D 发现池 | X 全网相关英文帖子 | 1 小时 | 只入候选池，不直接推送 |
+| B 侦察 | `@hqmank`、`@UsageReset` | 已停用 | 仅保留历史记录 |
+| C 传闻 | `@rezoundous` 等已知账号 | 已停用 | 仅保留历史记录 |
+| D 发现池 | X 全网相关英文帖子 | 已停用 | 仅保留历史记录 |
+
+自 2026-09-15 起，`QUERY_SPECS` 只启用 Tibo。数据库里的旧通道游标与抓取记录保留，调度器只运行配置中启用的通道；API 的 `sources[].enabled` 标记当前是否启用。Tibo 每小时增量抓取，Qwen 每 10 分钟检查未复核内容，已完成的帖子不再调用模型。失败重试不会短于正常抓取间隔。
 
 个人账户反馈不是新的来源等级，而是单条内容的弱证据类型：网页会显示并可单独筛选，但它不能独自证明全局 reset。
 
@@ -56,8 +58,8 @@ X Bearer Token 只存在 Cloudflare Secret 中，不会进入网页、D1 原始�
 ## 架构
 
 ```text
-Cloudflare Cron (hourly)
-  -> X source adapters + per-query since_id
+Cloudflare Cron (every 10 minutes)
+  -> hourly Tibo-only X query + since_id
   -> deterministic classifier
   -> event grouping / derivative dedupe / official inhibition
   -> D1 posts + signals + poll health + notification outbox

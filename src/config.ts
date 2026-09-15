@@ -9,32 +9,6 @@ export const QUERY_SPECS: QuerySpec[] = [
     allowedAuthors: ["thsottiaux"],
     query:
       'from:thsottiaux (Codex OR "ChatGPT Work" OR tokens OR milestone OR banked OR "rate limits" OR "usage limits" OR "reset button" OR reset OR "you know what\'s coming") -is:retweet'
-  },
-  {
-    name: "community-scouts",
-    lane: "scout",
-    pollSeconds: 3600,
-    maxResults: 50,
-    allowedAuthors: ["UsageReset", "hqmank"],
-    query:
-      '(from:UsageReset OR from:hqmank) (Codex OR "ChatGPT Work" OR reset OR tokens OR limits OR quota) -is:retweet'
-  },
-  {
-    name: "known-rumor-accounts",
-    lane: "rumor",
-    pollSeconds: 3600,
-    maxResults: 50,
-    allowedAuthors: ["kimmonismus", "rezoundous", "TokenGremlin", "argofowl"],
-    query:
-      '(from:kimmonismus OR from:rezoundous OR from:TokenGremlin OR from:argofowl) (Codex OR "ChatGPT Work" OR reset OR tokens OR limits OR quota) -is:retweet'
-  },
-  {
-    name: "discovery-pool",
-    lane: "discovery",
-    pollSeconds: 3600,
-    maxResults: 100,
-    query:
-      '(Codex OR "ChatGPT Work") (reset OR "usage limits" OR "rate limits" OR quota OR tokens OR allowance) -is:retweet -is:reply lang:en'
   }
 ];
 
