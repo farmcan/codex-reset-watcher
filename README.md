@@ -188,6 +188,6 @@ D1按信号、通道及目标去重，发送前原子认领，记录钉钉 `proc
 
 网站、钉钉应用、机器人、群头像与消息预览统一使用现有小猫素材 `public/brand-zh.png` / `public/brand-en.png`。旧版 `public/logo.svg` 已删除，不再使用或重新生成替代标志。
 
-全员提醒：按官方 channel SDK 的 `isAtAll` 字段请求全员 @（源码依据：https://github.com/DingTalk-Real-AI/dingtalk-channel-sdk-python/blob/main/src/dingtalk_channel_sdk/send.py ）。云端测试已有接口受理回执和群消息，但回执不提供全员提醒结果；`mentions_all_requested=true` 与 `mention_delivery_verified=false` 区分请求和接收端验收。云端全员 DING 未打通，原接口拒绝缺少 `Premium.Ding.Write`。
+全员提醒：按官方 channel SDK 的 `isAtAll` 字段请求全员 @（源码依据：https://github.com/DingTalk-Real-AI/dingtalk-channel-sdk-python/blob/main/src/dingtalk_channel_sdk/send.py ）。2026-10-22 用户确认 21:41 的 Cloudflare Worker 测试消息实际触发了“@所有人”提醒；公开状态 `mention_delivery_verified=true`，依据为接收端确认。单次后续测试的受理回执仍不代表每位成员已读。云端全员 DING 尚未打通，原接口拒绝缺少 `Premium.Ding.Write`。
 
 模型复核不会给历史/补录内容新增通知资格；对原本已排队且复核仍合格的新信号保留资格，降级后取消待发送队列，避免管理员测试能发送而自然新信号被复核清零。

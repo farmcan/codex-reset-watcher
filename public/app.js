@@ -278,7 +278,7 @@ function renderHealth(status) {
   const capability = document.querySelector("#notification-capability");
   const deliveryIssues = (ding?.delivery_counts || []).some(row => ["failed", "unknown"].includes(row.status) && row.count > 0);
   if (capability) capability.textContent = ding?.configured
-    ? (deliveryIssues ? ui("云端钉钉通知有异常 · 查看下方监控健康状态", "Cloud DingTalk delivery needs attention · see monitoring health below") : ui("云端钉钉群通知已启用 · 普通消息，非 DING · 无需本机在线", "Cloud DingTalk group alerts enabled · messages, not DING · no local computer needed"))
+    ? (deliveryIssues ? ui("云端钉钉通知有异常 · 查看下方监控健康状态", "Cloud DingTalk delivery needs attention · see monitoring health below") : ding.mention_delivery_verified ? ui("云端钉钉全员 @ 已验证 · 普通消息，非 DING · 无需本机在线", "Cloud DingTalk @all verified · messages, not DING · no local computer needed") : ui("云端钉钉群通知已启用 · 普通消息，非 DING · 无需本机在线", "Cloud DingTalk group alerts enabled · messages, not DING · no local computer needed"))
     : ui("支持云端钉钉群通知 · 当前未配置", "Cloud DingTalk group alerts supported · not configured");
 }
 
@@ -870,7 +870,7 @@ function renderSystem(status) {
     [ui("整体状态", "Overall status"), status.live.overall === "healthy" ? ui("正常", "Healthy") : status.live.overall === "initializing" ? ui("初始化", "Initializing") : ui("需关注", "Needs attention"), PAGES_SNAPSHOT ? ui(`备用页面约每 10 分钟同步；实时源每 ${status.live.expected_poll_seconds || 120} 秒检查`, `Fallback page syncs about every 10 minutes; live source checks every ${status.live.expected_poll_seconds || 120} seconds`) : ui(`官方源每 ${status.live.expected_poll_seconds || 120} 秒检查`, `First-party source checks every ${status.live.expected_poll_seconds || 120} seconds`)],
     [ui("官方源最后成功", "Last first-party success"), official.last_success_at ? formatTime(official.last_success_at, true) : ui("尚未成功", "No success yet"), official.last_error || ui("没有记录错误", "No recorded error")],
     [ui("邮件提醒", "Email alerts"), status.live.email.configured ? ui("已启用", "Enabled") : ui("未配置", "Not configured"), status.live.email.configured ? ui(`最低 ${status.live.email.minimum_severity} 才发送`, `Sends at ${status.live.email.minimum_severity} severity or above`) : ui("补收件人、发件域名和 Resend Secret 后启用", "Add recipient, verified sender domain, and Resend secret to enable")],
-    [ui("钉钉通知", "DingTalk alerts"), status.live.dingtalk?.configured ? ui("云端群消息已启用", "Cloud group messages enabled") : ui("未配置", "Not configured"), ui("普通机器人消息，非 DING。新信号达到通知阈值才推送；持久化去重，结果未知不自动重发。", "Robot messages, not DING. Only new eligible signals are sent; durable deduplication; unknown results are not replayed.") + " " + (status.live.dingtalk?.delivery_counts || []).map(row => `${row.status}: ${row.count}`).join(" · ")],
+    [ui("钉钉通知", "DingTalk alerts"), status.live.dingtalk?.configured ? (status.live.dingtalk?.mention_delivery_verified ? ui("云端全员 @ 已验证", "Cloud @all verified") : ui("云端群消息已启用", "Cloud group messages enabled")) : ui("未配置", "Not configured"), ui("普通机器人消息，非 DING。新信号达到通知阈值才推送；持久化去重，结果未知不自动重发。", "Robot messages, not DING. Only new eligible signals are sent; durable deduplication; unknown results are not replayed.") + " " + (status.live.dingtalk?.delivery_counts || []).map(row => `${row.status}: ${row.count}`).join(" · ")],
     [ui("实时记录", "Live records"), ui(`${(status.live.signals || []).length} 条`, `${(status.live.signals || []).length} items`), ui("页面显示最近 100 条有效信号", "The page shows the latest 100 valid signals")]
   ];
   cards.forEach(([label, value, note]) => {
