@@ -183,3 +183,7 @@ D1按信号、通道及目标去重，发送前原子认领，记录钉钉 `proc
 [Base URL 总览](https://help.aliyun.com/zh/model-studio/base-url)。
 
 受保护的 `POST /api/admin/review?limit=1` 可直接验证线上复核流程（上限 20 条），使用 `ADMIN_TOKEN` 或专用于复核的 `REVIEW_ADMIN_TOKEN`。失败原因区分模型调用与数据库写入，敏感凭据经过脱敏；首页分别显示排队和失败待重试数量。
+
+### 项目品牌
+
+网站、钉钉应用、机器人、群头像与消息预览统一使用现有小猫素材 `public/brand-zh.png` / `public/brand-en.png`。旧版 `public/logo.svg` 已删除，不再使用或重新生成替代标志。
