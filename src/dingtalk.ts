@@ -133,7 +133,7 @@ export async function testDingTalk(env: Env, key: string): Promise<Record<string
   let result: Record<string, unknown>;
   try {
     const receipt = await sendDingTalk(env, "[Codex Reset Watcher] Cloudflare Worker 生产通道测试成功。怎么蹬中英文已上线；后续新信号由云端定时任务和D1待发送账本推送，无需本机在线。全员 @ 普通群消息，非 DING；这不是重置公告。https://codex-reset-watcher.weican16hit.workers.dev/#pedal");
-    result = { status: "sent", provider_receipt: receipt, channel: "dingtalk_group_message", true_ding: false, mentions_all: true };
+    result = { status: "sent", provider_receipt: receipt, channel: "dingtalk_group_message", true_ding: false, mentions_all_requested: true, mention_delivery_verified: false };
   } catch (error) { result = { status: error instanceof DeliveryError ? error.state : "unknown", error: error instanceof DeliveryError ? error.message : "Unknown result" }; }
   await env.DB.prepare("UPDATE app_state SET value=?,updated_at=? WHERE key=?").bind(JSON.stringify(result), now, stateKey).run();
   return result;

@@ -57,6 +57,15 @@ describe("durable cloud DingTalk delivery", () => {
     expect(sqlite.prepare('SELECT should_notify FROM signals').get().should_notify).toBe(0);
     expect(await processDingTalkDeliveries(env,now)).toEqual({sent:0,failed:0});
   });
+  it("cancels an eligible alert when review downgrades it instead of stranding pending work", async () => {
+    const {env,sqlite}=await queued();
+    sqlite.prepare("UPDATE posts SET author='thsottiaux', text='A reset might be interesting.'").run();env.DASHSCOPE_API_KEY='fixture';
+    const verdict={post_id:'p',event_type:'weak_hint',reset_mode:'unknown',confidence:0.6,reason:'Only a hint',title_zh:'弱线索',title_en:'A hint',summary_zh:'不能确认重置',summary_en:'Not a reset announcement',evidence:['reset might be interesting'],effective_time:null,approximate_time:false};
+    const fetch=vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({reviews:[verdict]})}}]})));vi.stubGlobal('fetch',fetch);
+    await processReviews(env);expect(sqlite.prepare('SELECT should_notify FROM signals').get().should_notify).toBe(0);
+    expect(sqlite.prepare('SELECT status FROM deliveries').get().status).toBe('cancelled');
+    expect(await processDingTalkDeliveries(env,now)).toEqual({sent:0,failed:0});expect(fetch).toHaveBeenCalledTimes(1);
+  });
   it("quarantines ambiguous network results and never retries them", async () => {
     const {env,sqlite}=await queued(); const fetch=vi.fn().mockResolvedValueOnce(tokenResponse()).mockRejectedValueOnce(new Error('timeout'));
     vi.stubGlobal('fetch',fetch);await processDingTalkDeliveries(env,now);await processDingTalkDeliveries(env,'2026-10-22T14:30:00.000Z');
