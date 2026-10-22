@@ -122,6 +122,23 @@ npx wrangler secret put ALERT_EMAIL_TO
 
 `ALERT_EMAIL_FROM` 必须来自 Resend 已验证域名。默认只有 `medium` 或 `high` 信号发邮件；单账号低置信传闻只出现在网页/RSS。配置、测试与失败语义见 [`docs/email-alerts.md`](docs/email-alerts.md)。
 
+### 云端钉钉通知
+
+Cloudflare Worker 可直接使用企业内机器人发送普通群消息，无需本机 DWS 常驻。
+在 Worker Secrets 配置 `DINGTALK_APP_KEY`、`DINGTALK_APP_SECRET`、`DINGTALK_GROUP_ID`，并把相应机器人加入目标群；先执行远程数据库迁移。
+主页按实际配置显示能力，`GET /api/status` 的 `live.dingtalk` 与 `live.deliveries` 提供配置和发送状态。
+这条通道是普通群消息，**不是 DING**。2026-10-22 实测现有应用的 DING 请求被 `Premium.Ding.Write` 权限拒绝；未申请升级或使用短信/电话。
+
+新信号与邮件沿用相同阈值、首次基线静默及官方信号抑制规则；不扫描最近100条API列表补发历史。
+D1按信号、通道及目标去重，发送前原子认领，记录钉钉 `processQueryKey`。应用凭证自动换取短期token；认证或限流明确拒绝、取token失败最多再试2次。
+网络超时、服务端结果不明或发送中断进入 `unknown`，不盲目重发；权限/参数明确拒绝进入 `failed`。人工应先核对目标群与业务回执，再处理异常记录。
+账号权限撤销、机器人移除及钉钉服务异常仍会影响发送；配置成功不保证永不失效。
+
+带管理员凭据的 `POST /api/admin/test-dingtalk` 需提供稳定 `Idempotency-Key`（8–100位字母、数字、下划线或短横线）。
+同一个key只尝试一次，重复请求返回持久化结果；测试不写入公开重置信号。
+可临时设置专用 `DINGTALK_TEST_TOKEN` 进行验收，完成后删除；真正通知由既有10分钟Cron处理。
+公开交付事件同步 Seed 的 `/tasks/`；该状态页目前为审查后发布的静态快照，Worker 的逐轮心跳和通知失败尚未自动回写，实时状态以本服务API为准。
+
 ## API
 
 - `GET /api/status`：历史结论、实时信号、数据源/轮询/邮件健康度

@@ -7,3 +7,9 @@ DASHSCOPE_API_KEY=
 RESEND_API_KEY=
 ALERT_EMAIL_FROM=Codex Reset Watcher <alerts@example.com>
 ALERT_EMAIL_TO=you@example.com
+
+# Optional cloud-native DingTalk robot group messages (not DING).
+# Store real credentials only as Worker secrets.
+DINGTALK_APP_KEY=
+DINGTALK_APP_SECRET=
+DINGTALK_GROUP_ID=

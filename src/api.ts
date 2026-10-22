@@ -6,6 +6,7 @@ import { runPoll } from "./poll";
 import type { Env } from "./types";
 import { processReviews, reviewHealth } from "./model-review";
 import { acquirePollLock, releasePollLock } from "./db";
+import { dingtalkConfigured, testDingTalk } from "./dingtalk";
 
 const JSON_HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
@@ -47,6 +48,11 @@ async function healthSnapshot(env: Env): Promise<Record<string, unknown>> {
       provider: env.EMAIL_PROVIDER,
       minimum_severity: env.EMAIL_MIN_SEVERITY,
       recipient_configured: Boolean(env.ALERT_EMAIL_TO)
+    },
+    dingtalk: {
+      configured: dingtalkConfigured(env), channel: "robot_group_message", true_ding: false,
+      delivery_counts: (live.deliveries as Array<{channel: string; status: string; count: number}>).filter(row => row.channel === "dingtalk"),
+      automatic_token_refresh: true
     },
     ...live
   };
@@ -109,6 +115,13 @@ export async function handleApi(request: Request, env: Env): Promise<Response | 
     } catch (error) {
       return json({ status: "failed", error: error instanceof Error ? error.message : String(error) }, 502);
     }
+  }
+  if (request.method === "POST" && url.pathname === "/api/admin/test-dingtalk") {
+    if (!await authorized(request, env) && !await authorized(request, { ...env, ADMIN_TOKEN: env.DINGTALK_TEST_TOKEN })) return json({error: "unauthorized"}, 401);
+    const key = request.headers.get("Idempotency-Key") ?? "";
+    if (!/^[a-zA-Z0-9_-]{8,100}$/.test(key)) return json({error: "Idempotency-Key required (8-100 alphanumeric characters)"}, 400);
+    const result = await testDingTalk(env, key);
+    return json(result, result.status === "sent" ? 200 : 502);
   }
   return null;
 }

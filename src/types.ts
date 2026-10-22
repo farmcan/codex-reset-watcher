@@ -33,6 +33,10 @@ export interface Env {
   QWEN_BASE_URL?: string;
   QWEN_MODEL?: string;
   REVIEW_ADMIN_TOKEN?: string;
+  DINGTALK_APP_KEY?: string;
+  DINGTALK_APP_SECRET?: string;
+  DINGTALK_GROUP_ID?: string;
+  DINGTALK_TEST_TOKEN?: string;
 }
 
 export interface QuerySpec {

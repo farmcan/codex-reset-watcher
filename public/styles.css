@@ -365,3 +365,4 @@ footer { flex-wrap: wrap; }
   .pedal-card { padding: 18px; }
   .pedal-panel .freebie-summary h2 { font-size: 22px; }
 }
+.notification-capability { font-size: 13px; line-height: 1.65; color: var(--muted, #52645a); border-left: 3px solid #4f7a61; padding-left: 10px; max-width: 42em; }

@@ -20,6 +20,7 @@ import { processPendingDeliveries, severityAtLeast } from "./notifications";
 import type { Env, PollSummary, Signal, SourceStateRow } from "./types";
 import { fetchXQuery } from "./x-source";
 import { processReviews } from "./model-review";
+import { queueDingTalkDelivery, processDingTalkDeliveries } from "./dingtalk";
 
 export async function runPoll(env: Env, now = new Date()): Promise<PollSummary> {
   const startedAt = now.toISOString();
@@ -106,6 +107,7 @@ async function runPollWithLock(env: Env, startedAt: string): Promise<PollSummary
 
   await processReviews(env);
   const deliveries = await processPendingDeliveries(env, new Date().toISOString());
+  const dingTalk = await processDingTalkDeliveries(env, new Date().toISOString());
   const finishedAt = new Date().toISOString();
   const succeeded = states.length - errors.length;
   const status: PollSummary["status"] = states.length === 0
@@ -123,7 +125,7 @@ async function runPollWithLock(env: Env, startedAt: string): Promise<PollSummary
     fetchedCount,
     insertedCount,
     relevantCount,
-    notifiedCount: deliveries.sent,
+    notifiedCount: deliveries.sent + dingTalk.sent,
     errors
   };
   await finishPollRun(env.DB, runId, summary);
@@ -135,4 +137,5 @@ async function maybeQueueEmail(env: Env, signal: Signal, priming: boolean, now: 
   const minimum = env.EMAIL_MIN_SEVERITY in SEVERITY_RANK ? env.EMAIL_MIN_SEVERITY : "medium";
   if (!severityAtLeast(signal.severity, minimum)) return;
   await queueEmailDelivery(env, signal, now);
+  await queueDingTalkDelivery(env, signal, now);
 }
