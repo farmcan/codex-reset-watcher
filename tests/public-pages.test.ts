@@ -87,3 +87,34 @@ it('keeps an official event anchor visible during a flood of delivery reports',(
   signals.push({post_id:'official',created_at:'2026-09-07T19:24:57Z',source_tier:'A1'});
   expect(select({live:{signals}}).some((s:{post_id:string})=>s.post_id==='official')).toBe(true);
 });
+
+
+ describe('external Codex workflows', () => {
+  it('offers six reviewed projects on both pages without enabling the retired greeting loop', () => {
+    const repositories = ['obra/superpowers', 'github/spec-kit', 'smtg-ai/claude-squad', 'superset-sh/superset', 'mikeyobrien/ralph-orchestrator', 'umputun/ralphex'];
+    for (const page of [chinese, english]) {
+      expect(page.match(/href="#pedal"/g)).toHaveLength(2);
+      expect(page).toContain('id="pedal-title"');
+      expect(page).toContain('<details class="freebie-panel pedal-panel">');
+      const section = page.slice(page.indexOf('<section id="pedal"'), page.indexOf('<section class="system"'));
+      expect(section.match(/class="source-card pedal-card"/g)).toHaveLength(6);
+      for (const repository of repositories) expect(section).toContain(`href="https://github.com/${repository}"`);
+      expect(section).toContain('datetime="2026-10-22"');
+      expect(section).toContain('Elastic License 2.0');
+      expect(section).toContain('--yolo');
+      expect(section).toContain('danger-full-access');
+      expect(section).toContain('docs/research-pedaling-workflows.md');
+      expect(section).not.toContain('<script');
+      expect(section).not.toContain('copy-command');
+      expect(page).toMatch(/<template id="hourly-greeting-template">[\s\S]*id="freebie"[\s\S]*<\/template>/);
+      expect(page).not.toContain('src="freebie.js');
+      expect(page).toContain('<span class="section-index">05</span><h2 id="system-title">');
+    }
+    expect(chinese).toContain('猛蹬：怎么蹬');
+    expect(chinese).toContain('未进行本机实测');
+    expect(chinese).toContain('worktree 不是安全沙箱');
+    expect(english).toContain('not tested on your machine');
+    expect(english).toContain('worktree is not a sandbox');
+    expect(english).toContain('They do not increase Codex quota');
+  });
+});

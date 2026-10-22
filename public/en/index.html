@@ -6,7 +6,7 @@
     <meta name="description" content="Track Codex usage-reset signals: first-party warnings, community chatter, delivery reports, audited history, and alerts.">
     <title>Codex Reset Watcher</title>
     <link rel="icon" href="../brand-en.png" type="image/png">
-    <link rel="stylesheet" href="../styles.css?v=20260910-3">
+    <link rel="stylesheet" href="../styles.css?v=20261022-1">
     <script type="module" src="../app.js?v=20260915-1"></script>
   </head>
   <body>
@@ -20,6 +20,7 @@
           <a href="#signals">Latest signals</a>
           <a href="#sources">Sources</a>
           <a href="#history">Audited history</a>
+          <a href="#pedal">Workflows</a>
           <a href="../feed.xml">RSS</a>
           <a href="../" lang="zh-CN">中文</a>
         </nav>
@@ -41,6 +42,7 @@
                 <span>Check my Codex usage</span><span aria-hidden="true">↗</span>
               </a>
               <small>Open ChatGPT to view your personal Codex usage</small>
+              <a class="pedal-entry" href="#pedal">Explore workflows ↓</a>
             </div>
           </div>
           <figure class="hero-visual">
@@ -158,9 +160,73 @@
       </section>
       </template>
 
+      <section id="pedal" aria-labelledby="pedal-title">
+        <details class="freebie-panel pedal-panel">
+          <summary class="section-heading freebie-summary">
+            <div><span class="section-index">04</span><h2 id="pedal-title">Put Codex to work</h2></div>
+            <span class="freebie-toggle"><span class="when-closed">6 projects · 3 workflows · Explore</span><span class="when-open">Collapse</span></span>
+          </summary>
+          <div class="freebie-body">
+            <p>Run worthwhile work, not empty loops. Six external projects explicitly support Codex: two structure work, two manage parallel tasks, and two keep a bounded loop moving. Pick the approach your task needs.</p>
+            <p class="pedal-reviewed">Documentation and source reviewed · <time datetime="2026-10-22">2026-10-22</time></p>
+            <div class="source-method"><strong>Choose your workflow</strong><ul>
+              <li>One feature, done carefully: Superpowers / Spec Kit.</li>
+              <li>Several independent tasks: Claude Squad / Superset.</li>
+              <li>Execute a clear plan continuously: Ralph Orchestrator / ralphex. Review permissions, isolation and stop conditions first.</li>
+            </ul></div>
+            <div class="source-grid pedal-grid">
+              <article class="source-card pedal-card">
+                <header><div><small>Planning &amp; quality</small><h3><a href="https://github.com/obra/superpowers" target="_blank" rel="noreferrer noopener">Superpowers ↗</a></h3></div></header>
+                <p>Connects design, implementation plans, execution, TDD and code review. Complete a feature instead of repeatedly prompting “continue.”</p>
+                <p><strong>Start: </strong>Follow the upstream Codex guide; agree on requirements, design and acceptance checks first.</p>
+                <p class="source-caveat"><strong>Caveat: </strong>Workflow discipline, not extra quota. Small tasks and explicit checks beat empty loops.</p>
+                <p class="pedal-meta">MIT · <a href="https://github.com/obra/superpowers#codex-cli" target="_blank" rel="noreferrer noopener">Upstream guide / evidence ↗</a></p>
+              </article>
+              <article class="source-card pedal-card">
+                <header><div><small>Planning &amp; quality</small><h3><a href="https://github.com/github/spec-kit" target="_blank" rel="noreferrer noopener">Spec Kit ↗</a></h3></div></header>
+                <p>Organizes development around specifications, plans and tasks, with Codex support. Useful for unclear requirements and multi-module features.</p>
+                <p><strong>Start: </strong>Follow the Codex integration guide, then review specification, planning, tasks and implementation in order.</p>
+                <p class="source-caveat"><strong>Caveat: </strong>Not an unattended loop. Verify behavior and tests, not the volume of generated documents.</p>
+                <p class="pedal-meta">MIT · <a href="https://github.com/github/spec-kit/blob/main/docs/integrations/codex.md" target="_blank" rel="noreferrer noopener">Upstream guide / evidence ↗</a></p>
+              </article>
+              <article class="source-card pedal-card">
+                <header><div><small>Parallel tasks</small><h3><a href="https://github.com/smtg-ai/claude-squad" target="_blank" rel="noreferrer noopener">Claude Squad ↗</a></h3></div></header>
+                <p>Also supports Codex despite its name. Manages tasks using tmux sessions, separate Git worktrees and branches, with progress and diff views.</p>
+                <p><strong>Start: </strong>Prepare Codex, tmux and gh; follow upstream instructions and start with two independent tasks.</p>
+                <p class="source-caveat"><strong>Caveat: </strong>A worktree is not a sandbox and does not eliminate merge conflicts. Review diffs before merging.</p>
+                <p class="pedal-meta">AGPL-3.0 · <a href="https://github.com/smtg-ai/claude-squad#usage" target="_blank" rel="noreferrer noopener">Upstream guide / evidence ↗</a></p>
+              </article>
+              <article class="source-card pedal-card">
+                <header><div><small>Parallel tasks</small><h3><a href="https://github.com/superset-sh/superset" target="_blank" rel="noreferrer noopener">Superset ↗</a></h3></div></header>
+                <p>A desktop workspace for Codex sessions, worktrees, diffs and browser previews. Run feature, testing and documentation tasks in parallel.</p>
+                <p><strong>Start: </strong>Add a repository, create a workspace per task, choose Codex, then inspect Changes and run tests.</p>
+                <p class="source-caveat"><strong>Caveat: </strong>macOS is primary; Linux is experimental and Windows is not yet supported. Worktrees are not sandboxes; the license is ELv2, not MIT.</p>
+                <p class="pedal-meta">Elastic License 2.0 · <a href="https://github.com/superset-sh/superset#start-with-one-task" target="_blank" rel="noreferrer noopener">Upstream guide / evidence ↗</a></p>
+              </article>
+              <article class="source-card pedal-card">
+                <header><div><small>Continuous execution · Advanced</small><h3><a href="https://github.com/mikeyobrien/ralph-orchestrator" target="_blank" rel="noreferrer noopener">Ralph Orchestrator ↗</a></h3></div></header>
+                <p>Coordinates iterative work with events, specialized roles, Codex support, task tracking and validation gates.</p>
+                <p><strong>Start: </strong>Define the task, validation commands, iteration/runtime limits and stop conditions; inspect launch arguments first.</p>
+                <p class="source-caveat"><strong>Caveat: </strong>The reviewed Codex backend defaults to --yolo. Do not run it blindly on your everyday machine. Review permissions and provide external isolation; prompts are not sandboxes.</p>
+                <p class="pedal-meta">MIT · <a href="https://github.com/mikeyobrien/ralph-orchestrator/blob/b5789dfbb25bd4aa65ce565c756d95acc8c42f76/crates/ralph-adapters/src/cli_backend.rs#L357-L367" target="_blank" rel="noreferrer noopener">Upstream guide / evidence ↗</a></p>
+              </article>
+              <article class="source-card pedal-card">
+                <header><div><small>Continuous execution · Advanced</small><h3><a href="https://github.com/umputun/ralphex" target="_blank" rel="noreferrer noopener">ralphex ↗</a></h3></div></header>
+                <p>Reads a plan with task checkboxes and validation commands, executes tasks, creates commits and runs review phases. Supports native Codex execution and worktrees.</p>
+                <p><strong>Start: </strong>Prepare a small plan; verify the CLI version, permissions and iteration limit in an isolated environment before one complete run.</p>
+                <p class="source-caveat"><strong>Caveat: </strong>Requires Codex CLI ≥ 0.130.0. Codex mode defaults to danger-full-access and creates commits. Self-review is not independent validation or permission to push/deploy.</p>
+                <p class="pedal-meta">MIT · <a href="https://github.com/umputun/ralphex#codex-executor-mode" target="_blank" rel="noreferrer noopener">Upstream guide / evidence ↗</a></p>
+              </article>
+            </div>
+            <p class="source-caveat pedal-boundary">These are external projects, not site features or quality guarantees. Documentation and selected source code were reviewed; the tools were not tested on your machine. They do not increase Codex quota. Parallel work and loops may consume it faster; usage and billing depend on your actual login method. Define tasks, acceptance checks and stop conditions first. Do not assume permission to push or deploy, or run empty loops. Existing distinctions between future hard resets, confirmed resets and banked resets remain unchanged.</p>
+            <a class="node-link" href="https://github.com/farmcan/codex-reset-watcher/blob/main/docs/research-pedaling-workflows.md" target="_blank" rel="noreferrer noopener">Full comparison and sources ↗</a>
+          </div>
+        </details>
+      </section>
+
       <section class="system" aria-labelledby="system-title">
         <div class="section-heading">
-          <div><span class="section-index">04</span><h2 id="system-title">Is the monitor actually working?</h2></div>
+          <div><span class="section-index">05</span><h2 id="system-title">Is the monitor actually working?</h2></div>
           <p>Last success time, failures, and email configuration are visible.</p>
         </div>
         <div id="system-grid" class="system-grid"></div>
@@ -173,7 +239,7 @@
     </main>
 
     <footer>
-      <p class="site-credit"><a href="https://github.com/farmcan/codex-reset-watcher" target="_blank" rel="noreferrer noopener">farmcan / Codex Reset Watcher</a> · Built with Codex · Updated <time datetime="2026-09-10">2026-09-10</time></p>
+      <p class="site-credit"><a href="https://github.com/farmcan/codex-reset-watcher" target="_blank" rel="noreferrer noopener">farmcan / Codex Reset Watcher</a> · Built with Codex · Updated <time datetime="2026-10-22">2026-10-22</time></p>
       <p>Open source, unofficial, and unaffiliated with OpenAI, X, or any monitored account. The logo is an original project SVG.</p>
       <div><a id="status-api-link" href="../snapshots/status.json">JSON API</a><a id="history-api-link" href="../snapshots/history.json">History data</a><a href="../feed.xml">RSS</a></div>
     </footer>
