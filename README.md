@@ -127,7 +127,7 @@ npx wrangler secret put ALERT_EMAIL_TO
 Cloudflare Worker 可直接使用企业内机器人发送普通群消息，无需本机 DWS 常驻。
 在 Worker Secrets 配置 `DINGTALK_APP_KEY`、`DINGTALK_APP_SECRET`、`DINGTALK_GROUP_ID`，并把相应机器人加入目标群；先执行远程数据库迁移。
 主页按实际配置显示能力，`GET /api/status` 的 `live.dingtalk` 与 `live.deliveries` 提供配置和发送状态。
-这条通道是普通群消息，**不是 DING**。2026-10-22 实测现有应用的 DING 请求被 `Premium.Ding.Write` 权限拒绝；未申请升级或使用短信/电话。
+这条通道是普通群消息，**不是 DING**。2026-10-22 22:29（北京时间）从生产 Cloudflare Worker 实际调用应用内 DING 接口，返回 HTTP 403 / `Forbidden.AccessDenied.AccessTokenPermissionDenied`，缺少 `Premium.Ding.Write`；没有生成 `openDingId`，未发出 DING。临时测试入口与令牌已删除，未申请升级或使用短信/电话。
 
 新信号与邮件沿用相同阈值、首次基线静默及官方信号抑制规则；不扫描最近100条API列表补发历史。
 D1按信号、通道及目标去重，发送前原子认领，记录钉钉 `processQueryKey`。应用凭证自动换取短期token；认证或限流明确拒绝、取token失败最多再试2次。
