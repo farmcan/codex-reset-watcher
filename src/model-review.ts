@@ -135,7 +135,7 @@ export async function processReviews(env: Env, limit = 20): Promise<void> {
               signal.effectiveTime,+signal.approximateTime,signal.clusterKey,
               +(['high','medium'].includes(signal.severity) && ['explicit_reset','scheduled_reset'].includes(signal.eventType)),
               signal.reason,JSON.stringify(signal.evidence),post.postId).run();
-          if (signal.severity === 'none' || signal.eventType === 'unrelated') {
+          if (!['high','medium'].includes(signal.severity) || !['explicit_reset','scheduled_reset'].includes(signal.eventType)) {
             await env.DB.prepare("UPDATE deliveries SET status='cancelled' WHERE signal_id=? AND status='pending'").bind(signal.signalId).run();
           }
           await env.DB.prepare(`UPDATE model_reviews SET status='complete',attempts=attempts+1,reviewed_at=?,model=?,prompt_version=?,result_json=?,last_error=NULL WHERE post_id=?`)
