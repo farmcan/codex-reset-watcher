@@ -38,6 +38,7 @@
             <h1 id="page-title">找到重置机会，<br>站起来猛蹬。</h1>
             <p class="hero-copy">每小时只追踪 Tibo 的新帖与回复；历史公告、社区线索和到账反馈保留供查阅。</p>
             <p id="notification-capability" class="notification-capability" aria-live="polite">正在检查云端钉钉通知…</p>
+            <p class="dingtalk-contact">钉钉号: <code id="dingtalk-contact">d4r_yr1im7hv6</code> · 添加我，拉你进跨组织通知群</p>
             <div class="hero-actions">
               <a class="usage-link" href="https://chatgpt.com/codex/settings/usage" target="_blank" rel="noreferrer noopener" aria-label="前往 ChatGPT 查看我的 Codex 额度">
                 <span>查看我的 Codex 额度</span><span aria-hidden="true">↗</span>
@@ -164,63 +165,54 @@
       <section id="pedal" aria-labelledby="pedal-title">
         <details class="freebie-panel pedal-panel">
           <summary class="section-heading freebie-summary">
-            <div><span class="section-index">04</span><h2 id="pedal-title">猛蹬：怎么蹬</h2></div>
-            <span class="freebie-toggle"><span class="when-closed">6 个项目 · 3 类工作流 · 展开</span><span class="when-open">收起</span></span>
+            <div><span class="section-index">04</span><h2 id="pedal-title">Token maxxing：剩余额度做什么</h2></div>
+            <span class="freebie-toggle"><span class="when-closed">4 个项目 · 4 种实际产物 · 展开</span><span class="when-open">收起</span></span>
           </summary>
           <div class="freebie-body">
-            <p>有任务再猛蹬，不为清空额度空转。6 个明确支持 Codex 的外部项目：2 个帮你拆任务，2 个帮你并行，2 个帮你持续执行。按任务选一种，不必全部安装。</p>
-            <p class="pedal-reviewed">文档与源码核验 · <time datetime="2026-10-22">2026-10-22</time></p>
-            <div class="source-method"><strong>怎么选</strong><ul>
-              <li>一个需求做扎实：Superpowers / Spec Kit。</li>
-              <li>多个独立任务并行：Claude Squad / Superset。</li>
-              <li>已有明确计划持续执行：Ralph Orchestrator / ralphex，先检查权限、隔离与停止条件。</li>
+            <p>重置前还有剩余额度？这里直接给出能留下成果的任务：修代码、测性能、找 bug、整理资料。先选产物，再选工具。</p>
+            <p class="pedal-reviewed">上游文档与部分源码核验 · <time datetime="2026-10-22">2026-10-22</time></p>
+            <div class="source-method"><strong>先这样挑一件</strong><ul>
+              <li>20–40 分钟：修 1–3 个可复现问题，留下回归测试。</li>
+              <li>30–60 分钟：围绕一个固定基准测性能，留下实验日志。</li>
+              <li>没有代码任务：整理几份已有资料，留下带出处的知识卡。</li>
             </ul></div>
             <div class="source-grid pedal-grid">
               <article class="source-card pedal-card">
-                <header><div><small>规划与质量</small><h3><a href="https://github.com/obra/superpowers" target="_blank" rel="noreferrer noopener">Superpowers ↗</a></h3></div></header>
-                <p>把需求讨论、实施计划、任务执行、TDD 和代码复核串起来，适合把一个功能做完整，而不是反复催“继续”。</p>
-                <p><strong>怎么开始：</strong>按上游 Codex 安装说明启用，先确认需求、设计和验收条件。</p>
-                <p class="source-caveat"><strong>注意：</strong>这是工作方法和技能，不会增加额度；小任务和明确验收比空转更有用。</p>
-                <p class="pedal-meta">MIT · <a href="https://github.com/obra/superpowers#codex-cli" target="_blank" rel="noreferrer noopener">上游说明 / 核验依据 ↗</a></p>
+                <header><div><small>清技术债</small><h3><a href="https://github.com/peteromallet/desloppify" target="_blank" rel="noreferrer noopener">Desloppify ↗</a></h3></div></header>
+                <p>把重复代码、复杂模块和错误处理问题变成可逐项修复的队列。适合已有项目的集中整理。</p>
+                <p><strong>交付什么：</strong>小补丁、回归测试、修改前后差异。</p>
+                <pre class="token-task">扫描当前项目的 src/，只修复 3 个高价值问题。保留现有行为，运行回归测试；40 分钟停止，交付补丁与验证结果。</pre>
+                <p class="source-caveat">支持 Codex；评分是辅助，不是任务终点。自定义 OSNL 许可，商业再分发先读 LICENSE。</p>
+                <p class="pedal-meta">OSNL 0.2 · <a href="https://github.com/peteromallet/desloppify/blob/main/desloppify/data/global/CODEX.md" target="_blank" rel="noreferrer noopener">源码 / 模板依据 ↗</a></p>
               </article>
               <article class="source-card pedal-card">
-                <header><div><small>规划与质量</small><h3><a href="https://github.com/github/spec-kit" target="_blank" rel="noreferrer noopener">Spec Kit ↗</a></h3></div></header>
-                <p>用规格、计划和任务清单组织开发，支持 Codex 集成。适合模糊需求、多模块功能和需要留存的决策。</p>
-                <p><strong>怎么开始：</strong>按 Codex 集成文档初始化，依次完成需求、计划、任务和实施，每阶段审查后继续。</p>
-                <p class="source-caveat"><strong>注意：</strong>不是无人值守循环；别把文档数量当成果，最终仍需测试和行为验收。</p>
-                <p class="pedal-meta">MIT · <a href="https://github.com/github/spec-kit/blob/main/docs/integrations/codex.md" target="_blank" rel="noreferrer noopener">上游说明 / 核验依据 ↗</a></p>
+                <header><div><small>反复测性能</small><h3><a href="https://github.com/TheGreenCedar/codex-autoresearch" target="_blank" rel="noreferrer noopener">Codex Autoresearch ↗</a></h3></div></header>
+                <p>针对测试耗时、构建速度、内存或吞吐量，循环尝试小改动，只保留实测有效的结果。</p>
+                <p><strong>交付什么：</strong>基线、实验日志、测量结果、保留或回滚的补丁。</p>
+                <pre class="token-task">选当前项目一个真实慢路径，固定基准与正确性检查。最多 5 轮或 30 分钟；重复测量，只保留稳定改善，交付前后数据。</pre>
+                <p class="source-caveat">原生面向 Codex；没有可靠指标时先做普通调查，不为循环而循环。</p>
+                <p class="pedal-meta">Apache-2.0 · <a href="https://github.com/TheGreenCedar/codex-autoresearch/blob/main/plugins/codex-autoresearch/skills/codex-autoresearch/SKILL.md" target="_blank" rel="noreferrer noopener">源码 / 模板依据 ↗</a></p>
               </article>
               <article class="source-card pedal-card">
-                <header><div><small>并行任务</small><h3><a href="https://github.com/smtg-ai/claude-squad" target="_blank" rel="noreferrer noopener">Claude Squad ↗</a></h3></div></header>
-                <p>虽然名字带 Claude，也支持 Codex。通过 tmux 会话、独立 Git worktree 和分支管理多个任务，集中查看状态和差异。</p>
-                <p><strong>怎么开始：</strong>准备 Codex、tmux 和 gh，按上游用法开始两个互不依赖的小任务。</p>
-                <p class="source-caveat"><strong>注意：</strong>worktree 不是安全沙箱，也不会消除合并冲突。先复核差异，再合并。</p>
-                <p class="pedal-meta">AGPL-3.0 · <a href="https://github.com/smtg-ai/claude-squad#usage" target="_blank" rel="noreferrer noopener">上游说明 / 核验依据 ↗</a></p>
+                <header><div><small>找 bug、补回归</small><h3><a href="https://github.com/uditgoenka/autoresearch" target="_blank" rel="noreferrer noopener">Autoresearch ↗</a></h3></div></header>
+                <p>用假设、复现、验证、保留或丢弃的循环处理 bug 和质量问题；提供 Codex 技能入口。</p>
+                <p><strong>交付什么：</strong>可复现问题、失败用例、修复及剩余风险。</p>
+                <pre class="token-task">检查本仓库输入校验与错误恢复路径，最多确认 3 个真实 bug。每个先做失败用例再修复，30 分钟停止，不扫描外部系统。</pre>
+                <p class="source-caveat">Codex 使用技能入口；上游的 Claude Code hooks 不等于 Codex 也有相同防护。</p>
+                <p class="pedal-meta">MIT · <a href="https://github.com/uditgoenka/autoresearch/blob/master/.agents/skills/autoresearch/SKILL.md" target="_blank" rel="noreferrer noopener">源码 / 模板依据 ↗</a></p>
               </article>
               <article class="source-card pedal-card">
-                <header><div><small>并行任务</small><h3><a href="https://github.com/superset-sh/superset" target="_blank" rel="noreferrer noopener">Superset ↗</a></h3></div></header>
-                <p>把 Codex 会话、独立 worktree、差异查看和浏览器预览放在一个桌面工作台，适合并行推进功能、测试和文档。</p>
-                <p><strong>怎么开始：</strong>加入已有仓库，每个任务建一个工作区，选择 Codex，再检查 Changes 并运行测试。</p>
-                <p class="source-caveat"><strong>注意：</strong>macOS 是主要平台，Linux 为实验性，Windows 暂无。worktree 不是沙箱；许可为 ELv2，不是 MIT。</p>
-                <p class="pedal-meta">Elastic License 2.0 · <a href="https://github.com/superset-sh/superset#start-with-one-task" target="_blank" rel="noreferrer noopener">上游说明 / 核验依据 ↗</a></p>
-              </article>
-              <article class="source-card pedal-card">
-                <header><div><small>持续执行 · 进阶</small><h3><a href="https://github.com/mikeyobrien/ralph-orchestrator" target="_blank" rel="noreferrer noopener">Ralph Orchestrator ↗</a></h3></div></header>
-                <p>用事件和不同角色组织循环，支持 Codex 后端、任务记录和验证门槛，适合能自动验收的长任务。</p>
-                <p><strong>怎么开始：</strong>先写目标和验证命令，配置迭代数、时长与停止条件，检查启动参数再运行。</p>
-                <p class="source-caveat"><strong>注意：</strong>核验的 Codex 后端默认带 --yolo。不要在日常机器上盲目运行；先审查权限并提供外部隔离，提示词不等于沙箱。</p>
-                <p class="pedal-meta">MIT · <a href="https://github.com/mikeyobrien/ralph-orchestrator/blob/b5789dfbb25bd4aa65ce565c756d95acc8c42f76/crates/ralph-adapters/src/cli_backend.rs#L357-L367" target="_blank" rel="noreferrer noopener">上游说明 / 核验依据 ↗</a></p>
-              </article>
-              <article class="source-card pedal-card">
-                <header><div><small>持续执行 · 进阶</small><h3><a href="https://github.com/umputun/ralphex" target="_blank" rel="noreferrer noopener">ralphex ↗</a></h3></div></header>
-                <p>读取带任务勾选项和验证命令的计划，逐项执行、提交，再进行多轮复核；支持 Codex 原生执行和 worktree。</p>
-                <p><strong>怎么开始：</strong>先准备小计划，在隔离环境核对 CLI 版本、权限和迭代上限，再试一轮完整执行。</p>
-                <p class="source-caveat"><strong>注意：</strong>要求 Codex CLI ≥ 0.130.0；Codex 模式默认 danger-full-access，并自动提交。同模型自审不是独立验证，不能默认允许推送或部署。</p>
-                <p class="pedal-meta">MIT · <a href="https://github.com/umputun/ralphex#codex-executor-mode" target="_blank" rel="noreferrer noopener">上游说明 / 核验依据 ↗</a></p>
+                <header><div><small>把资料变成知识资产</small><h3><a href="https://github.com/danielmiessler/Fabric" target="_blank" rel="noreferrer noopener">Fabric · extract_wisdom ↗</a></h3></div></header>
+                <p>复用长文、字幕和笔记提炼模板，把已有资料整理成可追溯的知识卡与行动清单。</p>
+                <p><strong>交付什么：</strong>观点—原文位置—反例—可执行清单。</p>
+                <pre class="token-task">只处理我提供的 3 份资料，提炼知识卡：每条附原文位置与适用边界。分开作者观点与推断，找不到依据标未知，不凑条数。</pre>
+                <p class="source-caveat">可把模板交给 Codex，不必运行 Fabric CLI；完整 CLI 的模型配置与费用另算。</p>
+                <p class="pedal-meta">MIT · <a href="https://github.com/danielmiessler/Fabric/blob/main/data/patterns/extract_wisdom/system.md" target="_blank" rel="noreferrer noopener">源码 / 模板依据 ↗</a></p>
               </article>
             </div>
-            <p class="source-caveat pedal-boundary">这些是外部项目，不是本站功能或质量担保；本轮核验了文档和部分源码，未进行本机实测。工具不会增加 Codex 额度，并行和循环可能更快消耗额度，使用与计费以实际登录方式为准。先定任务、验收和停止条件，不自动推送、不自动部署、不为空耗额度运行。全量重置预告、已确认重置和可储存重置卡仍按本站原有证据标准区分。</p>
-            <a class="node-link" href="https://github.com/farmcan/codex-reset-watcher/blob/main/docs/research-pedaling-workflows.md" target="_blank" rel="noreferrer noopener">完整方案比较与来源 ↗</a>
+            <p class="source-caveat pedal-boundary">本轮核验上游文档与部分源码，未进行本机实测。示例时长是建议上限，不是吞吐量保证。按实际登录方式确认使用的是订阅额度还是另计费 API；这些项目不会增加额度。达到验收条件、预算或连续两轮无新收益即停止。</p>
+            <p>筛选中排除了纯刷 token 的 burn-baby-burn；同名 tokenmaxxing 项目中的多账号切换器也不等于有用任务。原来的并行桌面和规格框架不再作为这栏的主推荐。</p>
+            <a class="node-link" href="https://github.com/farmcan/codex-reset-watcher/blob/main/docs/research-pedaling-workflows.md" target="_blank" rel="noreferrer noopener">完整筛选与来源 ↗</a>
           </div>
         </details>
       </section>

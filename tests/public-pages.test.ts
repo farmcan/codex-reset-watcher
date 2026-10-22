@@ -89,32 +89,20 @@ it('keeps an official event anchor visible during a flood of delivery reports',(
 });
 
 
- describe('external Codex workflows', () => {
-  it('offers six reviewed projects on both pages without enabling the retired greeting loop', () => {
-    const repositories = ['obra/superpowers', 'github/spec-kit', 'smtg-ai/claude-squad', 'superset-sh/superset', 'mikeyobrien/ralph-orchestrator', 'umputun/ralphex'];
+describe('useful token maxxing tasks', () => {
+  it('links concrete outputs and reviewed projects in both languages', () => {
+    const repositories = ['peteromallet/desloppify', 'TheGreenCedar/codex-autoresearch', 'uditgoenka/autoresearch', 'danielmiessler/Fabric'];
     for (const page of [chinese, english]) {
-      expect(page.match(/href="#pedal"/g)).toHaveLength(2);
-      expect(page).toContain('id="pedal-title"');
-      expect(page).toContain('<details class="freebie-panel pedal-panel">');
       const section = page.slice(page.indexOf('<section id="pedal"'), page.indexOf('<section class="system"'));
-      expect(section.match(/class="source-card pedal-card"/g)).toHaveLength(6);
+      expect(section.match(/class="source-card pedal-card"/g)).toHaveLength(4);
       for (const repository of repositories) expect(section).toContain(`href="https://github.com/${repository}"`);
-      expect(section).toContain('datetime="2026-10-22"');
-      expect(section).toContain('Elastic License 2.0');
-      expect(section).toContain('--yolo');
-      expect(section).toContain('danger-full-access');
+      expect(section.match(/class="token-task"/g)).toHaveLength(4);
       expect(section).toContain('docs/research-pedaling-workflows.md');
-      expect(section).not.toContain('<script');
-      expect(section).not.toContain('copy-command');
-      expect(page).toMatch(/<template id="hourly-greeting-template">[\s\S]*id="freebie"[\s\S]*<\/template>/);
-      expect(page).not.toContain('src="freebie.js');
-      expect(page).toContain('<span class="section-index">05</span><h2 id="system-title">');
+      expect(section).not.toContain('superset-sh/superset');
+      expect(page).toContain('d4r_yr1im7hv6');
     }
-    expect(chinese).toContain('猛蹬：怎么蹬');
-    expect(chinese).toContain('未进行本机实测');
-    expect(chinese).toContain('worktree 不是安全沙箱');
-    expect(english).toContain('not tested on your machine');
-    expect(english).toContain('worktree is not a sandbox');
-    expect(english).toContain('They do not increase Codex quota');
+    expect(chinese).toContain('Token maxxing：剩余额度做什么');
+    expect(chinese).toContain('回归测试');
+    expect(english).toContain('A baseline, experiment log');
   });
 });

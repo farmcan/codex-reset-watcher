@@ -38,6 +38,7 @@
             <h1 id="page-title">Catch the Reset window.<br>Crack the whip.</h1>
             <p class="hero-copy">Check only Tibo’s new posts and replies every hour. Past announcements, community signals, and delivery reports remain available for reference.</p>
             <p id="notification-capability" class="notification-capability" aria-live="polite">Checking cloud DingTalk alerts…</p>
+            <p class="dingtalk-contact">DingTalk ID: <code id="dingtalk-contact">d4r_yr1im7hv6</code> · Add me for an invite to the cross-organization alert group</p>
             <div class="hero-actions">
               <a class="usage-link" href="https://chatgpt.com/codex/settings/usage" target="_blank" rel="noreferrer noopener" aria-label="Open ChatGPT to check my Codex usage">
                 <span>Check my Codex usage</span><span aria-hidden="true">↗</span>
@@ -164,63 +165,54 @@
       <section id="pedal" aria-labelledby="pedal-title">
         <details class="freebie-panel pedal-panel">
           <summary class="section-heading freebie-summary">
-            <div><span class="section-index">04</span><h2 id="pedal-title">Put Codex to work</h2></div>
-            <span class="freebie-toggle"><span class="when-closed">6 projects · 3 workflows · Explore</span><span class="when-open">Collapse</span></span>
+            <div><span class="section-index">04</span><h2 id="pedal-title">Token maxxing: put spare quota to work</h2></div>
+            <span class="freebie-toggle"><span class="when-closed">4 projects · 4 useful outputs · expand</span><span class="when-open">Collapse</span></span>
           </summary>
           <div class="freebie-body">
-            <p>Run worthwhile work, not empty loops. Six external projects explicitly support Codex: two structure work, two manage parallel tasks, and two keep a bounded loop moving. Pick the approach your task needs.</p>
-            <p class="pedal-reviewed">Documentation and source reviewed · <time datetime="2026-10-22">2026-10-22</time></p>
-            <div class="source-method"><strong>Choose your workflow</strong><ul>
-              <li>One feature, done carefully: Superpowers / Spec Kit.</li>
-              <li>Several independent tasks: Claude Squad / Superset.</li>
-              <li>Execute a clear plan continuously: Ralph Orchestrator / ralphex. Review permissions, isolation and stop conditions first.</li>
+            <p>Have quota left before a reset? Spend it on patches, measured improvements, bug reproductions or source-backed notes. Choose an output, then a tool.</p>
+            <p class="pedal-reviewed">Upstream docs and selected source reviewed · <time datetime="2026-10-22">2026-10-22</time></p>
+            <div class="source-method"><strong>Pick one useful job</strong><ul>
+              <li>20–40 minutes: fix one to three reproducible issues and leave regression tests.</li>
+              <li>30–60 minutes: optimize one fixed benchmark and preserve the experiment log.</li>
+              <li>No coding task: turn a few existing sources into traceable knowledge cards.</li>
             </ul></div>
             <div class="source-grid pedal-grid">
               <article class="source-card pedal-card">
-                <header><div><small>Planning &amp; quality</small><h3><a href="https://github.com/obra/superpowers" target="_blank" rel="noreferrer noopener">Superpowers ↗</a></h3></div></header>
-                <p>Connects design, implementation plans, execution, TDD and code review. Complete a feature instead of repeatedly prompting “continue.”</p>
-                <p><strong>Start: </strong>Follow the upstream Codex guide; agree on requirements, design and acceptance checks first.</p>
-                <p class="source-caveat"><strong>Caveat: </strong>Workflow discipline, not extra quota. Small tasks and explicit checks beat empty loops.</p>
-                <p class="pedal-meta">MIT · <a href="https://github.com/obra/superpowers#codex-cli" target="_blank" rel="noreferrer noopener">Upstream guide / evidence ↗</a></p>
+                <header><div><small>Clean up technical debt</small><h3><a href="https://github.com/peteromallet/desloppify" target="_blank" rel="noreferrer noopener">Desloppify ↗</a></h3></div></header>
+                <p>Turn duplication, complex modules and inconsistent error handling into a prioritized repair queue.</p>
+                <p><strong>Output: </strong>Small patches, regression checks and a before/after diff.</p>
+                <pre class="token-task">Scan src/ and fix at most three high-value issues. Preserve behavior, run regression checks and stop after 40 minutes. Deliver patches and evidence.</pre>
+                <p class="source-caveat">Codex supported. Treat its score as a signal, not the goal. Review the custom OSNL license before commercial redistribution.</p>
+                <p class="pedal-meta">OSNL 0.2 · <a href="https://github.com/peteromallet/desloppify/blob/main/desloppify/data/global/CODEX.md" target="_blank" rel="noreferrer noopener">Source / pattern ↗</a></p>
               </article>
               <article class="source-card pedal-card">
-                <header><div><small>Planning &amp; quality</small><h3><a href="https://github.com/github/spec-kit" target="_blank" rel="noreferrer noopener">Spec Kit ↗</a></h3></div></header>
-                <p>Organizes development around specifications, plans and tasks, with Codex support. Useful for unclear requirements and multi-module features.</p>
-                <p><strong>Start: </strong>Follow the Codex integration guide, then review specification, planning, tasks and implementation in order.</p>
-                <p class="source-caveat"><strong>Caveat: </strong>Not an unattended loop. Verify behavior and tests, not the volume of generated documents.</p>
-                <p class="pedal-meta">MIT · <a href="https://github.com/github/spec-kit/blob/main/docs/integrations/codex.md" target="_blank" rel="noreferrer noopener">Upstream guide / evidence ↗</a></p>
+                <header><div><small>Run measured performance experiments</small><h3><a href="https://github.com/TheGreenCedar/codex-autoresearch" target="_blank" rel="noreferrer noopener">Codex Autoresearch ↗</a></h3></div></header>
+                <p>Try small changes against a repeatable runtime, build, memory or throughput benchmark.</p>
+                <p><strong>Output: </strong>A baseline, experiment log, measurements and a reviewable patch.</p>
+                <pre class="token-task">Choose one real slow path. Freeze the benchmark and correctness checks. Stop after five experiments or 30 minutes; repeat measurements and keep only stable improvements.</pre>
+                <p class="source-caveat">Built for Codex. If no trustworthy evaluator exists, start with a direct investigation.</p>
+                <p class="pedal-meta">Apache-2.0 · <a href="https://github.com/TheGreenCedar/codex-autoresearch/blob/main/plugins/codex-autoresearch/skills/codex-autoresearch/SKILL.md" target="_blank" rel="noreferrer noopener">Source / pattern ↗</a></p>
               </article>
               <article class="source-card pedal-card">
-                <header><div><small>Parallel tasks</small><h3><a href="https://github.com/smtg-ai/claude-squad" target="_blank" rel="noreferrer noopener">Claude Squad ↗</a></h3></div></header>
-                <p>Also supports Codex despite its name. Manages tasks using tmux sessions, separate Git worktrees and branches, with progress and diff views.</p>
-                <p><strong>Start: </strong>Prepare Codex, tmux and gh; follow upstream instructions and start with two independent tasks.</p>
-                <p class="source-caveat"><strong>Caveat: </strong>A worktree is not a sandbox and does not eliminate merge conflicts. Review diffs before merging.</p>
-                <p class="pedal-meta">AGPL-3.0 · <a href="https://github.com/smtg-ai/claude-squad#usage" target="_blank" rel="noreferrer noopener">Upstream guide / evidence ↗</a></p>
+                <header><div><small>Find bugs and add regressions</small><h3><a href="https://github.com/uditgoenka/autoresearch" target="_blank" rel="noreferrer noopener">Autoresearch ↗</a></h3></div></header>
+                <p>Use hypothesis, reproduction and verification loops for bugs and quality gaps, with a Codex skill entry.</p>
+                <p><strong>Output: </strong>Reproductions, failing tests, fixes and remaining gaps.</p>
+                <pre class="token-task">Inspect input validation and error recovery in this repository. Confirm at most three bugs with a failing test before each fix. Stop after 30 minutes; keep the scope local.</pre>
+                <p class="source-caveat">Codex uses its skill entry. Claude Code hook protections do not imply equivalent Codex coverage.</p>
+                <p class="pedal-meta">MIT · <a href="https://github.com/uditgoenka/autoresearch/blob/master/.agents/skills/autoresearch/SKILL.md" target="_blank" rel="noreferrer noopener">Source / pattern ↗</a></p>
               </article>
               <article class="source-card pedal-card">
-                <header><div><small>Parallel tasks</small><h3><a href="https://github.com/superset-sh/superset" target="_blank" rel="noreferrer noopener">Superset ↗</a></h3></div></header>
-                <p>A desktop workspace for Codex sessions, worktrees, diffs and browser previews. Run feature, testing and documentation tasks in parallel.</p>
-                <p><strong>Start: </strong>Add a repository, create a workspace per task, choose Codex, then inspect Changes and run tests.</p>
-                <p class="source-caveat"><strong>Caveat: </strong>macOS is primary; Linux is experimental and Windows is not yet supported. Worktrees are not sandboxes; the license is ELv2, not MIT.</p>
-                <p class="pedal-meta">Elastic License 2.0 · <a href="https://github.com/superset-sh/superset#start-with-one-task" target="_blank" rel="noreferrer noopener">Upstream guide / evidence ↗</a></p>
-              </article>
-              <article class="source-card pedal-card">
-                <header><div><small>Continuous execution · Advanced</small><h3><a href="https://github.com/mikeyobrien/ralph-orchestrator" target="_blank" rel="noreferrer noopener">Ralph Orchestrator ↗</a></h3></div></header>
-                <p>Coordinates iterative work with events, specialized roles, Codex support, task tracking and validation gates.</p>
-                <p><strong>Start: </strong>Define the task, validation commands, iteration/runtime limits and stop conditions; inspect launch arguments first.</p>
-                <p class="source-caveat"><strong>Caveat: </strong>The reviewed Codex backend defaults to --yolo. Do not run it blindly on your everyday machine. Review permissions and provide external isolation; prompts are not sandboxes.</p>
-                <p class="pedal-meta">MIT · <a href="https://github.com/mikeyobrien/ralph-orchestrator/blob/b5789dfbb25bd4aa65ce565c756d95acc8c42f76/crates/ralph-adapters/src/cli_backend.rs#L357-L367" target="_blank" rel="noreferrer noopener">Upstream guide / evidence ↗</a></p>
-              </article>
-              <article class="source-card pedal-card">
-                <header><div><small>Continuous execution · Advanced</small><h3><a href="https://github.com/umputun/ralphex" target="_blank" rel="noreferrer noopener">ralphex ↗</a></h3></div></header>
-                <p>Reads a plan with task checkboxes and validation commands, executes tasks, creates commits and runs review phases. Supports native Codex execution and worktrees.</p>
-                <p><strong>Start: </strong>Prepare a small plan; verify the CLI version, permissions and iteration limit in an isolated environment before one complete run.</p>
-                <p class="source-caveat"><strong>Caveat: </strong>Requires Codex CLI ≥ 0.130.0. Codex mode defaults to danger-full-access and creates commits. Self-review is not independent validation or permission to push/deploy.</p>
-                <p class="pedal-meta">MIT · <a href="https://github.com/umputun/ralphex#codex-executor-mode" target="_blank" rel="noreferrer noopener">Upstream guide / evidence ↗</a></p>
+                <header><div><small>Turn source material into reusable knowledge</small><h3><a href="https://github.com/danielmiessler/Fabric" target="_blank" rel="noreferrer noopener">Fabric · extract_wisdom ↗</a></h3></div></header>
+                <p>Reuse extraction patterns to turn articles, transcripts or notes into traceable knowledge cards and checklists.</p>
+                <p><strong>Output: </strong>Claims, source locations, counterexamples and a practical checklist.</p>
+                <pre class="token-task">Use only the three supplied sources. Produce knowledge cards with source locations and limits. Separate author claims from inference; mark missing evidence and do not pad the count.</pre>
+                <p class="source-caveat">Give the pattern to Codex directly. Running the full Fabric CLI has separate model configuration and billing.</p>
+                <p class="pedal-meta">MIT · <a href="https://github.com/danielmiessler/Fabric/blob/main/data/patterns/extract_wisdom/system.md" target="_blank" rel="noreferrer noopener">Source / pattern ↗</a></p>
               </article>
             </div>
-            <p class="source-caveat pedal-boundary">These are external projects, not site features or quality guarantees. Documentation and selected source code were reviewed; the tools were not tested on your machine. They do not increase Codex quota. Parallel work and loops may consume it faster; usage and billing depend on your actual login method. Define tasks, acceptance checks and stop conditions first. Do not assume permission to push or deploy, or run empty loops. Existing distinctions between future hard resets, confirmed resets and banked resets remain unchanged.</p>
-            <a class="node-link" href="https://github.com/farmcan/codex-reset-watcher/blob/main/docs/research-pedaling-workflows.md" target="_blank" rel="noreferrer noopener">Full comparison and sources ↗</a>
+            <p class="source-caveat pedal-boundary">Reviewed upstream docs and selected source; not tested on your machine. Time boxes are suggestions, not throughput guarantees. Confirm whether your login consumes subscription quota or separately billed API usage. These projects do not increase Codex quota. Stop at acceptance, the budget, or two rounds without new value.</p>
+            <p>Excluded pure token burners such as burn-baby-burn. A similarly named account switcher does not supply useful work. Parallel desktops and specification frameworks are no longer the main recommendations here.</p>
+            <a class="node-link" href="https://github.com/farmcan/codex-reset-watcher/blob/main/docs/research-pedaling-workflows.md" target="_blank" rel="noreferrer noopener">Selection notes and sources ↗</a>
           </div>
         </details>
       </section>

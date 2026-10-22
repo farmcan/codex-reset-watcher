@@ -366,3 +366,5 @@ footer { flex-wrap: wrap; }
   .pedal-panel .freebie-summary h2 { font-size: 22px; }
 }
 .notification-capability { font-size: 13px; line-height: 1.65; color: var(--muted, #52645a); border-left: 3px solid #4f7a61; padding-left: 10px; max-width: 42em; }
+.token-task { white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.7 ui-monospace, monospace; padding: 14px; background: #f5f4ef; border-radius: 8px; color: #26372d; }
+.dingtalk-contact { font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
