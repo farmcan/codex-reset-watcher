@@ -91,13 +91,14 @@ it('keeps an official event anchor visible during a flood of delivery reports',(
 
 describe('useful token maxxing tasks', () => {
   it('links concrete outputs and reviewed projects in both languages', () => {
-    const repositories = ['peteromallet/desloppify', 'TheGreenCedar/codex-autoresearch', 'uditgoenka/autoresearch', 'danielmiessler/Fabric'];
+    const repositories = ['peteromallet/desloppify', 'TheGreenCedar/codex-autoresearch', 'uditgoenka/autoresearch', 'danielmiessler/Fabric', 'ravsau/token-maxxing-prompts', 'omribz156/oss-supporter', 'Nitjsefnie/burn-usage-skill', 'LuizPiccini/spare-tokens', 'Jia-wei-cui/TokenHunt', 'yzfly/TokenCode', 'Eunho-J/timework-skill'];
     for (const page of [chinese, english]) {
       const section = page.slice(page.indexOf('<section id="pedal"'), page.indexOf('<section class="system"'));
-      expect(section.match(/class="source-card pedal-card"/g)).toHaveLength(4);
+      expect(section.match(/class="source-card pedal-card"/g)).toHaveLength(15);
       for (const repository of repositories) expect(section).toContain(`href="https://github.com/${repository}"`);
-      expect(section.match(/class="token-task"/g)).toHaveLength(4);
+      expect(section.match(/class="token-task"/g)).toHaveLength(15);
       expect(section).toContain('docs/research-pedaling-workflows.md');
+      for (const entry of ['https://opire.dev/', 'https://up-for-grabs.net/', 'https://docs.opire.dev/rewards/pricing']) expect(section).toContain(entry);
       expect(section).not.toContain('superset-sh/superset');
       expect(page).toContain('d4r_yr1im7hv6');
     }

@@ -1,6 +1,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { processReviews } from "../src/model-review";
 import { queueDingTalkDelivery, processDingTalkDeliveries, testDingTalk, dingTalkContent } from "../src/dingtalk";
 
 const databases = [];
@@ -16,16 +17,16 @@ function fixture() {
   sqlite.prepare(`INSERT INTO posts(post_id,author,text,created_at,url,lane,source_tier,source_weight,raw_json,first_seen_at)
     VALUES ('p','tibo','reset announced',?,'https://x.com/tibo/status/1','official','A1',1,'{}',?)`).run(now, now);
   sqlite.prepare(`INSERT INTO signals(signal_id,post_id,event_type,reset_mode,severity,confidence,content_confidence,evidence_basis,cluster_key,should_notify,reason,created_at)
-    VALUES ('s','p','scheduled_reset','hard_reset','high',1,1,'first_party','cluster',1,'reason',?)`).run(now);
+    VALUES ('x:p','p','scheduled_reset','hard_reset','high',1,1,'first_party','cluster',1,'reason',?)`).run(now);
   const env = { DB: {prepare}, DINGTALK_APP_KEY: crypto.randomUUID(), DINGTALK_APP_SECRET: 'fixture-secret', DINGTALK_GROUP_ID: 'fixture-group' };
   return {env, sqlite};
 }
 const tokenResponse = () => new Response(JSON.stringify({ accessToken: "fixture-token", expireIn: 7200 }), {status: 200});
-async function queued() { const f = fixture(); await queueDingTalkDelivery(f.env, { signalId: "s" }, now); return f; }
+async function queued() { const f = fixture(); await queueDingTalkDelivery(f.env, { signalId: "x:p" }, now); return f; }
 
 describe("durable cloud DingTalk delivery", () => {
   it("deduplicates enqueue and accepted sends, retaining provider receipt", async () => {
-    const {env,sqlite} = await queued(); await queueDingTalkDelivery(env,{signalId:'s'},now);
+    const {env,sqlite} = await queued(); await queueDingTalkDelivery(env,{signalId:'x:p'},now);
     const fetch = vi.fn().mockResolvedValueOnce(tokenResponse()).mockResolvedValueOnce(new Response('{"processQueryKey":"receipt"}'));
     vi.stubGlobal('fetch',fetch);
     expect(await processDingTalkDeliveries(env,now)).toEqual({sent:1,failed:0});
@@ -34,7 +35,27 @@ describe("durable cloud DingTalk delivery", () => {
     expect(sqlite.prepare('SELECT status,attempts,provider_receipt FROM deliveries').get()).toMatchObject({status:'sent',attempts:1,provider_receipt:'receipt'});
     const payload=JSON.parse(fetch.mock.calls[1][1].body);
     expect(payload.openConversationId).toBe('fixture-group');
+    expect(payload.isAtAll).toBe(true);
     expect(JSON.parse(payload.msgParam).content).toContain('非 DING');
+  });
+  it("sends a queued natural alert after review, without replaying review-only history", async () => {
+    const {env,sqlite}=await queued();
+    sqlite.prepare("UPDATE posts SET author='thsottiaux', text='We will reset all Codex usage limits.'").run();
+    env.DASHSCOPE_API_KEY='fixture';
+    const verdict={post_id:'p',event_type:'scheduled_reset',reset_mode:'hard_reset',confidence:0.95,reason:'A future reset',title_zh:'重置预告',title_en:'Reset announced',summary_zh:'将重置用量',summary_en:'Will reset usage',evidence:['reset all Codex usage limits'],effective_time:null,approximate_time:false};
+    const fetch=vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({reviews:[verdict]})}}]})))
+      .mockResolvedValueOnce(tokenResponse()).mockResolvedValueOnce(new Response('{"processQueryKey":"natural-receipt"}'));
+    vi.stubGlobal('fetch',fetch);
+    await processReviews(env);
+    expect(sqlite.prepare('SELECT should_notify FROM signals').get().should_notify).toBe(1);
+    expect(await processDingTalkDeliveries(env,now)).toEqual({sent:1,failed:0});
+    // Reviewing history that was never eligible must not grant permission to send.
+    sqlite.prepare("UPDATE signals SET should_notify=0").run();
+    sqlite.prepare("UPDATE model_reviews SET status='pending'").run();
+    fetch.mockResolvedValueOnce(new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({reviews:[verdict]})}}]})));
+    await processReviews(env);
+    expect(sqlite.prepare('SELECT should_notify FROM signals').get().should_notify).toBe(0);
+    expect(await processDingTalkDeliveries(env,now)).toEqual({sent:0,failed:0});
   });
   it("quarantines ambiguous network results and never retries them", async () => {
     const {env,sqlite}=await queued(); const fetch=vi.fn().mockResolvedValueOnce(tokenResponse()).mockRejectedValueOnce(new Error('timeout'));

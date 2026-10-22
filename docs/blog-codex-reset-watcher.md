@@ -1,50 +1,52 @@
-# Codex 快重置了，你还在省额度？我做了个“猛蹬雷达”
+# Codex 还有余量？看重置信号，挑一件值得做的事
 
-![Codex Reset Watcher](../public/brand-zh.png)
+![拿皮鞭的小猫](https://codex-reset-watcher.weican16hit.workers.dev/brand-zh.png)
 
-> 找到重置机会，站起来猛蹬。
+不想一直刷重置消息，也不想让剩余额度闲着？我做的 **Codex Reset Watcher（猛蹬雷达）**，把公开重置信号、钉钉群提醒和有用的任务入口放到了一起。
 
-我用 Codex 时遇到过一个很亏的场景：一直省着额度，想做的长任务没跑，第二天却突然全局重置了。
+**[打开雷达](https://codex-reset-watcher.weican16hit.workers.dev/) · [直接挑任务](https://codex-reset-watcher.weican16hit.workers.dev/#pedal) · [GitHub 源码](https://github.com/farmcan/codex-reset-watcher)**
 
-如果能提前几个小时知道，旧额度就不用白白浪费。于是我做了 **Codex Reset Watcher**，专门盯 X 上的重置信号。
+## 看信号，不必自己追消息
 
-## 它真的有用吗？
+网页把重置预告、已确认重置、可储存重置权益和个人到账分开，每条保留原帖与时间。“有人到账”不会直接写成“全员重置”。
 
-我先回看了截至 2026 年 9 月 5 日的最近 12 次重置权益：
+当前仅追踪 Tibo，约每小时检查一次；规则判断结合模型辅助复核。历史回看覆盖截至 2026 年 9 月 5 日的 12 次重置权益，其中 8 次事前已有清晰提醒。**这是固定样本覆盖，不是预测准确率，也不表示现在即将重置。** [历史证据与局限](https://github.com/farmcan/codex-reset-watcher/blob/main/docs/historical-audit.md)
 
-| 指标 | 历史结果 |
-| --- | ---: |
-| 最终找到一手公告或确认 | **12 / 12** |
-| 重置前出现过一手线索 | **11 / 12（92%）** |
-| 重置前已有清晰、可理解的提醒 | **8 / 12（67%）** |
-| 清晰提醒的中位提前量 | **约 11 小时 49 分** |
-| 全部重置权益的平均间隔 | **约 3.4 天** |
-| 只看 hard reset 的平均间隔 | **约 4.1 天** |
+想持续跟进，可以加入跨组织钉钉群。通知由 Cloudflare 持续处理，无需电脑在线；目前是 **Codex-Watcher 普通群消息，尚未支持云端全员 DING**。全员提醒的实际能力以主页标注为准。
 
-这 12 次从 7 月 29 日到 9 月 5 日，横跨约 37.9 天，包含 9 次全量重置和 3 次可储存重置卡。全部重置权益的间隔中位数约为 2.2 天，只看全量重置则约为 2.6 天；说明重置有时很密集，偶尔也会隔上一周以上。
+添加钉钉号 **`d4r_yr1im7hv6`**，我拉你进群。认准网页上拿皮鞭的小猫。
 
-这里的 92% 是“已确认事件中，事前找到一手线索的覆盖率”，不是预测准确率。要计算真正的预测准确率，还需要完整记录那些最终没有发生重置的误报；目前的数据不足以诚实地给出这个数字。
+## Token maxxing：有余量，就留下一份成果
 
-[查看 12 次重置的完整时间轴和原帖证据](https://github.com/farmcan/codex-reset-watcher/blob/main/docs/historical-audit.md)
+“怎么蹬”现在整理了 **15 个外部工具与任务入口**，中英文都有具体产物、用法和边界。可以先选一条路：
 
-## 它怎么做
+- **改好自己的项目**：补一类 bug、清技术债、优化一个真实慢路径，或把已有资料整理成知识卡。
+- **贡献开源**：从自己用过的依赖、维护者欢迎的小任务开始，交付最小复现、测试和小补丁。
+- **领取或发布任务**：找公益任务，也可以看现金悬赏；先核对验收条件和报酬规则。
+
+不知道从哪里开始，可以看这些更贴题的项目：
+
+| 入口 | 能帮你做什么 |
+| --- | --- |
+| [token-maxxing-prompts](https://github.com/ravsau/token-maxxing-prompts) | 从项目、笔记和半成品里找值得做的任务，附 10 类任务模板 |
+| [OSS Supporter](https://github.com/omribz156/oss-supporter)、[burn-usage-skill](https://github.com/Nitjsefnie/burn-usage-skill) | 筛选开源任务，准备小修复并独立验证 |
+| [Spare Tokens](https://github.com/LuizPiccini/spare-tokens)、[TokenHunt](https://github.com/Jia-wei-cui/TokenHunt) | 公益任务包与任务板方案，不等于现金赏金 |
+| [Opire](https://opire.dev/) | 找带赏金的 issue，或按规则发布悬赏 |
+| [TokenCode](https://github.com/yzfly/TokenCode)、[timework-skill](https://github.com/Eunho-J/timework-skill) | 用独立尝试或反馈循环，提高一个难题的解答质量 |
+
+这些是外部方案，未全部安装实测；TokenHunt 的公共服务本轮未验证。**TokenCode 使用另计费的模型 API，不是 Codex 订阅余量入口。** 作者报告的 PR 成绩不代表你的成功率。完整适用条件见首页卡片。
+
+开源贡献先读项目的贡献与 AI 使用规则，只提交自己能解释、能验证的改动；领取悬赏不保证付款，开始前确认验收和支付安排。
+
+## 现在就能交给 Codex 的一个任务
 
 ```text
-每小时查询官方 X API
-→ 区分官方、转述、传闻和个人到账
-→ 保存证据并交叉验证
-→ 网页展示，重要消息可发邮件
+根据当前项目，选一个值得做、60 分钟内可验收的任务。
+先给出问题依据、预期产物和验收命令，再完成最小改动。
+保留修改前后证据；不要为了用量增加范围。
+达到验收条件就停止，交付补丁、测试结果与剩余问题。
 ```
 
-官方消息会压过旧传闻；单个用户到账不会被当成全局重置；两个独立社区来源同时出现，才可能提高关注等级。整套判断由固定代码完成，不让大模型自由猜测。
+想省心：加入钉钉通知群。想现在动手：**[挑一个能验收的任务](https://codex-reset-watcher.weican16hit.workers.dev/#pedal)**。
 
-它不读取你的 Codex 账号，也不预测下一次重置的精确时间。个人额度仍以 [Codex Usage](https://chatgpt.com/codex/settings/usage) 为准。
-
-## 试试看
-
-- [打开实时雷达](https://codex-reset-watcher.weican16hit.workers.dev/)
-- [查看开源代码](https://github.com/farmcan/codex-reset-watcher)
-
-它不能预知未来，只负责在公开线索出现时，尽量别让你后知后觉。
-
-该省的时候省。机会来了——站起来猛蹬。
+本站非 OpenAI 官方产品，不读取你的私人额度。个人用量与重置时间仍以 [Codex Usage](https://chatgpt.com/codex/settings/usage) 为准。

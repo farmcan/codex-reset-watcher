@@ -50,7 +50,7 @@ async function healthSnapshot(env: Env): Promise<Record<string, unknown>> {
       recipient_configured: Boolean(env.ALERT_EMAIL_TO)
     },
     dingtalk: {
-      configured: dingtalkConfigured(env), channel: "robot_group_message", true_ding: false,
+      configured: dingtalkConfigured(env), channel: "robot_group_message", true_ding: false, mentions_all: true,
       delivery_counts: (live.deliveries as Array<{channel: string; status: string; count: number}>).filter(row => row.channel === "dingtalk"),
       automatic_token_refresh: true
     },

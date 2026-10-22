@@ -42,7 +42,7 @@ npm run backtest
 
 ## 猛蹬：怎么蹬
 
-首页提供 Token maxxing 余量任务：Desloppify 技术债清理、Codex Autoresearch 性能实验、Autoresearch bug 回归、Fabric 资料提炼。中英文均附产物、限时任务、来源与许可；核验日期为 2026-10-22，未进行本机实测。保留钉钉联系号供邀请进入跨组织通知群。
+首页提供 Token maxxing 余量任务：Desloppify 技术债清理、Codex Autoresearch 性能实验、Autoresearch bug 回归、Fabric 资料提炼，并提供 Opire 悬赏领取与发布、Up For Grabs 开源任务、实际依赖的上游贡献入口。中英文均附产物、限时任务、来源与许可；核验日期为 2026-10-22，未进行本机实测。保留钉钉联系号供邀请进入跨组织通知群。
 
 完整比较见 [外部工作流研究](docs/research-pedaling-workflows.md)。
 

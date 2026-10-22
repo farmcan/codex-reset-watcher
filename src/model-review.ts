@@ -125,12 +125,16 @@ export async function processReviews(env: Env, limit = 20): Promise<void> {
         for (const post of posts) {
           const verdict = verdicts.find(v=>v.post_id===post.postId)!;
           const signal = reviewedSignal(post, verdict);
-          // Retain any existing supersession decision and delivery history.
+          // Never grant review/backfill notification eligibility. Preserve an existing
+          // eligible alert only while the reviewed result still warrants it;
+          // otherwise an in-poll review would strand the queued delivery.
           await insertSignal(env.DB,signal);
           await env.DB.prepare(`UPDATE signals SET event_type=?,reset_mode=?,severity=?,confidence=?,content_confidence=?,
-            evidence_basis=?,effective_time=?,approximate_time=?,cluster_key=?,should_notify=0,reason=?,evidence=? WHERE post_id=?`)
+            evidence_basis=?,effective_time=?,approximate_time=?,cluster_key=?,should_notify=CASE WHEN ? THEN should_notify ELSE 0 END,reason=?,evidence=? WHERE post_id=?`)
             .bind(signal.eventType,signal.resetMode,signal.severity,signal.confidence,signal.contentConfidence,signal.evidenceBasis,
-              signal.effectiveTime,+signal.approximateTime,signal.clusterKey,signal.reason,JSON.stringify(signal.evidence),post.postId).run();
+              signal.effectiveTime,+signal.approximateTime,signal.clusterKey,
+              +(['high','medium'].includes(signal.severity) && ['explicit_reset','scheduled_reset'].includes(signal.eventType)),
+              signal.reason,JSON.stringify(signal.evidence),post.postId).run();
           if (signal.severity === 'none' || signal.eventType === 'unrelated') {
             await env.DB.prepare("UPDATE deliveries SET status='cancelled' WHERE signal_id=? AND status='pending'").bind(signal.signalId).run();
           }

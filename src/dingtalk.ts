@@ -42,7 +42,7 @@ export async function sendDingTalk(env: Env, content: string): Promise<string> {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-acs-dingtalk-access-token": token },
       body: JSON.stringify({ robotCode: env.DINGTALK_APP_KEY, openConversationId: env.DINGTALK_GROUP_ID,
-        msgKey: "sampleText", msgParam: JSON.stringify({ content }) }),
+        isAtAll: true, msgKey: "sampleText", msgParam: JSON.stringify({ content }) }),
       signal: AbortSignal.timeout(20_000)
     });
   } catch {
@@ -81,7 +81,7 @@ export function dingTalkContent(row: Omit<Row, "id" | "attempts">): string {
     ? "一手未来 hard reset 信号；如果本来有任务，可以考虑提前安排。预告不保证执行。"
     : row.reset_mode === "banked_reset" ? "可储存/手动使用的重置权益，不等同自动 hard reset；请查看个人 Usage。"
     : row.event_type === "explicit_reset" ? "请在个人 Codex Usage 检查是否实际到账。" : "公开线索仅供留意，请核对原帖。";
-  return `[Codex Reset Watcher] ${title}\n${action}\n来源：@${row.author} · ${row.source_tier}\n类型：${row.event_type} / ${row.reset_mode}${row.effective_time ? `\n预计时间：${row.effective_time}` : ""}\n\n${row.text.replace(/\s+/g, " ").slice(0, 700)}\n\n原帖：${row.url}\n雷达：https://codex-reset-watcher.weican16hit.workers.dev/\n普通机器人群通知（非 DING）`;
+  return `[Codex Reset Watcher] ${title}\n${action}\n来源：@${row.author} · ${row.source_tier}\n类型：${row.event_type} / ${row.reset_mode}${row.effective_time ? `\n预计时间：${row.effective_time}` : ""}\n\n${row.text.replace(/\s+/g, " ").slice(0, 700)}\n\n原帖：${row.url}\n雷达：https://codex-reset-watcher.weican16hit.workers.dev/\n全员 @ 普通群通知（非 DING）`;
 }
 
 export async function processDingTalkDeliveries(env: Env, now = new Date().toISOString()): Promise<{ sent: number; failed: number }> {
@@ -132,8 +132,8 @@ export async function testDingTalk(env: Env, key: string): Promise<Record<string
   }
   let result: Record<string, unknown>;
   try {
-    const receipt = await sendDingTalk(env, "[Codex Reset Watcher] Cloudflare Worker 生产通道测试成功。怎么蹬中英文已上线；后续新信号由云端定时任务和D1待发送账本推送，无需本机在线。普通机器人群消息，非 DING；这不是重置公告。https://codex-reset-watcher.weican16hit.workers.dev/#pedal");
-    result = { status: "sent", provider_receipt: receipt, channel: "dingtalk_group_message", true_ding: false };
+    const receipt = await sendDingTalk(env, "[Codex Reset Watcher] Cloudflare Worker 生产通道测试成功。怎么蹬中英文已上线；后续新信号由云端定时任务和D1待发送账本推送，无需本机在线。全员 @ 普通群消息，非 DING；这不是重置公告。https://codex-reset-watcher.weican16hit.workers.dev/#pedal");
+    result = { status: "sent", provider_receipt: receipt, channel: "dingtalk_group_message", true_ding: false, mentions_all: true };
   } catch (error) { result = { status: error instanceof DeliveryError ? error.state : "unknown", error: error instanceof DeliveryError ? error.message : "Unknown result" }; }
   await env.DB.prepare("UPDATE app_state SET value=?,updated_at=? WHERE key=?").bind(JSON.stringify(result), now, stateKey).run();
   return result;
