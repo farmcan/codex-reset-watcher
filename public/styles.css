@@ -350,3 +350,18 @@ footer { flex-wrap: wrap; }
   .freebie-guide, .freebie-context { padding: 20px; }
   .freebie-intro { font-size: 17px; }
 }
+
+/* External workflow guide: static, optional, and separate from reset evidence. */
+#pedal { scroll-margin-top: 88px; }
+.pedal-entry { display: inline-block; color: var(--accent); font-weight: 700; font-size: 14px; }
+.pedal-reviewed, .pedal-meta { color: var(--muted); font-size: 12px; }
+.pedal-card { min-width: 0; }
+.pedal-card h3, .pedal-card a { overflow-wrap: anywhere; }
+.pedal-card p { line-height: 1.7; }
+.pedal-card a, .pedal-meta a { color: var(--accent); }
+.pedal-boundary { margin: 22px 0 12px; line-height: 1.7; }
+.pedal-panel a:focus-visible, .pedal-entry:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+@media (max-width: 520px) {
+  .pedal-card { padding: 18px; }
+  .pedal-panel .freebie-summary h2 { font-size: 22px; }
+}

@@ -6,7 +6,7 @@
     <meta name="description" content="追踪 Codex 额度重置信号：一手预告、社区风声、到账反馈、历史审计与邮件提醒。">
     <title>Codex 重置雷达</title>
     <link rel="icon" href="brand-zh.png" type="image/png">
-    <link rel="stylesheet" href="styles.css?v=20260910-3">
+    <link rel="stylesheet" href="styles.css?v=20261022-1">
     <script type="module" src="app.js?v=20260915-1"></script>
   </head>
   <body>
@@ -20,6 +20,7 @@
           <a href="#signals">最新信号</a>
           <a href="#sources">信源</a>
           <a href="#history">历史审计</a>
+          <a href="#pedal">怎么蹬</a>
           <a href="feed.xml">RSS</a>
           <a href="en/" lang="en">EN</a>
         </nav>
@@ -41,6 +42,7 @@
                 <span>查看我的 Codex 额度</span><span aria-hidden="true">↗</span>
               </a>
               <small>前往 ChatGPT 查看你的个人 Codex 使用额度</small>
+              <a class="pedal-entry" href="#pedal">看看怎么蹬 ↓</a>
             </div>
           </div>
           <figure class="hero-visual">
@@ -158,9 +160,73 @@
       </section>
       </template>
 
+      <section id="pedal" aria-labelledby="pedal-title">
+        <details class="freebie-panel pedal-panel">
+          <summary class="section-heading freebie-summary">
+            <div><span class="section-index">04</span><h2 id="pedal-title">猛蹬：怎么蹬</h2></div>
+            <span class="freebie-toggle"><span class="when-closed">6 个项目 · 3 类工作流 · 展开</span><span class="when-open">收起</span></span>
+          </summary>
+          <div class="freebie-body">
+            <p>有任务再猛蹬，不为清空额度空转。6 个明确支持 Codex 的外部项目：2 个帮你拆任务，2 个帮你并行，2 个帮你持续执行。按任务选一种，不必全部安装。</p>
+            <p class="pedal-reviewed">文档与源码核验 · <time datetime="2026-10-22">2026-10-22</time></p>
+            <div class="source-method"><strong>怎么选</strong><ul>
+              <li>一个需求做扎实：Superpowers / Spec Kit。</li>
+              <li>多个独立任务并行：Claude Squad / Superset。</li>
+              <li>已有明确计划持续执行：Ralph Orchestrator / ralphex，先检查权限、隔离与停止条件。</li>
+            </ul></div>
+            <div class="source-grid pedal-grid">
+              <article class="source-card pedal-card">
+                <header><div><small>规划与质量</small><h3><a href="https://github.com/obra/superpowers" target="_blank" rel="noreferrer noopener">Superpowers ↗</a></h3></div></header>
+                <p>把需求讨论、实施计划、任务执行、TDD 和代码复核串起来，适合把一个功能做完整，而不是反复催“继续”。</p>
+                <p><strong>怎么开始：</strong>按上游 Codex 安装说明启用，先确认需求、设计和验收条件。</p>
+                <p class="source-caveat"><strong>注意：</strong>这是工作方法和技能，不会增加额度；小任务和明确验收比空转更有用。</p>
+                <p class="pedal-meta">MIT · <a href="https://github.com/obra/superpowers#codex-cli" target="_blank" rel="noreferrer noopener">上游说明 / 核验依据 ↗</a></p>
+              </article>
+              <article class="source-card pedal-card">
+                <header><div><small>规划与质量</small><h3><a href="https://github.com/github/spec-kit" target="_blank" rel="noreferrer noopener">Spec Kit ↗</a></h3></div></header>
+                <p>用规格、计划和任务清单组织开发，支持 Codex 集成。适合模糊需求、多模块功能和需要留存的决策。</p>
+                <p><strong>怎么开始：</strong>按 Codex 集成文档初始化，依次完成需求、计划、任务和实施，每阶段审查后继续。</p>
+                <p class="source-caveat"><strong>注意：</strong>不是无人值守循环；别把文档数量当成果，最终仍需测试和行为验收。</p>
+                <p class="pedal-meta">MIT · <a href="https://github.com/github/spec-kit/blob/main/docs/integrations/codex.md" target="_blank" rel="noreferrer noopener">上游说明 / 核验依据 ↗</a></p>
+              </article>
+              <article class="source-card pedal-card">
+                <header><div><small>并行任务</small><h3><a href="https://github.com/smtg-ai/claude-squad" target="_blank" rel="noreferrer noopener">Claude Squad ↗</a></h3></div></header>
+                <p>虽然名字带 Claude，也支持 Codex。通过 tmux 会话、独立 Git worktree 和分支管理多个任务，集中查看状态和差异。</p>
+                <p><strong>怎么开始：</strong>准备 Codex、tmux 和 gh，按上游用法开始两个互不依赖的小任务。</p>
+                <p class="source-caveat"><strong>注意：</strong>worktree 不是安全沙箱，也不会消除合并冲突。先复核差异，再合并。</p>
+                <p class="pedal-meta">AGPL-3.0 · <a href="https://github.com/smtg-ai/claude-squad#usage" target="_blank" rel="noreferrer noopener">上游说明 / 核验依据 ↗</a></p>
+              </article>
+              <article class="source-card pedal-card">
+                <header><div><small>并行任务</small><h3><a href="https://github.com/superset-sh/superset" target="_blank" rel="noreferrer noopener">Superset ↗</a></h3></div></header>
+                <p>把 Codex 会话、独立 worktree、差异查看和浏览器预览放在一个桌面工作台，适合并行推进功能、测试和文档。</p>
+                <p><strong>怎么开始：</strong>加入已有仓库，每个任务建一个工作区，选择 Codex，再检查 Changes 并运行测试。</p>
+                <p class="source-caveat"><strong>注意：</strong>macOS 是主要平台，Linux 为实验性，Windows 暂无。worktree 不是沙箱；许可为 ELv2，不是 MIT。</p>
+                <p class="pedal-meta">Elastic License 2.0 · <a href="https://github.com/superset-sh/superset#start-with-one-task" target="_blank" rel="noreferrer noopener">上游说明 / 核验依据 ↗</a></p>
+              </article>
+              <article class="source-card pedal-card">
+                <header><div><small>持续执行 · 进阶</small><h3><a href="https://github.com/mikeyobrien/ralph-orchestrator" target="_blank" rel="noreferrer noopener">Ralph Orchestrator ↗</a></h3></div></header>
+                <p>用事件和不同角色组织循环，支持 Codex 后端、任务记录和验证门槛，适合能自动验收的长任务。</p>
+                <p><strong>怎么开始：</strong>先写目标和验证命令，配置迭代数、时长与停止条件，检查启动参数再运行。</p>
+                <p class="source-caveat"><strong>注意：</strong>核验的 Codex 后端默认带 --yolo。不要在日常机器上盲目运行；先审查权限并提供外部隔离，提示词不等于沙箱。</p>
+                <p class="pedal-meta">MIT · <a href="https://github.com/mikeyobrien/ralph-orchestrator/blob/b5789dfbb25bd4aa65ce565c756d95acc8c42f76/crates/ralph-adapters/src/cli_backend.rs#L357-L367" target="_blank" rel="noreferrer noopener">上游说明 / 核验依据 ↗</a></p>
+              </article>
+              <article class="source-card pedal-card">
+                <header><div><small>持续执行 · 进阶</small><h3><a href="https://github.com/umputun/ralphex" target="_blank" rel="noreferrer noopener">ralphex ↗</a></h3></div></header>
+                <p>读取带任务勾选项和验证命令的计划，逐项执行、提交，再进行多轮复核；支持 Codex 原生执行和 worktree。</p>
+                <p><strong>怎么开始：</strong>先准备小计划，在隔离环境核对 CLI 版本、权限和迭代上限，再试一轮完整执行。</p>
+                <p class="source-caveat"><strong>注意：</strong>要求 Codex CLI ≥ 0.130.0；Codex 模式默认 danger-full-access，并自动提交。同模型自审不是独立验证，不能默认允许推送或部署。</p>
+                <p class="pedal-meta">MIT · <a href="https://github.com/umputun/ralphex#codex-executor-mode" target="_blank" rel="noreferrer noopener">上游说明 / 核验依据 ↗</a></p>
+              </article>
+            </div>
+            <p class="source-caveat pedal-boundary">这些是外部项目，不是本站功能或质量担保；本轮核验了文档和部分源码，未进行本机实测。工具不会增加 Codex 额度，并行和循环可能更快消耗额度，使用与计费以实际登录方式为准。先定任务、验收和停止条件，不自动推送、不自动部署、不为空耗额度运行。全量重置预告、已确认重置和可储存重置卡仍按本站原有证据标准区分。</p>
+            <a class="node-link" href="https://github.com/farmcan/codex-reset-watcher/blob/main/docs/research-pedaling-workflows.md" target="_blank" rel="noreferrer noopener">完整方案比较与来源 ↗</a>
+          </div>
+        </details>
+      </section>
+
       <section class="system" aria-labelledby="system-title">
         <div class="section-heading">
-          <div><span class="section-index">04</span><h2 id="system-title">监控是否真的在工作</h2></div>
+          <div><span class="section-index">05</span><h2 id="system-title">监控是否真的在工作</h2></div>
           <p>最后成功时间、失败原因和邮件状态都会公开显示。</p>
         </div>
         <div id="system-grid" class="system-grid"></div>
@@ -173,7 +239,7 @@
     </main>
 
     <footer>
-      <p class="site-credit"><a href="https://github.com/farmcan/codex-reset-watcher" target="_blank" rel="noreferrer noopener">farmcan / Codex Reset Watcher</a> · 由 Codex 协助构建 · 更新于 <time datetime="2026-09-10">2026-09-10</time></p>
+      <p class="site-credit"><a href="https://github.com/farmcan/codex-reset-watcher" target="_blank" rel="noreferrer noopener">farmcan / Codex Reset Watcher</a> · 由 Codex 协助构建 · 更新于 <time datetime="2026-10-22">2026-10-22</time></p>
       <p>开源、非官方，与 OpenAI、X 或任何被追踪账号无隶属关系。Logo 为本项目原创 SVG。</p>
       <div><a id="status-api-link" href="api/status">JSON API</a><a id="history-api-link" href="api/history">历史数据</a><a href="feed.xml">RSS</a></div>
     </footer>
