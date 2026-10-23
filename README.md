@@ -129,6 +129,8 @@ Cloudflare Worker 可直接使用企业内机器人发送普通群消息，无�
 主页按实际配置显示能力，`GET /api/status` 的 `live.dingtalk` 与 `live.deliveries` 提供配置和发送状态。
 这条通道是普通群消息，**不是 DING**。2026-10-22 22:29（北京时间）从生产 Cloudflare Worker 实际调用应用内 DING 接口，返回 HTTP 403 / `Forbidden.AccessDenied.AccessTokenPermissionDenied`，缺少 `Premium.Ding.Write`；没有生成 `openDingId`，未发出 DING。临时测试入口与令牌已删除，未申请升级或使用短信/电话。
 
+2026-10-23 补充：在开发者后台点击该权限的“立即开通”，并用官方 DWS CLI 单独申请，均被服务端以 `40023 / 无效请求scope值` 拒绝；授权列表回读仍为空。此错误不能证明必须付费，当前仍保留普通全员 @，没有开通云端 DING。
+
 新信号与邮件沿用相同阈值、首次基线静默及官方信号抑制规则；不扫描最近100条API列表补发历史。
 D1按信号、通道及目标去重，发送前原子认领，记录钉钉 `processQueryKey`。应用凭证自动换取短期token；认证或限流明确拒绝、取token失败最多再试2次。
 网络超时、服务端结果不明或发送中断进入 `unknown`，不盲目重发；权限/参数明确拒绝进入 `failed`。人工应先核对目标群与业务回执，再处理异常记录。
@@ -186,7 +188,7 @@ D1按信号、通道及目标去重，发送前原子认领，记录钉钉 `proc
 
 ### 项目品牌
 
-网站、钉钉应用、机器人、群头像与消息预览统一使用现有小猫素材 `public/brand-zh.png` / `public/brand-en.png`。旧版 `public/logo.svg` 已删除，不再使用或重新生成替代标志。
+网站、钉钉应用、机器人、群头像与消息预览统一使用现有小猫素材 `public/brand-zh.png` / `public/brand-en.png`。旧版 `public/logo.svg` 已删除，不再使用或重新生成替代标志。2026-10-23 独立的“机器人消息预览图”重新上传小猫素材，并随应用 1.0.3 正式发布（`RELEASE`）；后台重新读取确认新媒体图为小猫，接收端是否刷新另行验收。
 
 全员提醒：按官方 channel SDK 的 `isAtAll` 字段请求全员 @（源码依据：https://github.com/DingTalk-Real-AI/dingtalk-channel-sdk-python/blob/main/src/dingtalk_channel_sdk/send.py ）。2026-10-22 用户确认 21:41 的 Cloudflare Worker 测试消息实际触发了“@所有人”提醒；公开状态 `mention_delivery_verified=true`，依据为接收端确认。单次后续测试的受理回执仍不代表每位成员已读。云端全员 DING 尚未打通，原接口拒绝缺少 `Premium.Ding.Write`。
 
