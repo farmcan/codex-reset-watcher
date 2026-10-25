@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-25",
+  "scope": "Cloudflare synthetic signal -> owner Dot -> local Codex -> independently verified file",
+  "natural_reset_automation_enabled": false,
+  "multi_user_acceptance": false,
+  "first_attempt": {
+    "gateway_task_id": "task_88ccd98fee9d3604675209ea6a6eef9d",
+    "codex_task_id": "01a172dd-dda9-77b1-a5d2-affd2c1b002d",
+    "codex_completed": true,
+    "artifact": {
+      "bytes": 26,
+      "sha256": "b78be7cf9b72d4556661474a9050408a96a1d313a55bb78bbd60728254bc9049"
+    },
+    "gateway_status": "failed",
+    "gateway_error": "Lease expired",
+    "acceptance": "partial: real execution succeeded, gateway receipt did not close"
+  },
+  "second_attempt": {
+    "cloudflare_sender_version": "0f5d87d2-8928-4837-a414-69f711290f50",
+    "gateway_task_id": "task_26deab5b20b4829292f534148415afaa",
+    "codex_task_id": "01a172e5-8895-7566-ae24-54beb6f1c02a",
+    "gateway_status": "completed",
+    "gateway_result": {
+      "codex_task_id": "01a172e5-8895-7566-ae24-54beb6f1c02a",
+      "completion_verified": false,
+      "marker": "CRW-DOT-20261025-b798a815",
+      "phase": "delegated"
+    },
+    "codex_turn_status": "completed",
+    "codex_command_exit_code": 0,
+    "artifact": {
+      "bytes": 26,
+      "sha256": "2b30ea2f1fef93382e0a5bc935faa4195c564250d5df60d2cae94dc66ef22716"
+    },
+    "artifact_exact_bytes_verified": true,
+    "same_marker_task_count_after_duplicate_cloud_request": 1,
+    "audit": [
+      "api:task.submitted",
+      "dot:task.claimed",
+      "dot:complete_task"
+    ],
+    "verified_at": "2026-10-25T11:53:25.527619+00:00"
+  },
+  "cleanup": {
+    "temporary_sender_deleted": true,
+    "test_subscription_deactivated_by_owner": true,
+    "dot_reported_stop_did_not_match_backend_state": true,
+    "valid_gateway_tokens_after_restoration": 0,
+    "active_subscriptions_after_cleanup": 0,
+    "local_probe_gateway_and_relay_stopped": true,
+    "production_dingtalk_unchanged_by_probe": true
+  },
+  "limitations": [
+    "Owner account only; no second ChatGPT account was tested.",
+    "One-shot explicit delegation, not a natural reset event and not unattended production acceptance.",
+    "Gateway completed means delegated receipt; artifact completion was checked independently.",
+    "Automatic subscription cleanup needs improvement before long-term rollout."
+  ]
+}

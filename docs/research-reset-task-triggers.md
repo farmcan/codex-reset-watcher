@@ -1,6 +1,6 @@
 # Reset 信号 → Dot → Codex：自动启动任务调研
 
-核验：2026-10-25，Asia/Shanghai。本轮仅调研；没有启用自动执行、创建新订阅、发测试任务或迁移凭据。
+核验：2026-10-25，Asia/Shanghai。初稿只调研；随后用户授权本人账号实测，结果见文末。自然 Reset 自动执行和多用户接入仍未启用。
 
 **这条链路可行。WatchDot 已复用的 `dot2api` 就是现成接入方案。用户提供的应是自己的任务网关与受限凭据，普通 Dot 聊天链接不能直接当 webhook。** 面向普通用户，也可以让 Watcher 自己提供 MCP Events，用户连接插件并授权订阅，无需自己搭网关。
 
@@ -109,3 +109,19 @@ stop_when: 验收通过、预算达到、额度不足或连续两轮没有进展
 5. 再验一次同事件重复投递只执行一次；离线/订阅过期不假成功；重启恢复；停止按钮和预算到期有效。记录受理、执行、产物三层证据，并接入既有 Seed 状态事件入口。权限或费用有变化时按用户既有边界处理。
 
 **建议决策：先用自己的 dot2api 验一个真实的预授权目录任务；确定有用后，Watcher 原生 MCP Events 是更简洁的多人接入方向。** 目前已确认协议、现成代码和历史闭环，当前在线恢复与 Reset Watcher 生产触发尚未实施。
+
+## 2026-10-25 后续：本人账号 Cloudflare 实测
+
+用户随后授权使用自己的账号验证。复用现有网关与中继，既有 caller/Dot 凭据仅临时恢复两小时；没有扩大租户、队列或权限。部署了一个只接受固定测试请求的临时 Cloudflare Worker，结束后删除，不改成生产自动执行入口。
+
+第一轮实际由 Cloudflare 提交、事件 HTTP200、真实 Dot 领取并委派 Codex，独占创建26字节文件，独立哈希核验通过。但 Dot 领取了180秒租约、未及时写回，网关最终 Lease expired；因此保留为部分通过，不能称为完整回执闭环。
+
+第二轮采用两层状态：Dot 显式申请600秒租约，拿到 Codex 任务ID后立即写回 `phase=delegated, completion_verified=false`；Codex 后台完成由发起方独立读取线程和文件核验。实测网关 `completed`、委派回执成功，真实 Codex 命令退出0；独立读取26字节及SHA-256通过。重复同一 Cloudflare 请求仍返回原任务，只创建一条任务。
+
+测试也发现两处部署细节：Cloudflare Workers 不接受 `redirect: error`，已改为 manual 且拒绝非成功响应；临时Worker直接访问同账号中继域名返回404，改为官方 [Service Binding](https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/) 后成功入队。没有将这些错误判为 Dot 不支持接入。
+
+Dot 主会话曾称未收到事件，但独立网关审计、Codex执行及真实文件证明事件工作已发生；主会话可见性不能替代执行证据。Dot 还报告已停订阅，实际后台仍有一个活动订阅，维护侧已明确停用。因此自动订阅退出及长期无人值守尚不能宣称通过。
+
+临时发送Worker及其Secrets已删除，网关凭据恢复原期限，活动订阅和有效token均为0；本次启动的本机网关/中继已停止。未触发自然Reset、未开放多用户、未给其他人发任务。
+
+[本次脱敏执行与清理证据](evidence/reset-dot-probe-20261025.json)。
