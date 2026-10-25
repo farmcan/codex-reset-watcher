@@ -212,3 +212,8 @@ GitHub Pages 备用快照引导到实时站查看与点赞，不写入离线快�
 （`functions/api/site-counter.js`、`migrations/0001_counters.sql`），
 沿用已有 D1，无新增外部服务；这里按上海自然日去重，与 MiaoTI 的 24 小时 cookie 口径不同。
 上线前应用 `0005_site_engagement.sql`。
+
+### Reset 信号自动启动任务（仅调研）
+
+外部事件触发 Dot/Codex、预先准备任务目录的可行性与实施边界见
+[Reset 自动任务调研](docs/research-reset-task-triggers.md)；目前仅调研，未启用自动执行。
