@@ -1,5 +1,5 @@
 import { classifyPost, isRelevant } from "./classifier";
-import { QUERY_SPECS } from "./config";
+import { QUERY_SPECS, SEVERITY_RANK } from "./config";
 import {
   acquirePollLock,
   createPollRun,
@@ -16,7 +16,7 @@ import {
   queueEmailDelivery,
   releasePollLock
 } from "./db";
-import { processPendingDeliveries } from "./notifications";
+import { processPendingDeliveries, severityAtLeast } from "./notifications";
 import type { Env, PollSummary, Signal, SourceStateRow } from "./types";
 import { fetchXQuery } from "./x-source";
 import { processReviews } from "./model-review";
@@ -141,6 +141,7 @@ async function runPollWithLock(env: Env, startedAt: string): Promise<PollSummary
 
 async function maybeQueueEmail(env: Env, signal: Signal, priming: boolean, now: string): Promise<void> {
   if (priming || !signal.shouldNotify || signal.supersededByPostId) return;
-  await queueEmailDelivery(env, signal, now);
+  const minimum=env.EMAIL_MIN_SEVERITY in SEVERITY_RANK?env.EMAIL_MIN_SEVERITY:'medium';
+  if(severityAtLeast(signal.severity,minimum))await queueEmailDelivery(env, signal, now);
   await queueDingTalkDelivery(env, signal, now);
 }

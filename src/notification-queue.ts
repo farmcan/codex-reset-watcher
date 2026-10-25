@@ -1,4 +1,5 @@
 import { queueEmailDelivery, shortHash } from './db';
+import { SEVERITY_RANK } from './config';
 import { dingtalkConfigured, dingTalkDestination, queueDingTalkDelivery } from './dingtalk';
 import { emailConfigured } from './notifications';
 import type { Env, Signal } from './types';
@@ -24,6 +25,10 @@ export async function reconcileNotificationQueue(env: Env, now: string): Promise
       AND NOT EXISTS (SELECT 1 FROM deliveries d WHERE d.signal_id=s.signal_id AND d.channel=? AND d.destination_hash=?)
       ORDER BY s.created_at LIMIT 100`).bind(destination.channel,destination.hash).all<{signal_id:string;severity:Signal['severity']}>();
     for (const row of results) {
+      // The user's all-visible policy applies to DingTalk. Preserve the
+      // separately configured email threshold when that optional channel is on.
+      const minimum=env.EMAIL_MIN_SEVERITY in SEVERITY_RANK?env.EMAIL_MIN_SEVERITY:'medium';
+      if(destination.channel==='email'&&SEVERITY_RANK[row.severity]<SEVERITY_RANK[minimum])continue;
       await destination.queue({signalId: row.signal_id} as Signal);
       queued++;
     }

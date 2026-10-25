@@ -37,10 +37,12 @@ async function personalFixture() {
 describe("durable cloud DingTalk delivery", () => {
   it('does not filter new visible weak hints by email severity',async()=>{
     const {env,sqlite}=fixture();env.EMAIL_MIN_SEVERITY='high';
+    Object.assign(env,{EMAIL_PROVIDER:'resend',RESEND_API_KEY:'fixture',ALERT_EMAIL_FROM:'from@example.test',ALERT_EMAIL_TO:'to@example.test'});
     sqlite.prepare("UPDATE posts SET notification_eligible=1").run();
     sqlite.prepare("UPDATE signals SET event_type='weak_hint',severity='low'").run();
     expect(await reconcileNotificationQueue(env,now)).toBe(1);
     expect(sqlite.prepare('SELECT count(*) AS n FROM deliveries').get().n).toBe(1);
+    expect(sqlite.prepare('SELECT channel FROM deliveries').get().channel).toBe('dingtalk');
   });
   it('sends actual app DING to every group member before retaining the group message, exactly once',async()=>{
     const {env,sqlite}=await personalFixture();
