@@ -368,3 +368,12 @@ footer { flex-wrap: wrap; }
 .notification-capability { font-size: 13px; line-height: 1.65; color: var(--muted, #52645a); border-left: 3px solid #4f7a61; padding-left: 10px; max-width: 42em; }
 .token-task { white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.7 ui-monospace, monospace; padding: 14px; background: #f5f4ef; border-radius: 8px; color: #26372d; }
 .dingtalk-contact { font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
+
+.site-engagement { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 20px; color: var(--muted); font-size: 14px; }
+.site-engagement strong { font-variant-numeric: tabular-nums; color: var(--ink, #26372d); }
+.site-engagement button { display: inline-flex; gap: 7px; align-items: center; padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: inherit; font: inherit; cursor: pointer; }
+.site-engagement button:hover:not(:disabled), .site-engagement button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.site-engagement button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.site-engagement button:disabled { cursor: default; }
+.engagement-note { margin: 8px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.engagement-note a { color: var(--accent); }

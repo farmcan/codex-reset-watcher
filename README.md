@@ -196,3 +196,19 @@ npx wrangler secret put ALERT_EMAIL_TO
 旧版 `public/logo.svg` 已删除，不再使用或重新生成替代标志。钉钉中文图片配置已随应用 1.0.4 正式发布。
 
 2026-10-25 生产验收补充：修复模型复核产生网页信号却未入队的问题；当天唯一指定的漏发信号已在原群留档，并由 Cloudflare 向 2/5 位可达成员补发 DING，其余 3 位被平台以非好友/同事拒绝，保持部分覆盖状态，不宣称全员成功。
+
+### 访问量与点赞
+
+主页中英文共用 D1 累计数，自 2026-10-25 上线起记录，不回填历史访问。
+`GET /api/engagement` 只读总数；`POST /api/engagement/visit` 和 `/like`
+接受随机浏览器 UUID `visitor_id`。同一浏览器按上海自然日计一次访问，点赞一次；
+唯一键和 SQLite trigger 原子去重并累加，刷新、重试与部署不清零。
+页面只在浏览器存储可用时登记；仅保存随机标识，不保存 IP、账号或浏览历史。
+这是轻量浏览器计数，不是实名人数统计；清除存储或换浏览器会被视为新浏览器。
+常见爬虫与跨站写入被排除。存储失败显示不可用，不显示伪造的 0。
+GitHub Pages 备用快照引导到实时站查看与点赞，不写入离线快照。
+
+实现复用自有 MiaoTI 项目 `3603fa3` 的设计思路
+（`functions/api/site-counter.js`、`migrations/0001_counters.sql`），
+沿用已有 D1，无新增外部服务；这里按上海自然日去重，与 MiaoTI 的 24 小时 cookie 口径不同。
+上线前应用 `0005_site_engagement.sql`。

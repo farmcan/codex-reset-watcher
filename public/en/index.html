@@ -6,7 +6,8 @@
     <meta name="description" content="Track Codex usage-reset signals: first-party warnings, community chatter, delivery reports, audited history, and alerts.">
     <title>Codex Reset Watcher</title>
     <link rel="icon" href="../brand-en.png" type="image/png">
-    <link rel="stylesheet" href="../styles.css?v=20261022-1">
+    <link rel="stylesheet" href="../styles.css?v=20261025-1">
+    <script type="module" src="../engagement.js?v=20261025-1"></script>
     <script type="module" src="../app.js?v=20260915-1"></script>
   </head>
   <body>
@@ -39,6 +40,11 @@
             <p class="hero-copy">Check only Tibo’s new posts and replies every hour. Past announcements, community signals, and delivery reports remain available for reference.</p>
             <p id="notification-capability" class="notification-capability" aria-live="polite">Checking cloud DingTalk alerts…</p>
             <p class="dingtalk-contact">DingTalk ID: <code id="dingtalk-contact">d4r_yr1im7hv6</code> · Add me for an invite to the cross-organization alert group</p>
+            <div class="site-engagement" aria-label="Site visits and likes">
+              <span>Visits <strong id="visit-count">—</strong></span>
+              <button id="like-button" type="button" aria-pressed="false" disabled><span aria-hidden="true">♥</span> <span id="like-label">Like</span> <strong id="like-count">—</strong></button>
+            </div>
+            <p id="engagement-note" class="engagement-note" aria-live="polite">Since launch · one visit per browser per day, one like per browser.</p>
             <div class="hero-actions">
               <a class="usage-link" href="https://chatgpt.com/codex/settings/usage" target="_blank" rel="noreferrer noopener" aria-label="Open ChatGPT to check my Codex usage">
                 <span>Check my Codex usage</span><span aria-hidden="true">↗</span>

@@ -2,6 +2,7 @@ import { handleApi } from "./api";
 import { runPoll } from "./poll";
 import { buildRss } from "./rss";
 import type { Env } from "./types";
+import { handleEngagement } from './engagement';
 
 const SECURITY_HEADERS = {
   "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
@@ -15,6 +16,8 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname === "/__scheduled") return new Response("Not Found", { status: 404 });
+    const engagement = await handleEngagement(request, env);
+    if (engagement) return withSecurityHeaders(engagement);
     const api = await handleApi(request, env);
     if (api) return withSecurityHeaders(api);
     if (request.method === "GET" && url.pathname === "/feed.xml") return withSecurityHeaders(await buildRss(env, url.origin));
