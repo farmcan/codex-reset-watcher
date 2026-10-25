@@ -1,6 +1,6 @@
 import { shortHash } from "./db";
 import type { Env, Signal } from "./types";
-import { DwsError, sendGroupPersonalDing } from './dws';
+import { DwsError, sendGroupPersonalDing, selectedDingRecipients } from './dws';
 
 export function dingtalkConfigured(env: Env): boolean {
   if(env.DINGTALK_MODE==='personal_ding')return Boolean(env.DWS_TOKEN_KEY&&env.DINGTALK_GROUP_ID);
@@ -81,6 +81,7 @@ export async function queueDingTalkDelivery(env: Env, signal: Signal, now: strin
 
 export async function dingTalkHealth(env: Env, now = new Date().toISOString()): Promise<Record<string, unknown>> {
   if (!dingtalkConfigured(env)) return {status:'disabled', unqueued_eligible:0};
+  const selected=env.DINGTALK_MODE==='personal_ding'?selectedDingRecipients(env):null;
   const destination = await dingTalkDestination(env);
   const delivery = await env.DB.prepare(`SELECT
     COALESCE(SUM(status='failed'),0) AS failed, COALESCE(SUM(status='unknown'),0) AS unknown,
@@ -103,6 +104,7 @@ export async function dingTalkHealth(env: Env, now = new Date().toISOString()): 
     .bind(destination).first<{last_error:string}>();
   const coverage=partial?.last_error.match(/coverage partial: (\d+)\/(\d+)/);
   return {...delivery, unqueued_eligible:missing?.n ?? 0,
+    recipient_scope:selected?'selected_members':'group_members',configured_recipient_count:selected?.length??null,mentions_all_requested:!selected,
     cloud_ding_verified:Boolean(verified),cloud_ding_last_success_at:verified?.updated_at??null,
     coverage:coverage?{notified:Number(coverage[1]),total:Number(coverage[2]),blocked:Number(coverage[2])-Number(coverage[1]),reason:'not_colleagues_or_friends'}:undefined,
     status:Number(delivery?.failed)>0 || Number(delivery?.unknown)>0 || Number(delivery?.partial)>0 || Number(missing?.n)>0 || stale ? 'degraded' : 'healthy'};
@@ -120,7 +122,7 @@ export function dingTalkContent(row: Omit<Row, "id" | "attempts">, personalDing 
     ? "一手未来 hard reset 信号；如果本来有任务，可以考虑提前安排。预告不保证执行。"
     : row.reset_mode === "banked_reset" ? "可储存/手动使用的重置权益，不等同自动 hard reset；请查看个人 Usage。"
     : row.event_type === "explicit_reset" ? "请在个人 Codex Usage 检查是否实际到账。" : "公开线索仅供留意，请核对原帖。";
-  return `[Codex Reset Watcher] ${title}\n${action}\n来源：@${row.author} · ${row.source_tier}\n类型：${row.event_type} / ${row.reset_mode}${row.effective_time ? `\n预计时间：${row.effective_time}` : ""}\n\n${row.text.replace(/\s+/g, " ").slice(0, 700)}\n\n原帖：${row.url}\n雷达：https://codex-reset-watcher.weican16hit.workers.dev/\n${personalDing?'Cloudflare 云端应用内 DING · 通知群全体成员':'全员 @ 普通群通知（非 DING）'}`;
+  return `[Codex Reset Watcher] ${title}\n${action}\n来源：@${row.author} · ${row.source_tier}\n类型：${row.event_type} / ${row.reset_mode}${row.effective_time ? `\n预计时间：${row.effective_time}` : ""}\n\n${row.text.replace(/\s+/g, " ").slice(0, 700)}\n\n原帖：${row.url}\n雷达：https://codex-reset-watcher.weican16hit.workers.dev/\n${personalDing?'Cloudflare 云端应用内 DING':'全员 @ 普通群通知（非 DING）'}`;
 }
 
 export async function processDingTalkDeliveries(env: Env, now = new Date().toISOString()): Promise<{ sent: number; failed: number }> {

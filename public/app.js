@@ -283,7 +283,9 @@ function renderHealth(status) {
       : ding.coverage ? ui(`云端 DING 已覆盖 ${ding.coverage.notified}/${ding.coverage.total} 位成员 · 其余需要好友或同事关系`, `Cloud DING reached ${ding.coverage.notified}/${ding.coverage.total} members · the rest require colleague or friend relationships`)
       : deliveryIssues ? ui("云端钉钉通知有异常 · 查看下方监控健康状态", "Cloud DingTalk delivery needs attention · see monitoring health below")
       : ding.true_ding ? (ding.cloud_ding_verified
-        ? ui("云端应用内 DING 已验证 · 网页每条新增信息都通知群成员 · 无需本机在线", "Cloud app DING verified · every new website update notifies group members · no local computer needed")
+        ? (ding.recipient_scope === "selected_members"
+          ? ui(`云端 DING 已验证 · 每条新增信息通知指定的 ${ding.configured_recipient_count} 位接收者 · 无需本机在线`, `Cloud DING verified · every new update notifies ${ding.configured_recipient_count} selected recipients · no local computer needed`)
+          : ui("云端应用内 DING 已验证 · 网页每条新增信息都通知群成员 · 无需本机在线", "Cloud app DING verified · every new website update notifies group members · no local computer needed"))
         : ui("云端应用内 DING 已配置 · 实际发送待验证", "Cloud app DING configured · live delivery not yet verified"))
       : ui("云端钉钉群消息 · 普通消息，非 DING", "Cloud DingTalk group messages · not DING");
   }
@@ -882,7 +884,7 @@ function renderSystem(status) {
     [ui("官方源最后成功", "Last first-party success"), official.last_success_at ? formatTime(official.last_success_at, true) : ui("尚未成功", "No success yet"), official.last_error || ui("没有记录错误", "No recorded error")],
     [ui("邮件提醒", "Email alerts"), status.live.email.configured ? ui("已启用", "Enabled") : ui("未配置", "Not configured"), status.live.email.configured ? ui(`最低 ${status.live.email.minimum_severity} 才发送`, `Sends at ${status.live.email.minimum_severity} severity or above`) : ui("补收件人、发件域名和 Resend Secret 后启用", "Add recipient, verified sender domain, and Resend secret to enable")],
     [ui("钉钉通知", "DingTalk alerts"), dingLabel, (ding.true_ding
-      ? ui("每条网页新增信息均通知当前群成员，并在群内留档。登录自动刷新；发送失败、积压和缺失任务会显示为异常。", "Every new website update notifies current group members and is retained in the group. Login refreshes automatically; failed, overdue or missing deliveries surface as errors.")
+      ? ui("每条网页新增信息均通知已配置的接收者，并在群内留档。登录自动刷新；发送失败、积压和缺失任务会显示为异常。", "Every new website update notifies configured recipients and is retained in the group. Login refreshes automatically; failed, overdue or missing deliveries surface as errors.")
       : ui("普通群消息，非 DING。", "Group messages, not DING.")) + " " + (ding.delivery_counts || []).map(row => `${row.status}: ${row.count}`).join(" · ")],
     [ui("实时记录", "Live records"), ui(`${(status.live.signals || []).length} 条`, `${(status.live.signals || []).length} items`), ui("页面显示最近 100 条有效信号", "The page shows the latest 100 valid signals")]
   ];

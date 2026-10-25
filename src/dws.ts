@@ -94,7 +94,16 @@ export async function dwsCall(env:Env, tool:'get_group_members'|'send_personal_d
   return body.result || {};
 }
 interface SendState {receivers?:string[];dingIds:string[];taskId?:string;messageId?:string;strategy?:'group_message';receipts?:Record<string,string>;blocked?:Record<string,string>}
+export function selectedDingRecipients(env:Env):string[]|null {
+  if(env.DINGTALK_RECIPIENT_IDS===undefined)return null;
+  let value:unknown;
+  try {value=JSON.parse(env.DINGTALK_RECIPIENT_IDS);}catch{throw new DwsError('Invalid selected DING recipients','failed');}
+  if(!Array.isArray(value)||!value.length||value.length>100||value.some(id=>typeof id!=='string'||!id.trim()||id.length>128))throw new DwsError('Invalid selected DING recipients','failed');
+  return [...new Set(value as string[])].sort();
+}
 export async function sendGroupPersonalDing(env:Env,group:string,content:string,idempotencyKey:string):Promise<string> {
+  // Production recipient preferences must never alter the isolated test group.
+  const selected=group===env.DINGTALK_GROUP_ID?selectedDingRecipients(env):null;
   const key=`dws-send:${await shortHash(group+':'+idempotencyKey)}`;
   const row=await env.DB.prepare('SELECT value FROM app_state WHERE key=?').bind(key).first<{value:string}>();
   const state:SendState=row?JSON.parse(row.value):{dingIds:[]};
@@ -115,6 +124,8 @@ export async function sendGroupPersonalDing(env:Env,group:string,content:string,
     if(!complete||!receivers.size)throw new DwsError('DWS group membership unavailable','pending');
     state.receivers=[...receivers].sort();await persist();
   }
+  const targets=selected??state.receivers;
+  if(targets.some(id=>!state.receivers!.includes(id)))throw new DwsError('Selected DING recipient is missing from the group','pending');
   const ensureGroupMessage=async()=>{
     if(!state.taskId&&!state.messageId){
     const result=await dwsCall(env,'send_personal_message',{openConversationId:group,msgType:'text',
@@ -171,16 +182,16 @@ export async function sendGroupPersonalDing(env:Env,group:string,content:string,
     for(const id of ids){state.receipts![id]=result!.openDingId;delete state.blocked![id];}
     await persist();
   };
-  const remaining=state.receivers.filter(id=>!state.receipts![id]);
+  const remaining=targets.filter(id=>!state.receipts![id]);
   for(let offset=0;offset<remaining.length;offset+=50){
     await deliver(remaining.slice(offset,offset+50));
   }
   await ensureGroupMessage();
-  const delivered=Object.keys(state.receipts).length;
-  if(delivered!==state.receivers.length)throw new DwsError(`DING coverage partial: ${delivered}/${state.receivers.length}; remaining members are not colleagues or friends`,'pending');
+  const delivered=targets.filter(id=>Boolean(state.receipts![id])).length;
+  if(delivered!==targets.length)throw new DwsError(`DING coverage partial: ${delivered}/${targets.length}; remaining members are not colleagues or friends`,'pending');
   await env.DB.prepare(`INSERT INTO app_state(key,value,updated_at) VALUES ('dws_ding_last_success',?,?)
     ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at`)
-    .bind(JSON.stringify({recipient_count:state.receivers.length,ding_count:state.dingIds.length}),new Date().toISOString()).run();
-  return JSON.stringify({openDingIds:state.dingIds,recipientCount:state.receivers.length,
+    .bind(JSON.stringify({recipient_count:targets.length,group_member_count:state.receivers.length,recipient_scope:selected?'selected_members':'group_members',ding_count:state.dingIds.length}),new Date().toISOString()).run();
+  return JSON.stringify({openDingIds:state.dingIds,recipientCount:targets.length,groupMemberCount:state.receivers.length,recipientScope:selected?'selected_members':'group_members',
     openTaskId:state.taskId,openMessageId:state.messageId,channel:'personal_app_ding'});
 }

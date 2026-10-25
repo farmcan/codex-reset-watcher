@@ -39,6 +39,7 @@ export interface Env {
   DINGTALK_TEST_TOKEN?: string;
   DINGTALK_TEST_GROUP_ID?: string;
   DINGTALK_MODE?: 'personal_ding' | 'group_message';
+  DINGTALK_RECIPIENT_IDS?: string;
   DWS_TOKEN_KEY?: string;
 }
 

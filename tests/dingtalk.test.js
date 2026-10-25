@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { reconcileNotificationQueue } from "../src/notification-queue";
 import { sealDwsSession, dwsAccessToken, sendGroupPersonalDing } from '../src/dws';
 import { processReviews } from "../src/model-review";
+import { shortHash } from '../src/db';
 import { queueDingTalkDelivery, processDingTalkDeliveries, testDingTalk, dingTalkContent, dingTalkHealth } from "../src/dingtalk";
 
 const databases = [];
@@ -35,6 +36,27 @@ async function personalFixture() {
 }
 
 describe("durable cloud DingTalk delivery", () => {
+  it('completes the newly selected audience using existing receipts without resending or discarding the group audit',async()=>{
+    const {env,sqlite}=await personalFixture();env.DINGTALK_RECIPIENT_IDS=JSON.stringify(['a','b']);
+    const group=env.DINGTALK_GROUP_ID;
+    const key='dws-send:'+await shortHash(group+':selected-existing');
+    const state={receivers:['a','b','c'],dingIds:['ding-ab'],receipts:{a:'ding-ab',b:'ding-ab'},blocked:{c:'not_colleague_or_friend'},messageId:'existing-message',strategy:'group_message'};
+    sqlite.prepare('INSERT INTO app_state(key,value,updated_at) VALUES (?,?,?)').run(key,JSON.stringify(state),now);
+    const fetch=vi.fn();vi.stubGlobal('fetch',fetch);
+    expect(JSON.parse(await sendGroupPersonalDing(env,group,'notice','selected-existing'))).toMatchObject({recipientCount:2,groupMemberCount:3,recipientScope:'selected_members',openMessageId:'existing-message'});
+    expect(fetch).not.toHaveBeenCalled();
+    expect(JSON.parse(sqlite.prepare('SELECT value FROM app_state WHERE key=?').get(key).value).blocked.c).toBe('not_colleague_or_friend');
+    expect(await dingTalkHealth(env,now)).toMatchObject({recipient_scope:'selected_members',configured_recipient_count:2,mentions_all_requested:false});
+  });
+  it('fails closed for an empty selected audience and a selected person absent from the group',async()=>{
+    const {env}=await personalFixture();env.DINGTALK_RECIPIENT_IDS='[]';
+    const fetch=vi.fn();vi.stubGlobal('fetch',fetch);
+    await expect(sendGroupPersonalDing(env,env.DINGTALK_GROUP_ID,'notice','empty')).rejects.toThrow('Invalid selected');
+    expect(fetch).not.toHaveBeenCalled();
+    env.DINGTALK_RECIPIENT_IDS='["absent"]';fetch.mockResolvedValueOnce(rpc({hasMore:false,list:[{openDingtalkId:'present'}]}));
+    await expect(sendGroupPersonalDing(env,env.DINGTALK_GROUP_ID,'notice','missing')).rejects.toThrow('missing from the group');
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
   it('does not filter new visible weak hints by email severity',async()=>{
     const {env,sqlite}=fixture();env.EMAIL_MIN_SEVERITY='high';
     Object.assign(env,{EMAIL_PROVIDER:'resend',RESEND_API_KEY:'fixture',ALERT_EMAIL_FROM:'from@example.test',ALERT_EMAIL_TO:'to@example.test'});
