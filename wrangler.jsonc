@@ -11,6 +11,7 @@
   "vars": {
     "ENVIRONMENT": "production",
     "PUBLIC_TIMEZONE": "Asia/Shanghai",
+    "DINGTALK_MODE": "personal_ding",
     "EMAIL_PROVIDER": "resend",
     "EMAIL_MIN_SEVERITY": "medium",
     "QWEN_MODEL": "qwen3.7-plus",

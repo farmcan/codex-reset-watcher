@@ -124,22 +124,25 @@ npx wrangler secret put ALERT_EMAIL_TO
 
 ### 云端钉钉通知
 
-Cloudflare Worker 可直接使用企业内机器人发送普通群消息，无需本机 DWS 常驻。
-在 Worker Secrets 配置 `DINGTALK_APP_KEY`、`DINGTALK_APP_SECRET`、`DINGTALK_GROUP_ID`，并把相应机器人加入目标群；先执行远程数据库迁移。
-主页按实际配置显示能力，`GET /api/status` 的 `live.dingtalk` 与 `live.deliveries` 提供配置和发送状态。
-这条通道是普通群消息，**不是 DING**。2026-10-22 22:29（北京时间）从生产 Cloudflare Worker 实际调用应用内 DING 接口，返回 HTTP 403 / `Forbidden.AccessDenied.AccessTokenPermissionDenied`，缺少 `Premium.Ding.Write`；没有生成 `openDingId`，未发出 DING。临时测试入口与令牌已删除，未申请升级或使用短信/电话。
+当前生产通道为 **Cloudflare → 个人应用内 DING → 群内留档**。每次发送先分页获取通知群当前成员，逐批发送应用内 DING；必要时尝试关联群消息的 DING，并查询群消息 `SUCCESS` 和 `openMessageId`。普通群消息不会代替 DING 被算作成功；不使用短信、电话。
 
-2026-10-23 补充：在开发者后台点击该权限的“立即开通”，并用官方 DWS CLI 单独申请，均被服务端以 `40023 / 无效请求scope值` 拒绝；授权列表回读仍为空。此错误不能证明必须付费，当前仍保留普通全员 @，没有开通云端 DING。
+2026-10-25 已在隔离双人测试群完成真实云端模拟发送，DING 业务回执覆盖 2 位接收者，群消息也已查得成功状态。本机 CLI 只用于配置和只读核验，不算云端发送验收。
 
-新信号与邮件沿用相同阈值、首次基线静默及官方信号抑制规则；不扫描最近100条API列表补发历史。
-D1按信号、通道及目标去重，发送前原子认领，记录钉钉 `processQueryKey`。应用凭证自动换取短期token；认证或限流明确拒绝、取token失败最多再试2次。
-网络超时、服务端结果不明或发送中断进入 `unknown`，不盲目重发；权限/参数明确拒绝进入 `failed`。人工应先核对目标群与业务回执，再处理异常记录。
-账号权限撤销、机器人移除及钉钉服务异常仍会影响发送；配置成功不保证永不失效。
+**通知范围：实时轮询新增、网页可见的每条信息均通知，不按 high/medium/low 过滤。** `posts.notification_eligible` 在增量抓取时持久化；模型把原规则未识别的短帖提升为网页信号后，也能获得通知资格。历史导入及首次基线默认为 0，不回放历史。复核后及每轮 Cron 都按目标补齐缺失发送任务，持久化唯一键防止重复；与网页相同的可见性条件排除无关内容。
 
-带管理员凭据的 `POST /api/admin/test-dingtalk` 需提供稳定 `Idempotency-Key`（8–100位字母、数字、下划线或短横线）。
-同一个key只尝试一次，重复请求返回持久化结果；测试不写入公开重置信号。
-可临时设置专用 `DINGTALK_TEST_TOKEN` 进行验收，完成后删除；真正通知由既有10分钟Cron处理。
-公开交付事件同步 Seed 的 `/tasks/`；该状态页目前为审查后发布的静态快照，Worker 的逐轮心跳和通知失败尚未自动回写，实时状态以本服务API为准。
+生产设置 `DINGTALK_MODE=personal_ding`，目标群 ID 保存在 `DINGTALK_GROUP_ID` Secret。独立 DWS OAuth 登录的令牌经 AES-256-GCM 加密，保存在 D1 `app_state.dws_oauth_v1`；32 字节密钥仅保存在 `DWS_TOKEN_KEY` Worker Secret。云端自行刷新并持久化轮换后的令牌，使用跨实例锁，不依赖本机在线。初始化使用独立登录，避免本机和云端争用同一刷新令牌。
+
+发送前原子认领，逐人 DING 回执、成员快照与群消息任务持久化。钉钉明确要求 DING 接收者为发送者的好友或同事；明确拒绝的整批会安全拆分，可达成员先正常通知，不让受限成员阻断整组。已成功成员不会在重试时收到重复 DING；剩余受限成员保留待处理并显示实际覆盖人数。明确的发送前临时失败继续重试；发送结果未知会隔离，不能盲目重发。队列缺口、积压、失败、未知状态或登录故障会使公开状态降级，`/healthz` 返回 503，不再仅凭 X 抓取正常显示整体健康。授权撤销或刷新结果未知仍需重新核验登录。
+
+`POST /api/admin/test-dingtalk` 要求稳定 `Idempotency-Key`，个人 DING 测试必须另配隔离的 `DINGTALK_TEST_GROUP_ID`，不会回退到生产群。可临时使用 `DINGTALK_TEST_TOKEN`，验收后删除。同一成功或未知测试不会重复发送；仅明确 pending 的测试可继续查询已接受的任务。测试不写入公开重置信号。
+
+`POST /api/admin/refresh-dws` 验证云端刷新；`POST /api/admin/reconcile-notifications` 在锁内补齐和处理待发送通知。均需管理员凭据。
+
+企业机器人 DING 是另一通道：2026-10-22 云端 OpenAPI 返回 403，缺少 `Premium.Ding.Write`；随后开通申请返回 `40023 / 无效请求scope值`。当前个人 DING 的成功不代表该企业应用权限已经开通，也不能据此断言个人 DING 必须付费。
+
+协议与字段参考官方 [DWS CLI](https://github.com/DingTalk-Real-AI/dingtalk-workspace-cli)（Apache-2.0，2026-10-25 核验，commit `52f38a4a6997da07fd9159fa643d313ca9b83409`）的 `internal/helpers/ding.go`、`internal/helpers/chat.go`、`internal/auth/oauth_helpers.go` 和 `internal/syncdata/endpoints.go`；本项目保留自身 MIT 许可。
+
+公开交付事件同步 Seed 的 `/tasks/`。该页目前为审查后发布的状态快照；Worker 的逐轮心跳尚未自动回写，实时状态以本服务 API 为准。
 
 ## API
 
@@ -188,10 +191,8 @@ D1按信号、通道及目标去重，发送前原子认领，记录钉钉 `proc
 
 ### 项目品牌
 
-网站、钉钉应用、机器人、群头像与消息预览统一使用现有小猫素材 `public/brand-zh.png`（含中文文案的唯一品牌图）。旧版 `public/logo.svg` 已删除，不再使用或重新生成替代标志。2026-10-23 独立的“机器人消息预览图”重新上传小猫素材，并随应用 1.0.3 正式发布（`RELEASE`）；后台重新读取确认新媒体图为小猫，接收端是否刷新另行验收。
+中文网页使用 `public/brand-zh.png`；英文网页使用 `public/brand-en.png`。钉钉应用、机器人、群头像和消息预览固定使用中文小猫图（“我真得好好调教你了”）。英文网页的英文表情包已恢复，图片语言不随钉钉设置一起改动。
 
-全员提醒：按官方 channel SDK 的 `isAtAll` 字段请求全员 @（源码依据：https://github.com/DingTalk-Real-AI/dingtalk-channel-sdk-python/blob/main/src/dingtalk_channel_sdk/send.py ）。2026-10-22 用户确认 21:41 的 Cloudflare Worker 测试消息实际触发了“@所有人”提醒；公开状态 `mention_delivery_verified=true`，依据为接收端确认。单次后续测试的受理回执仍不代表每位成员已读。云端全员 DING 尚未打通，原接口拒绝缺少 `Premium.Ding.Write`。
+旧版 `public/logo.svg` 已删除，不再使用或重新生成替代标志。钉钉中文图片配置已随应用 1.0.4 正式发布。
 
-模型复核不会给历史/补录内容新增通知资格；对原本已排队且复核仍合格的新信号保留资格，降级后取消待发送队列，避免管理员测试能发送而自然新信号被复核清零。
-
-品牌图片统一使用含“我真得好好调教你了”的中文小猫图，包括英文页面、钉钉应用、机器人、通知群头像及消息预览；英文图片文件已删除，后续不再按页面语言切换图片。
+2026-10-25 生产验收补充：修复模型复核产生网页信号却未入队的问题；当天唯一指定的漏发信号已在原群留档，并由 Cloudflare 向 2/5 位可达成员补发 DING，其余 3 位被平台以非好友/同事拒绝，保持部分覆盖状态，不宣称全员成功。

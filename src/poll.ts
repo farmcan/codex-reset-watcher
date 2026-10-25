@@ -1,5 +1,5 @@
 import { classifyPost, isRelevant } from "./classifier";
-import { QUERY_SPECS, SEVERITY_RANK } from "./config";
+import { QUERY_SPECS } from "./config";
 import {
   acquirePollLock,
   createPollRun,
@@ -16,11 +16,12 @@ import {
   queueEmailDelivery,
   releasePollLock
 } from "./db";
-import { processPendingDeliveries, severityAtLeast } from "./notifications";
+import { processPendingDeliveries } from "./notifications";
 import type { Env, PollSummary, Signal, SourceStateRow } from "./types";
 import { fetchXQuery } from "./x-source";
 import { processReviews } from "./model-review";
 import { queueDingTalkDelivery, processDingTalkDeliveries } from "./dingtalk";
+import { reconcileNotificationQueue } from "./notification-queue";
 
 export async function runPoll(env: Env, now = new Date()): Promise<PollSummary> {
   const startedAt = now.toISOString();
@@ -84,7 +85,7 @@ async function runPollWithLock(env: Env, startedAt: string): Promise<PollSummary
       fetchedCount += result.resultCount;
       const priming = state.primed_at === null;
       for (const post of [...result.posts].sort((a, b) => a.createdAt.localeCompare(b.createdAt))) {
-        if (!await insertPost(env.DB, post, startedAt)) continue;
+        if (!await insertPost(env.DB, post, startedAt, !priming)) continue;
         insertedCount += 1;
         let signal = classifyPost(post);
         if (!isRelevant(signal)) continue;
@@ -106,11 +107,17 @@ async function runPollWithLock(env: Env, startedAt: string): Promise<PollSummary
   }
 
   await processReviews(env);
+  await reconcileNotificationQueue(env, new Date().toISOString());
+  const sourceFailures = errors.length;
   const deliveries = await processPendingDeliveries(env, new Date().toISOString());
   const dingTalk = await processDingTalkDeliveries(env, new Date().toISOString());
+  if (deliveries.failed) errors.push(`Email deliveries failed: ${deliveries.failed}`);
+  if (dingTalk.failed) errors.push(`DingTalk deliveries failed: ${dingTalk.failed}`);
   const finishedAt = new Date().toISOString();
-  const succeeded = states.length - errors.length;
-  const status: PollSummary["status"] = states.length === 0
+  const succeeded = states.length - sourceFailures;
+  const status: PollSummary["status"] = errors.length > 0
+    ? succeeded > 0 ? "partial" : "failed"
+    : states.length === 0
     ? "skipped"
     : succeeded === states.length
       ? "success"
@@ -134,8 +141,6 @@ async function runPollWithLock(env: Env, startedAt: string): Promise<PollSummary
 
 async function maybeQueueEmail(env: Env, signal: Signal, priming: boolean, now: string): Promise<void> {
   if (priming || !signal.shouldNotify || signal.supersededByPostId) return;
-  const minimum = env.EMAIL_MIN_SEVERITY in SEVERITY_RANK ? env.EMAIL_MIN_SEVERITY : "medium";
-  if (!severityAtLeast(signal.severity, minimum)) return;
   await queueEmailDelivery(env, signal, now);
   await queueDingTalkDelivery(env, signal, now);
 }

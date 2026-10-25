@@ -59,12 +59,12 @@ export async function markSourceFailure(db: D1Database, state: SourceStateRow, n
   `).bind(error.slice(0, 2000), failures, next, state.name).run();
 }
 
-export async function insertPost(db: D1Database, post: RawPost, firstSeenAt: string): Promise<boolean> {
+export async function insertPost(db: D1Database, post: RawPost, firstSeenAt: string, notificationEligible = false): Promise<boolean> {
   const result = await db.prepare(`
     INSERT OR IGNORE INTO posts (
       post_id, author, text, created_at, url, lane, source_tier, source_weight,
-      referenced_post_ids, linked_urls, raw_json, first_seen_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      referenced_post_ids, linked_urls, raw_json, first_seen_at, notification_eligible
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     post.postId,
     post.author,
@@ -77,7 +77,8 @@ export async function insertPost(db: D1Database, post: RawPost, firstSeenAt: str
     JSON.stringify(post.referencedPostIds),
     JSON.stringify(post.linkedUrls),
     JSON.stringify(post.raw),
-    firstSeenAt
+    firstSeenAt,
+    +notificationEligible
   ).run();
   return (result.meta.changes ?? 0) > 0;
 }

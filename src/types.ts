@@ -37,6 +37,9 @@ export interface Env {
   DINGTALK_APP_SECRET?: string;
   DINGTALK_GROUP_ID?: string;
   DINGTALK_TEST_TOKEN?: string;
+  DINGTALK_TEST_GROUP_ID?: string;
+  DINGTALK_MODE?: 'personal_ding' | 'group_message';
+  DWS_TOKEN_KEY?: string;
 }
 
 export interface QuerySpec {

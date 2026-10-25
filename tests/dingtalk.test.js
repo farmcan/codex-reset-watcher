@@ -1,15 +1,17 @@
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { reconcileNotificationQueue } from "../src/notification-queue";
+import { sealDwsSession, dwsAccessToken, sendGroupPersonalDing } from '../src/dws';
 import { processReviews } from "../src/model-review";
-import { queueDingTalkDelivery, processDingTalkDeliveries, testDingTalk, dingTalkContent } from "../src/dingtalk";
+import { queueDingTalkDelivery, processDingTalkDeliveries, testDingTalk, dingTalkContent, dingTalkHealth } from "../src/dingtalk";
 
 const databases = [];
 afterEach(() => { vi.unstubAllGlobals(); databases.splice(0).forEach(db => db.close()); });
 const now = "2026-10-22T12:30:00.000Z";
 function fixture() {
   const sqlite = new DatabaseSync(":memory:"); databases.push(sqlite);
-  for (const file of ["0001_initial.sql", "0002_model_reviews.sql", "0003_delivery_receipt.sql"]) sqlite.exec(readFileSync(new URL(`../migrations/${file}`, import.meta.url), "utf8"));
+  for (const file of ["0001_initial.sql", "0002_model_reviews.sql", "0003_delivery_receipt.sql", "0004_notification_eligibility.sql"]) sqlite.exec(readFileSync(new URL(`../migrations/${file}`, import.meta.url), "utf8"));
   const prepare = (sql, params = []) => ({ bind: (...args) => prepare(sql, args),
     run: async () => ({meta: sqlite.prepare(sql).run(...params)}),
     all: async () => ({results: sqlite.prepare(sql).all(...params)}),
@@ -23,8 +25,119 @@ function fixture() {
 }
 const tokenResponse = () => new Response(JSON.stringify({ accessToken: "fixture-token", expireIn: 7200 }), {status: 200});
 async function queued() { const f = fixture(); await queueDingTalkDelivery(f.env, { signalId: "x:p" }, now); return f; }
+const rpc = result => new Response(JSON.stringify({jsonrpc:'2.0',id:1,result:{content:[{type:'text',text:JSON.stringify({success:true,result})}]}}));
+async function personalFixture() {
+  const f=fixture();f.env.DINGTALK_MODE='personal_ding';f.env.DINGTALK_TEST_GROUP_ID='isolated-test-group';
+  f.env.DWS_TOKEN_KEY=btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))));
+  const value=await sealDwsSession(f.env,{access_token:'private-access',refresh_token:'private-refresh',client_id:'client',expires_at:new Date(Date.now()+3600_000).toISOString(),refresh_expires_at:new Date(Date.now()+86400_000).toISOString()});
+  f.sqlite.prepare('INSERT INTO app_state(key,value,updated_at) VALUES (?,?,?)').run('dws_oauth_v1',value,now);
+  return f;
+}
 
 describe("durable cloud DingTalk delivery", () => {
+  it('does not filter new visible weak hints by email severity',async()=>{
+    const {env,sqlite}=fixture();env.EMAIL_MIN_SEVERITY='high';
+    sqlite.prepare("UPDATE posts SET notification_eligible=1").run();
+    sqlite.prepare("UPDATE signals SET event_type='weak_hint',severity='low'").run();
+    expect(await reconcileNotificationQueue(env,now)).toBe(1);
+    expect(sqlite.prepare('SELECT count(*) AS n FROM deliveries').get().n).toBe(1);
+  });
+  it('sends actual app DING to every group member before retaining the group message, exactly once',async()=>{
+    const {env,sqlite}=await personalFixture();
+    const fetch=vi.fn().mockResolvedValueOnce(rpc({hasMore:false,list:[{openDingtalkId:'self'},{openDingtalkId:'er24'}]}))
+      .mockResolvedValueOnce(rpc({openDingId:'ding-receipt'})).mockResolvedValueOnce(rpc({openTaskId:'task'}))
+      .mockResolvedValueOnce(rpc({sendStatus:'SUCCESS',openMessageId:'message'}));vi.stubGlobal('fetch',fetch);
+    const result=JSON.parse(await sendGroupPersonalDing(env,'isolated-test-group','mock notice','stable-key'));
+    expect(result).toMatchObject({openDingIds:['ding-receipt'],recipientCount:2,openMessageId:'message'});
+    await sendGroupPersonalDing(env,'isolated-test-group','mock notice','stable-key');
+    expect(fetch).toHaveBeenCalledTimes(4);
+    const calls=fetch.mock.calls.map(c=>JSON.parse(c[1].body).params);
+    expect(calls[1]).toMatchObject({name:'send_personal_ding',arguments:{remindType:'APP',receiverOpenDingTalkIds:['er24','self']}});
+    expect(calls[2].arguments.openConversationId).toBe('isolated-test-group');
+    const encrypted=sqlite.prepare("SELECT value FROM app_state WHERE key='dws_oauth_v1'").get().value;
+    expect(encrypted).not.toContain('private-access');expect(encrypted).not.toContain('private-refresh');
+  });
+  it('never substitutes a plain group message after DING rejection',async()=>{
+    const {env}=await personalFixture();const fetch=vi.fn().mockResolvedValueOnce(rpc({hasMore:false,list:[{openDingtalkId:'self'}]}))
+      .mockResolvedValueOnce(new Response(JSON.stringify({result:{content:[{type:'text',text:JSON.stringify({success:false,errorCode:'DENIED'})}]}})));
+    vi.stubGlobal('fetch',fetch);await expect(sendGroupPersonalDing(env,'isolated','mock','denied')).rejects.toThrow('DENIED');
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+  it('tries a source-group DING after explicit personal DING permission rejection, requiring a DING receipt',async()=>{
+    const {env}=await personalFixture();const fetch=vi.fn().mockResolvedValueOnce(rpc({hasMore:false,list:[{openDingtalkId:'self'}]}))
+      .mockResolvedValueOnce(new Response(JSON.stringify({result:{content:[{type:'text',text:JSON.stringify({success:false,errorCode:'FORBIDDEN'})}]}})))
+      .mockResolvedValueOnce(rpc({openTaskId:'task'})).mockResolvedValueOnce(rpc({sendStatus:'SUCCESS',openMessageId:'message'}))
+      .mockResolvedValueOnce(rpc({openDingId:'group-ding'}));vi.stubGlobal('fetch',fetch);
+    expect(JSON.parse(await sendGroupPersonalDing(env,'isolated','notice','context'))).toMatchObject({openDingIds:['group-ding'],openMessageId:'message'});
+    expect(JSON.parse(fetch.mock.calls[4][1].body).params).toMatchObject({name:'send_ding_by_message',arguments:{openConversationId:'isolated',openMessageId:'message',remindType:'APP'}});
+  });
+  it('isolates blocked members, notifies reachable members, and never repeats their DING on retry',async()=>{
+    const {env}=await personalFixture();
+    const forbidden=()=>new Response(JSON.stringify({result:{content:[{type:'text',text:JSON.stringify({success:false,errorCode:'FORBIDDEN',errorMsg:'no permission: sender and receiver are neither colleagues nor friends'})}]}}));
+    const fetch=vi.fn().mockResolvedValueOnce(rpc({hasMore:false,list:[{openDingtalkId:'a'},{openDingtalkId:'b'}]}))
+      .mockResolvedValueOnce(forbidden()).mockResolvedValueOnce(rpc({openTaskId:'task'}))
+      .mockResolvedValueOnce(rpc({sendStatus:'SUCCESS',openMessageId:'message'})).mockResolvedValueOnce(forbidden())
+      .mockResolvedValueOnce(rpc({openDingId:'ding-a'})).mockResolvedValueOnce(forbidden())
+      .mockResolvedValueOnce(rpc({openDingId:'ding-b'}));vi.stubGlobal('fetch',fetch);
+    await expect(sendGroupPersonalDing(env,'isolated','notice','partial')).rejects.toThrow('coverage partial: 1/2');
+    expect(JSON.parse(await sendGroupPersonalDing(env,'isolated','notice','partial'))).toMatchObject({openDingIds:['ding-a','ding-b'],recipientCount:2});
+    expect(JSON.parse(fetch.mock.calls[7][1].body).params.arguments.receiverOpenDingTalkIds).toEqual(['b']);
+    expect(fetch).toHaveBeenCalledTimes(8);
+  });
+  it('refreshes the independent session and persists the rotated token encrypted',async()=>{
+    const {env,sqlite}=await personalFixture();const fetch=vi.fn().mockResolvedValue(new Response(JSON.stringify({accessToken:'rotated-access',refreshToken:'rotated-refresh',expiresIn:7200})));vi.stubGlobal('fetch',fetch);
+    expect(await dwsAccessToken(env,true)).toBe('rotated-access');
+    expect(await dwsAccessToken(env)).toBe('rotated-access');expect(fetch).toHaveBeenCalledTimes(1);
+    const encrypted=sqlite.prepare("SELECT value FROM app_state WHERE key='dws_oauth_v1'").get().value;
+    expect(encrypted).not.toContain('rotated-refresh');
+  });
+  it('requires an isolated group for personal DING tests instead of using the production group',async()=>{
+    const {env}=await personalFixture();delete env.DINGTALK_TEST_GROUP_ID;const fetch=vi.fn();vi.stubGlobal('fetch',fetch);
+    expect(await testDingTalk(env,'missing-test-group')).toMatchObject({status:'failed'});expect(fetch).not.toHaveBeenCalled();
+  });
+  it('surfaces missing outbox rows and failed deliveries as unhealthy',async()=>{
+    const {env,sqlite}=fixture();sqlite.prepare('UPDATE posts SET notification_eligible=1').run();
+    expect(await dingTalkHealth(env,now)).toMatchObject({status:'degraded',unqueued_eligible:1});
+    await reconcileNotificationQueue(env,now);
+    expect(await dingTalkHealth(env,now)).toMatchObject({status:'healthy',unqueued_eligible:0});
+    sqlite.prepare("UPDATE deliveries SET status='failed'").run();
+    expect(await dingTalkHealth(env,now)).toMatchObject({status:'degraded',failed:1});
+  });
+  it('does not blindly consume a rotating refresh token again after an unknown refresh result',async()=>{
+    const {env}=await personalFixture();const fetch=vi.fn().mockRejectedValue(new Error('network'));vi.stubGlobal('fetch',fetch);
+    await expect(dwsAccessToken(env,true)).rejects.toThrow('unknown');
+    await expect(dwsAccessToken(env,true)).rejects.toThrow('unknown');expect(fetch).toHaveBeenCalledTimes(1);
+  });
+  it('resumes an accepted group-message task without repeating DING or group writes',async()=>{
+    const {env}=await personalFixture();const fetch=vi.fn().mockResolvedValueOnce(rpc({hasMore:false,list:[{openDingtalkId:'self'}]}))
+      .mockResolvedValueOnce(rpc({openDingId:'ding'})).mockResolvedValueOnce(rpc({openTaskId:'task'}))
+      .mockResolvedValueOnce(rpc({sendStatus:'PROCESSING'})).mockResolvedValueOnce(rpc({sendStatus:'SUCCESS',openMessageId:'msg'}));vi.stubGlobal('fetch',fetch);
+    expect(await testDingTalk(env,'pending-task')).toMatchObject({status:'pending'});
+    expect(await testDingTalk(env,'pending-task')).toMatchObject({status:'sent',true_ding:true});
+    expect(fetch).toHaveBeenCalledTimes(5);
+    expect(fetch.mock.calls.map(c=>JSON.parse(c[1].body).params.name).filter(n=>n==='send_personal_ding')).toHaveLength(1);
+  });
+  it("queues a new short reset discovered only by review, and repairs interrupted enqueue once", async () => {
+    const {env,sqlite}=fixture();
+    sqlite.prepare("UPDATE posts SET author='thsottiaux',text='Day 20/ Rest and reset',notification_eligible=1").run();
+    sqlite.prepare("DELETE FROM signals").run();
+    env.DASHSCOPE_API_KEY='fixture';
+    const verdict={post_id:'p',event_type:'explicit_reset',reset_mode:'unknown',confidence:0.9,reason:'Official daily reset update',title_zh:'重置更新',title_en:'Reset update',summary_zh:'官方重置更新，模式未明',summary_en:'Official reset update; mode unspecified',evidence:['Rest and reset'],effective_time:null,approximate_time:false};
+    const fetch=vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({reviews:[verdict]})}}]})))
+      .mockResolvedValueOnce(tokenResponse()).mockResolvedValueOnce(new Response('{"processQueryKey":"review-promoted-receipt"}'));
+    vi.stubGlobal('fetch',fetch);
+    await processReviews(env);
+    expect(sqlite.prepare('SELECT should_notify FROM signals').get().should_notify).toBe(1);
+    expect(sqlite.prepare('SELECT COUNT(*) AS n FROM deliveries').get().n).toBe(1);
+    sqlite.prepare('DELETE FROM deliveries').run(); // simulate interruption before durable enqueue
+    await reconcileNotificationQueue(env,now);
+    await reconcileNotificationQueue(env,now);
+    expect(sqlite.prepare('SELECT COUNT(*) AS n FROM deliveries').get().n).toBe(1);
+    expect(await processDingTalkDeliveries(env,now)).toEqual({sent:1,failed:0});
+    await reconcileNotificationQueue(env,now);
+    expect(await processDingTalkDeliveries(env,now)).toEqual({sent:0,failed:0});
+    expect(fetch).toHaveBeenCalledTimes(3);
+  });
   it("deduplicates enqueue and accepted sends, retaining provider receipt", async () => {
     const {env,sqlite} = await queued(); await queueDingTalkDelivery(env,{signalId:'x:p'},now);
     const fetch = vi.fn().mockResolvedValueOnce(tokenResponse()).mockResolvedValueOnce(new Response('{"processQueryKey":"receipt"}'));
@@ -60,7 +173,7 @@ describe("durable cloud DingTalk delivery", () => {
   it("cancels an eligible alert when review downgrades it instead of stranding pending work", async () => {
     const {env,sqlite}=await queued();
     sqlite.prepare("UPDATE posts SET author='thsottiaux', text='A reset might be interesting.'").run();env.DASHSCOPE_API_KEY='fixture';
-    const verdict={post_id:'p',event_type:'weak_hint',reset_mode:'unknown',confidence:0.6,reason:'Only a hint',title_zh:'弱线索',title_en:'A hint',summary_zh:'不能确认重置',summary_en:'Not a reset announcement',evidence:['reset might be interesting'],effective_time:null,approximate_time:false};
+    const verdict={post_id:'p',event_type:'unrelated',reset_mode:'not_applicable',confidence:0.6,reason:'Only a wish',title_zh:'弱线索',title_en:'A hint',summary_zh:'不能确认重置',summary_en:'Not a reset announcement',evidence:['reset might be interesting'],effective_time:null,approximate_time:false};
     const fetch=vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({reviews:[verdict]})}}]})));vi.stubGlobal('fetch',fetch);
     await processReviews(env);expect(sqlite.prepare('SELECT should_notify FROM signals').get().should_notify).toBe(0);
     expect(sqlite.prepare('SELECT status FROM deliveries').get().status).toBe('cancelled');

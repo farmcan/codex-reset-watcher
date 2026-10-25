@@ -1,8 +1,14 @@
 import { shortHash } from "./db";
 import type { Env, Signal } from "./types";
+import { DwsError, sendGroupPersonalDing } from './dws';
 
 export function dingtalkConfigured(env: Env): boolean {
+  if(env.DINGTALK_MODE==='personal_ding')return Boolean(env.DWS_TOKEN_KEY&&env.DINGTALK_GROUP_ID);
   return Boolean(env.DINGTALK_APP_KEY && env.DINGTALK_APP_SECRET && env.DINGTALK_GROUP_ID);
+}
+
+export async function dingTalkDestination(env:Env):Promise<string> {
+  return shortHash(env.DINGTALK_MODE==='personal_ding'?`personal_ding:${env.DINGTALK_GROUP_ID}`:`${env.DINGTALK_APP_KEY}:${env.DINGTALK_GROUP_ID}`);
 }
 
 class DeliveryError extends Error {
@@ -33,8 +39,12 @@ async function accessToken(env: Env): Promise<string> {
   }
 }
 
-export async function sendDingTalk(env: Env, content: string): Promise<string> {
+export async function sendDingTalk(env: Env, content: string, key: string = crypto.randomUUID(), group = env.DINGTALK_GROUP_ID): Promise<string> {
   if (!dingtalkConfigured(env)) throw new DeliveryError("DingTalk configuration incomplete", "failed");
+  if(env.DINGTALK_MODE==='personal_ding'){
+    try {return await sendGroupPersonalDing(env,group!,content,key);}
+    catch(error){if(error instanceof DwsError)throw new DeliveryError(error.message,error.state);throw error;}
+  }
   const token = await accessToken(env);
   let response: Response;
   try {
@@ -63,10 +73,39 @@ export async function sendDingTalk(env: Env, content: string): Promise<string> {
 
 export async function queueDingTalkDelivery(env: Env, signal: Signal, now: string): Promise<void> {
   if (!dingtalkConfigured(env)) return;
-  const destination = await shortHash(`${env.DINGTALK_APP_KEY}:${env.DINGTALK_GROUP_ID}`);
+  const destination = await dingTalkDestination(env);
   await env.DB.prepare(`INSERT OR IGNORE INTO deliveries
     (signal_id,channel,destination_hash,status,attempts,next_attempt_at,created_at)
     VALUES (?,'dingtalk',?,'pending',0,?,?)`).bind(signal.signalId, destination, now, now).run();
+}
+
+export async function dingTalkHealth(env: Env, now = new Date().toISOString()): Promise<Record<string, unknown>> {
+  if (!dingtalkConfigured(env)) return {status:'disabled', unqueued_eligible:0};
+  const destination = await dingTalkDestination(env);
+  const delivery = await env.DB.prepare(`SELECT
+    COALESCE(SUM(status='failed'),0) AS failed, COALESCE(SUM(status='unknown'),0) AS unknown,
+    COALESCE(SUM(status='pending'),0) AS pending,
+    COALESCE(SUM(status='pending' AND last_error LIKE '%coverage partial%'),0) AS partial,
+    MIN(CASE WHEN status IN ('pending','sending') THEN created_at END) AS oldest_pending_at,
+    MAX(sent_at) AS last_signal_delivery_at
+    FROM deliveries WHERE channel='dingtalk' AND destination_hash=?`).bind(destination).first<Record<string, unknown>>();
+  const missing = await env.DB.prepare(`SELECT COUNT(*) AS n FROM signals s JOIN posts p ON p.post_id=s.post_id
+    WHERE p.notification_eligible=1 AND s.should_notify=1 AND s.superseded_by_post_id IS NULL
+    AND s.event_type!='unrelated'
+    AND NOT EXISTS (SELECT 1 FROM deliveries d WHERE d.signal_id=s.signal_id AND d.channel='dingtalk' AND d.destination_hash=?)`)
+    .bind(destination).first<{n:number}>();
+  const stale = typeof delivery?.oldest_pending_at === 'string'
+    && Date.parse(now)-Date.parse(delivery.oldest_pending_at)>20*60_000;
+  const verified=env.DINGTALK_MODE==='personal_ding'
+    ? await env.DB.prepare("SELECT updated_at FROM app_state WHERE key='dws_ding_last_success'").first<{updated_at:string}>():null;
+  const partial=await env.DB.prepare(`SELECT last_error FROM deliveries WHERE channel='dingtalk' AND destination_hash=?
+    AND status='pending' AND last_error LIKE '%coverage partial%' ORDER BY created_at DESC LIMIT 1`)
+    .bind(destination).first<{last_error:string}>();
+  const coverage=partial?.last_error.match(/coverage partial: (\d+)\/(\d+)/);
+  return {...delivery, unqueued_eligible:missing?.n ?? 0,
+    cloud_ding_verified:Boolean(verified),cloud_ding_last_success_at:verified?.updated_at??null,
+    coverage:coverage?{notified:Number(coverage[1]),total:Number(coverage[2]),blocked:Number(coverage[2])-Number(coverage[1]),reason:'not_colleagues_or_friends'}:undefined,
+    status:Number(delivery?.failed)>0 || Number(delivery?.unknown)>0 || Number(delivery?.partial)>0 || Number(missing?.n)>0 || stale ? 'degraded' : 'healthy'};
 }
 
 interface Row {
@@ -74,14 +113,14 @@ interface Row {
   author: string; text: string; url: string; effective_time: string | null;
 }
 
-export function dingTalkContent(row: Omit<Row, "id" | "attempts">): string {
+export function dingTalkContent(row: Omit<Row, "id" | "attempts">, personalDing = false): string {
   const title = row.event_type === "scheduled_reset" ? "Codex 重置预告"
     : row.reset_mode === "banked_reset" ? "Codex 可储存重置权益" : row.event_type === "explicit_reset" ? "Codex 重置确认" : "Codex 新信号";
   const action = row.event_type === "scheduled_reset" && row.reset_mode === "hard_reset" && row.source_tier.startsWith("A")
     ? "一手未来 hard reset 信号；如果本来有任务，可以考虑提前安排。预告不保证执行。"
     : row.reset_mode === "banked_reset" ? "可储存/手动使用的重置权益，不等同自动 hard reset；请查看个人 Usage。"
     : row.event_type === "explicit_reset" ? "请在个人 Codex Usage 检查是否实际到账。" : "公开线索仅供留意，请核对原帖。";
-  return `[Codex Reset Watcher] ${title}\n${action}\n来源：@${row.author} · ${row.source_tier}\n类型：${row.event_type} / ${row.reset_mode}${row.effective_time ? `\n预计时间：${row.effective_time}` : ""}\n\n${row.text.replace(/\s+/g, " ").slice(0, 700)}\n\n原帖：${row.url}\n雷达：https://codex-reset-watcher.weican16hit.workers.dev/\n全员 @ 普通群通知（非 DING）`;
+  return `[Codex Reset Watcher] ${title}\n${action}\n来源：@${row.author} · ${row.source_tier}\n类型：${row.event_type} / ${row.reset_mode}${row.effective_time ? `\n预计时间：${row.effective_time}` : ""}\n\n${row.text.replace(/\s+/g, " ").slice(0, 700)}\n\n原帖：${row.url}\n雷达：https://codex-reset-watcher.weican16hit.workers.dev/\n${personalDing?'Cloudflare 云端应用内 DING · 通知群全体成员':'全员 @ 普通群通知（非 DING）'}`;
 }
 
 export async function processDingTalkDeliveries(env: Env, now = new Date().toISOString()): Promise<{ sent: number; failed: number }> {
@@ -91,7 +130,7 @@ export async function processDingTalkDeliveries(env: Env, now = new Date().toISO
   const cutoff = new Date(Date.parse(now) - 5 * 60_000).toISOString();
   await env.DB.prepare(`UPDATE deliveries SET status='unknown', last_error='Interrupted send; manual reconciliation required'
     WHERE channel='dingtalk' AND status='sending' AND next_attempt_at < ?`).bind(cutoff).run();
-  const destination = await shortHash(`${env.DINGTALK_APP_KEY}:${env.DINGTALK_GROUP_ID}`);
+  const destination = await dingTalkDestination(env);
   const { results } = await env.DB.prepare(`SELECT d.id,d.attempts,s.event_type,s.reset_mode,s.effective_time,p.author,p.text,p.url,p.source_tier
     FROM deliveries d JOIN signals s ON s.signal_id=d.signal_id JOIN posts p ON p.post_id=s.post_id
     WHERE d.channel='dingtalk' AND d.destination_hash=? AND d.status='pending' AND d.next_attempt_at<=?
@@ -101,13 +140,13 @@ export async function processDingTalkDeliveries(env: Env, now = new Date().toISO
       WHERE id=? AND status='pending'`).bind(now, row.id).run();
     if (!claim.meta.changes) continue;
     let receipt: string;
-    try { receipt = await sendDingTalk(env, dingTalkContent(row)); }
+    try { receipt = await sendDingTalk(env, dingTalkContent(row,env.DINGTALK_MODE==='personal_ding'),`signal-${row.id}`); }
     catch (error) {
       const attempts = row.attempts + 1;
       const state = error instanceof DeliveryError ? error.state : "unknown";
       await env.DB.prepare(`UPDATE deliveries SET status=?,next_attempt_at=?,last_error=? WHERE id=?`)
-        .bind(state === "pending" && attempts >= 3 ? "failed" : state,
-          new Date(Date.parse(now) + attempts * 10 * 60_000).toISOString(),
+        .bind(state === "pending" && attempts >= 3 && env.DINGTALK_MODE!=='personal_ding' ? "failed" : state,
+          new Date(Date.parse(now) + Math.min(60,attempts * 10) * 60_000).toISOString(),
           error instanceof DeliveryError ? error.message : "DingTalk result unknown", row.id).run();
       summary.failed++;
       continue;
@@ -128,12 +167,19 @@ export async function testDingTalk(env: Env, key: string): Promise<Record<string
     .bind(stateKey, JSON.stringify({ status: "unknown", note: "Test claimed; do not replay" }), now).run();
   if (!claim.meta.changes) {
     const existing = await env.DB.prepare("SELECT value FROM app_state WHERE key=?").bind(stateKey).first<{ value: string }>();
-    return { ...JSON.parse(existing!.value), deduplicated: true };
+    const prior=JSON.parse(existing!.value);
+    if(prior.status!=='pending')return {...prior,deduplicated:true};
+    const resume=await env.DB.prepare('UPDATE app_state SET value=?,updated_at=? WHERE key=? AND value=?')
+      .bind(JSON.stringify({status:'unknown',note:'Resume claimed; do not replay'}),now,stateKey,existing!.value).run();
+    if(!resume.meta.changes)return {...prior,deduplicated:true};
   }
   let result: Record<string, unknown>;
   try {
-    const receipt = await sendDingTalk(env, "[Codex Reset Watcher] Cloudflare Worker 生产通道测试成功。怎么蹬中英文已上线；后续新信号由云端定时任务和D1待发送账本推送，无需本机在线。全员 @ 普通群消息，非 DING；这不是重置公告。https://codex-reset-watcher.weican16hit.workers.dev/#pedal");
-    result = { status: "sent", provider_receipt: receipt, channel: "dingtalk_group_message", true_ding: false, mentions_all_requested: true, mention_delivery_verified: false };
+    const personal=env.DINGTALK_MODE==='personal_ding';
+    if(personal&&!env.DINGTALK_TEST_GROUP_ID)throw new DeliveryError('An isolated DING test group is required','failed');
+    const content=personal?'[Codex-Watcher 模拟验收] 此通知由 Cloudflare Worker 发出，不是本机CLI发送，也不是真实重置公告。实时网页新增信息会写入待发送账本，向通知群全体成员发送应用内 DING，并在群里保留同一内容。只在本人和二四的双人测试群验收。':'[Codex Reset Watcher] Cloudflare Worker 普通群通知通道测试；非 DING，不是重置公告。';
+    const receipt = await sendDingTalk(env,content,`test-${key}`,personal?env.DINGTALK_TEST_GROUP_ID:env.DINGTALK_GROUP_ID);
+    result = { status: "sent", runtime:'cloudflare_worker', provider_receipt: receipt, channel: personal?'personal_app_ding':'dingtalk_group_message', true_ding: personal, mentions_all_requested: true, mention_delivery_verified: false };
   } catch (error) { result = { status: error instanceof DeliveryError ? error.state : "unknown", error: error instanceof DeliveryError ? error.message : "Unknown result" }; }
   await env.DB.prepare("UPDATE app_state SET value=?,updated_at=? WHERE key=?").bind(JSON.stringify(result), now, stateKey).run();
   return result;

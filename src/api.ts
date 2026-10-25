@@ -6,7 +6,9 @@ import { runPoll } from "./poll";
 import type { Env } from "./types";
 import { processReviews, reviewHealth } from "./model-review";
 import { acquirePollLock, releasePollLock } from "./db";
-import { dingtalkConfigured, testDingTalk } from "./dingtalk";
+import { dingtalkConfigured, dingTalkHealth, processDingTalkDeliveries, testDingTalk } from "./dingtalk";
+import { dwsAccessToken, dwsSessionHealth } from './dws';
+import { reconcileNotificationQueue } from './notification-queue';
 
 const JSON_HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
@@ -32,7 +34,10 @@ async function healthSnapshot(env: Env): Promise<Record<string, unknown>> {
     : ageMs !== null && ageMs > staleAfterMs
       ? "stale"
       : "healthy";
-  const overall = sourceStatus === "healthy" ? "healthy" : sourceStatus;
+  const dingHealth = await dingTalkHealth(env);
+  const personal=env.DINGTALK_MODE==='personal_ding';
+  const session=personal?await dwsSessionHealth(env):undefined;
+  const overall = sourceStatus === "healthy" && (dingHealth.status === 'degraded'||session?.status==='degraded') ? 'degraded' : sourceStatus;
   return {
     overall,
     generated_at: new Date().toISOString(),
@@ -50,10 +55,11 @@ async function healthSnapshot(env: Env): Promise<Record<string, unknown>> {
       recipient_configured: Boolean(env.ALERT_EMAIL_TO)
     },
     dingtalk: {
-      configured: dingtalkConfigured(env), channel: "robot_group_message", true_ding: false, mentions_all_requested: true, mention_delivery_verified: true,
-      mention_verification_basis: "recipient_confirmed_2026-10-22",
+      configured: dingtalkConfigured(env), channel: personal?'personal_app_ding':"robot_group_message", true_ding: personal, mentions_all_requested: true, mention_delivery_verified: !personal,
+      mention_verification_basis: personal?"cloud_business_receipt":"recipient_confirmed_2026-10-22",
       delivery_counts: (live.deliveries as Array<{channel: string; status: string; count: number}>).filter(row => row.channel === "dingtalk"),
-      automatic_token_refresh: true
+      automatic_token_refresh: true,
+      ...dingHealth, session, notification_scope:'all_new_visible_signals'
     },
     ...live
   };
@@ -123,6 +129,21 @@ export async function handleApi(request: Request, env: Env): Promise<Response | 
     if (!/^[a-zA-Z0-9_-]{8,100}$/.test(key)) return json({error: "Idempotency-Key required (8-100 alphanumeric characters)"}, 400);
     const result = await testDingTalk(env, key);
     return json(result, result.status === "sent" ? 200 : 502);
+  }
+  if (request.method === "POST" && url.pathname === "/api/admin/refresh-dws") {
+    if (!await authorized(request, env) && !await authorized(request, { ...env, ADMIN_TOKEN: env.DINGTALK_TEST_TOKEN })) return json({error:'unauthorized'},401);
+    try {await dwsAccessToken(env,true);return json(await dwsSessionHealth(env));}
+    catch {return json({status:'failed',error:'DWS refresh failed; inspect session health'},502);}
+  }
+  if (request.method === "POST" && url.pathname === "/api/admin/reconcile-notifications") {
+    if (!await authorized(request, env) && !await authorized(request, { ...env, ADMIN_TOKEN: env.DINGTALK_TEST_TOKEN })) return json({error:'unauthorized'},401);
+    const lock=crypto.randomUUID();
+    if(!await acquirePollLock(env.DB,lock,new Date().toISOString()))return json({error:'poll_in_progress'},409);
+    try {
+      const queued=await reconcileNotificationQueue(env,new Date().toISOString());
+      const delivered=await processDingTalkDeliveries(env);
+      return json({queued,...delivered,dingtalk:await dingTalkHealth(env)});
+    } finally {await releasePollLock(env.DB,lock);}
   }
   return null;
 }

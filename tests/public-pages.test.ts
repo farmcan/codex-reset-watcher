@@ -23,7 +23,7 @@ describe("public bilingual dashboard", () => {
     expect(chinese).toContain('class="hero-visual"');
     expect(chinese).toContain('src="brand-zh.png"');
     expect(english).toContain('class="hero-visual"');
-    expect(english).toContain('src="../brand-zh.png"');
+    expect(english).toContain('src="../brand-en.png"');
     expect(chinese).toContain("距离上次已确认重置权益的时间");
     expect(english).toContain("Time since the last confirmed reset benefit");
   });
