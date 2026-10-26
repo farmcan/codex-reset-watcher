@@ -3,10 +3,10 @@ import { QUERY_SPECS, sourceProfile } from "../src/config";
 import { severityAtLeast } from "../src/notifications";
 
 describe("monitor configuration", () => {
-  it("only polls Tibo once per hour", () => {
+  it("only polls Tibo every twenty minutes", () => {
     expect(QUERY_SPECS).toHaveLength(1);
     expect(QUERY_SPECS[0]?.name).toBe("official-first-party");
-    expect(QUERY_SPECS[0]?.pollSeconds).toBe(3600);
+    expect(QUERY_SPECS[0]?.pollSeconds).toBe(1200);
     expect(QUERY_SPECS[0]?.query).toContain("from:thsottiaux ");
   });
 

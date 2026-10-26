@@ -9,6 +9,7 @@ import { acquirePollLock, releasePollLock } from "./db";
 import { dingtalkConfigured, dingTalkHealth, processDingTalkDeliveries, testDingTalk } from "./dingtalk";
 import { dwsAccessToken, dwsSessionHealth } from './dws';
 import { reconcileNotificationQueue } from './notification-queue';
+import { QUERY_SPECS } from './config';
 
 const JSON_HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
@@ -26,7 +27,7 @@ async function healthSnapshot(env: Env): Promise<Record<string, unknown>> {
   const sources = live.sources as Array<Record<string, unknown>>;
   const official = sources.find((source) => source.name === "official-first-party");
   const lastSuccess = typeof official?.last_success_at === "string" ? Date.parse(official.last_success_at) : null;
-  const pollSeconds = Number(official?.poll_seconds ?? 3600);
+  const pollSeconds = Number(official?.poll_seconds ?? QUERY_SPECS[0]!.pollSeconds);
   const staleAfterMs = pollSeconds * 3 * 1000 + 60_000;
   const ageMs = lastSuccess === null ? null : Date.now() - lastSuccess;
   const sourceStatus = lastSuccess === null

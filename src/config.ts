@@ -4,7 +4,7 @@ export const QUERY_SPECS: QuerySpec[] = [
   {
     name: "official-first-party",
     lane: "official",
-    pollSeconds: 3600,
+    pollSeconds: 1200,
     maxResults: 50,
     allowedAuthors: ["thsottiaux"],
     query:

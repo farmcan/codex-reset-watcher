@@ -104,7 +104,7 @@ export async function dingTalkHealth(env: Env, now = new Date().toISOString()): 
     .bind(destination).first<{last_error:string}>();
   const coverage=partial?.last_error.match(/coverage partial: (\d+)\/(\d+)/);
   return {...delivery, unqueued_eligible:missing?.n ?? 0,
-    recipient_scope:selected?'selected_members':'group_members',configured_recipient_count:selected?.length??null,mentions_all_requested:!selected,
+    recipient_scope:selected?'selected_members':'group_members',configured_recipient_count:selected?.length??null,ding_all_requested:!selected,mentions_all_requested:true,
     cloud_ding_verified:Boolean(verified),cloud_ding_last_success_at:verified?.updated_at??null,
     coverage:coverage?{notified:Number(coverage[1]),total:Number(coverage[2]),blocked:Number(coverage[2])-Number(coverage[1]),reason:'not_colleagues_or_friends'}:undefined,
     status:Number(delivery?.failed)>0 || Number(delivery?.unknown)>0 || Number(delivery?.partial)>0 || Number(missing?.n)>0 || stale ? 'degraded' : 'healthy'};
@@ -179,7 +179,7 @@ export async function testDingTalk(env: Env, key: string): Promise<Record<string
   try {
     const personal=env.DINGTALK_MODE==='personal_ding';
     if(personal&&!env.DINGTALK_TEST_GROUP_ID)throw new DeliveryError('An isolated DING test group is required','failed');
-    const content=personal?'[Codex-Watcher 模拟验收] 此通知由 Cloudflare Worker 发出，不是本机CLI发送，也不是真实重置公告。实时网页新增信息会写入待发送账本，向通知群全体成员发送应用内 DING，并在群里保留同一内容。只在本人和二四的双人测试群验收。':'[Codex Reset Watcher] Cloudflare Worker 普通群通知通道测试；非 DING，不是重置公告。';
+    const content=personal?'[Codex-Watcher 模拟验收] 此通知由 Cloudflare Worker 发出，不是本机CLI发送，也不是真实重置公告。实时网页新增信息会写入待发送账本，向测试群成员发送应用内 DING，并通过消息元数据和占位符真正 @所有人。只在本人和二四的双人测试群验收。':'[Codex Reset Watcher] Cloudflare Worker 普通群通知通道测试；非 DING，不是重置公告。';
     const receipt = await sendDingTalk(env,content,`test-${key}`,personal?env.DINGTALK_TEST_GROUP_ID:env.DINGTALK_GROUP_ID);
     result = { status: "sent", runtime:'cloudflare_worker', provider_receipt: receipt, channel: personal?'personal_app_ding':'dingtalk_group_message', true_ding: personal, mentions_all_requested: true, mention_delivery_verified: false };
   } catch (error) { result = { status: error instanceof DeliveryError ? error.state : "unknown", error: error instanceof DeliveryError ? error.message : "Unknown result" }; }

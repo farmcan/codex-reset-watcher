@@ -2,7 +2,7 @@
 
 ## Design goals
 
-1. Keep X API spend bounded while preserving a predictable hourly evidence check.
+1. Keep X API spend bounded while preserving a predictable 20-minute evidence check.
 2. At-least-once scheduled execution must not create duplicate posts or emails.
 3. Missing, stale, and failed data must remain visibly different from “no signal”.
 4. Every human-facing conclusion must link back to a canonical X post.
@@ -58,7 +58,7 @@ The primary clock anchors to the latest confirmed reset benefit: a first-party h
 
 ### Health
 
-All X queries are expected every 3600 seconds. The site becomes stale after three missed periods plus 60 seconds. `/healthz` returns `503` for initializing, stale, or down states so an external uptime monitor can watch the watcher.
+The enabled Tibo query is expected every 1200 seconds; the Cron checks due work every ten minutes. The site becomes stale after three missed periods plus 60 seconds. `/healthz` returns `503` for initializing, stale, or down states so an external uptime monitor can watch the watcher.
 
 The primary Worker remains the live source. A GitHub Actions workflow copies only the public status/history/source/event JSON and RSS into a GitHub Pages artifact every ten minutes. The fallback never receives X, Cloudflare, admin, or email secrets; its browser does not call `workers.dev`. It marks snapshots older than twenty minutes as stale.
 

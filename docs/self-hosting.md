@@ -6,12 +6,12 @@
 
 | 通道 | 对象 | 默认频率 | 行为 |
 | --- | --- | ---: | --- |
-| A1 一手 | `@thsottiaux` 帖子与回复 | 1 小时 | 预告、确认、banked、弱暗示分开 |
+| A1 一手 | `@thsottiaux` 帖子与回复 | 20 分钟 | 预告、确认、banked、弱暗示分开 |
 | B 侦察 | `@hqmank`、`@UsageReset` | 已停用 | 仅保留历史记录 |
 | C 传闻 | `@rezoundous` 等已知账号 | 已停用 | 仅保留历史记录 |
 | D 发现池 | X 全网相关英文帖子 | 已停用 | 仅保留历史记录 |
 
-自 2026-09-15 起，`QUERY_SPECS` 只启用 Tibo。数据库里的旧通道游标与抓取记录保留，调度器只运行配置中启用的通道；API 的 `sources[].enabled` 标记当前是否启用。Tibo 每小时增量抓取，Qwen 每 10 分钟检查未复核内容，已完成的帖子不再调用模型。失败重试不会短于正常抓取间隔。
+自 2026-09-15 起，`QUERY_SPECS` 只启用 Tibo。数据库里的旧通道游标与抓取记录保留，调度器只运行配置中启用的通道；API 的 `sources[].enabled` 标记当前是否启用。Tibo 每 20 分钟增量抓取，Qwen 每 10 分钟检查未复核内容，已完成的帖子不再调用模型。失败重试不会短于正常抓取间隔。
 
 个人账户反馈不是新的来源等级，而是单条内容的弱证据类型：网页会显示并可单独筛选，但它不能独自证明全局 reset。
 
@@ -21,7 +21,7 @@ X Bearer Token 只存在 Cloudflare Secret 中，不会进入网页、D1 原始�
 
 ```text
 Cloudflare Cron (every 10 minutes)
-  -> hourly Tibo-only X query + since_id
+  -> 20-minute Tibo-only X query + since_id
   -> deterministic classifier
   -> event grouping / derivative dedupe / official inhibition
   -> D1 posts + signals + poll health + notification outbox
@@ -118,7 +118,7 @@ npx wrangler secret put ALERT_EMAIL_TO
 配置 `DASHSCOPE_API_KEY` 为 Cloudflare Secret 后，只有 Tibo（`@thsottiaux`）的帖子进入
 `model_reviews` 队列，包括被规则判为无关的 Tibo 内容。其他账号使用规则筛选。默认使用北京地域的
 `qwen3.7-plus`，可通过 `QWEN_BASE_URL` / `QWEN_MODEL` 调整。
-每 10 分钟处理一次复核队列，X 信源仍按每小时抓取。
+每 10 分钟处理一次复核队列，X 信源按每 20 分钟抓取。
 每轮最多复核 20 条，逐帖调用、最多两条并发，按时间从新到旧处理。
 失败保留规则结果、记录状态并退避重试，首页显示已完成、待处理和重试数量。
 复核存储模型、提示版本、标题、摘要及原文证据。补审不重发历史邮件。
@@ -156,7 +156,7 @@ GitHub Pages 备用快照引导到实时站查看与点赞，不写入离线快�
 
 默认按群成员发送。可在 `DINGTALK_RECIPIENT_IDS` Worker Secret 中保存非空 JSON ID 数组，明确指定必须送达的人；仅作用于生产通知群，隔离测试群不受影响。接收者必须在群成员快照中，配置为空或目标缺失时拒绝发送，不退回全员。
 
-公开实例按维护者最新选择只向两位指定接收者发送DING；群内留档保留。其他成员原有关系限制的历史记录不删除，但不再作为这两位目标的失败。已有成功回执被复用，调整目标不会重复DING。API返回 `recipient_scope` 和目标人数，不公开个人ID。
+公开实例按维护者最新选择只向两位指定接收者发送DING；群消息会通过 `atAll: true` 和 `<@all>` 占位符真正 @所有人；群内留档保留。其他成员原有关系限制的历史记录不删除，但不再作为这两位目标的失败。已有成功回执被复用，调整目标不会重复DING。API返回 `recipient_scope` 和目标人数，不公开个人ID。
 
 ```sh
 npx wrangler secret put DINGTALK_RECIPIENT_IDS

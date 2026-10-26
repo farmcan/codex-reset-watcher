@@ -93,7 +93,7 @@ export async function dwsCall(env:Env, tool:'get_group_members'|'send_personal_d
   }
   return body.result || {};
 }
-interface SendState {receivers?:string[];dingIds:string[];taskId?:string;messageId?:string;strategy?:'group_message';receipts?:Record<string,string>;blocked?:Record<string,string>}
+interface SendState {receivers?:string[];dingIds:string[];taskId?:string;messageId?:string;groupAtAll?:boolean;strategy?:'group_message';receipts?:Record<string,string>;blocked?:Record<string,string>}
 export function selectedDingRecipients(env:Env):string[]|null {
   if(env.DINGTALK_RECIPIENT_IDS===undefined)return null;
   let value:unknown;
@@ -128,11 +128,14 @@ export async function sendGroupPersonalDing(env:Env,group:string,content:string,
   if(targets.some(id=>!state.receivers!.includes(id)))throw new DwsError('Selected DING recipient is missing from the group','pending');
   const ensureGroupMessage=async()=>{
     if(!state.taskId&&!state.messageId){
-    const result=await dwsCall(env,'send_personal_message',{openConversationId:group,msgType:'text',
-      content:JSON.stringify({content}),uuid:`watcher-${await shortHash(key)}-group`});
+    // DWS requires both atAll metadata and the mention placeholder. Keeping
+    // this separate from DING targets lets every group member see the @all.
+    const result=await dwsCall(env,'send_personal_message',{openConversationId:group,msgType:'markdown',atAll:true,
+      content:JSON.stringify({title:'Codex 重置雷达',text:`<@all>\n${content}`}),uuid:`watcher-${await shortHash(key)}-group`});
     if(typeof result.openTaskId==='string')state.taskId=result.openTaskId;
     if(typeof result.openMessageId==='string')state.messageId=result.openMessageId;
     if(!state.taskId&&!state.messageId)throw new DwsError('DWS group message receipt missing','unknown');
+    state.groupAtAll=true;
     await persist();
     }
     if(state.taskId&&!state.messageId){
@@ -192,6 +195,6 @@ export async function sendGroupPersonalDing(env:Env,group:string,content:string,
   await env.DB.prepare(`INSERT INTO app_state(key,value,updated_at) VALUES ('dws_ding_last_success',?,?)
     ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at`)
     .bind(JSON.stringify({recipient_count:targets.length,group_member_count:state.receivers.length,recipient_scope:selected?'selected_members':'group_members',ding_count:state.dingIds.length}),new Date().toISOString()).run();
-  return JSON.stringify({openDingIds:state.dingIds,recipientCount:targets.length,groupMemberCount:state.receivers.length,recipientScope:selected?'selected_members':'group_members',
+  return JSON.stringify({openDingIds:state.dingIds,recipientCount:targets.length,groupMemberCount:state.receivers.length,recipientScope:selected?'selected_members':'group_members',groupMentionsAllRequested:state.groupAtAll===true,
     openTaskId:state.taskId,openMessageId:state.messageId,channel:'personal_app_ding'});
 }

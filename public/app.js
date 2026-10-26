@@ -284,7 +284,7 @@ function renderHealth(status) {
       : deliveryIssues ? ui("云端钉钉通知有异常 · 查看下方监控健康状态", "Cloud DingTalk delivery needs attention · see monitoring health below")
       : ding.true_ding ? (ding.cloud_ding_verified
         ? (ding.recipient_scope === "selected_members"
-          ? ui(`云端 DING 已验证 · 每条新增信息通知指定的 ${ding.configured_recipient_count} 位接收者 · 无需本机在线`, `Cloud DING verified · every new update notifies ${ding.configured_recipient_count} selected recipients · no local computer needed`)
+          ? ui(`云端 DING 已验证 · 每条新增信息通知指定的 ${ding.configured_recipient_count} 位接收者，并在群里 @所有人 · 无需本机在线`, `Cloud DING verified · every new update notifies ${ding.configured_recipient_count} selected recipients and @everyone in the group · no local computer needed`)
           : ui("云端应用内 DING 已验证 · 网页每条新增信息都通知群成员 · 无需本机在线", "Cloud app DING verified · every new website update notifies group members · no local computer needed"))
         : ui("云端应用内 DING 已配置 · 实际发送待验证", "Cloud app DING configured · live delivery not yet verified"))
       : ui("云端钉钉群消息 · 普通消息，非 DING", "Cloud DingTalk group messages · not DING");
@@ -878,13 +878,13 @@ function renderSystem(status) {
     : !ding.configured ? ui("未配置", "Not configured")
     : ding.true_ding ? ui("云端应用内 DING", "Cloud app DING") : ui("云端群消息", "Cloud group messages");
   const cards = [
-    [ui("抓取范围", "Polling scope"), ui("仅 Tibo", "Tibo only"), ui("每小时检查新帖；社区账号和全网搜索已停用。历史记录仍保留。", "New posts checked hourly; community polling and broad search are disabled. Historical records are preserved.")],
+    [ui("抓取范围", "Polling scope"), ui("仅 Tibo", "Tibo only"), ui("每 20 分钟检查新帖；社区账号和全网搜索已停用。历史记录仍保留。", "New posts checked every 20 minutes; community polling and broad search are disabled. Historical records are preserved.")],
     [ui("Tibo 内容复核", "Tibo content review"), review.configured ? ui(`${Number(review.completed || 0)}/${Number(review.total || 0)} 已完成${Number(review.retrying || 0) ? " · 有失败" : ""}`, `${Number(review.completed || 0)}/${Number(review.total || 0)} completed${Number(review.retrying || 0) ? " · failures" : ""}`) : ui("尚未启用", "Not enabled"), review.configured ? ui(`${review.model} · 排队 ${Number(review.pending || 0)} 条 · 失败待重试 ${Number(review.retrying || 0)} 条。仅新内容进入复核。`, `${review.model} · ${Number(review.pending || 0)} queued · ${Number(review.retrying || 0)} failed, awaiting retry. Only unreviewed content is processed.`) : ui("使用规则识别", "Rule-based classification")],
     [ui("整体状态", "Overall status"), status.live.overall === "healthy" ? ui("正常", "Healthy") : status.live.overall === "initializing" ? ui("初始化", "Initializing") : ui("需关注", "Needs attention"), PAGES_SNAPSHOT ? ui(`备用页面约每 10 分钟同步；实时源每 ${status.live.expected_poll_seconds || 120} 秒检查`, `Fallback page syncs about every 10 minutes; live source checks every ${status.live.expected_poll_seconds || 120} seconds`) : ui(`官方源每 ${status.live.expected_poll_seconds || 120} 秒检查`, `First-party source checks every ${status.live.expected_poll_seconds || 120} seconds`)],
     [ui("官方源最后成功", "Last first-party success"), official.last_success_at ? formatTime(official.last_success_at, true) : ui("尚未成功", "No success yet"), official.last_error || ui("没有记录错误", "No recorded error")],
     [ui("邮件提醒", "Email alerts"), status.live.email.configured ? ui("已启用", "Enabled") : ui("未配置", "Not configured"), status.live.email.configured ? ui(`最低 ${status.live.email.minimum_severity} 才发送`, `Sends at ${status.live.email.minimum_severity} severity or above`) : ui("补收件人、发件域名和 Resend Secret 后启用", "Add recipient, verified sender domain, and Resend secret to enable")],
     [ui("钉钉通知", "DingTalk alerts"), dingLabel, (ding.true_ding
-      ? ui("每条网页新增信息均通知已配置的接收者，并在群内留档。登录自动刷新；发送失败、积压和缺失任务会显示为异常。", "Every new website update notifies configured recipients and is retained in the group. Login refreshes automatically; failed, overdue or missing deliveries surface as errors.")
+      ? ui("每条网页新增信息向已配置的接收者发送 DING，并在群内 @所有人、留档。登录自动刷新；发送失败、积压和缺失任务会显示为异常。", "Every new website update sends DING to configured recipients and mentions everyone in the group. Login refreshes automatically; failed, overdue or missing deliveries surface as errors.")
       : ui("普通群消息，非 DING。", "Group messages, not DING.")) + " " + (ding.delivery_counts || []).map(row => `${row.status}: ${row.count}`).join(" · ")],
     [ui("实时记录", "Live records"), ui(`${(status.live.signals || []).length} 条`, `${(status.live.signals || []).length} items`), ui("页面显示最近 100 条有效信号", "The page shows the latest 100 valid signals")]
   ];

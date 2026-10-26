@@ -29,6 +29,20 @@ function fixture() {
 }
 
 describe("Tibo-only polling with existing production state", () => {
+  it('shortens an existing hourly schedule without resetting cursors or pulling retired lanes',async()=>{
+    const {sqlite,db}=fixture();
+    sqlite.prepare("UPDATE source_state SET last_success_at='2026-09-15T14:00:00.000Z',next_poll_at='2026-09-15T15:00:00.000Z'").run();
+    expect(await getDueSourceStates(db,'2026-09-15T14:19:59.000Z')).toEqual([]);
+    const due=await getDueSourceStates(db,'2026-09-15T14:20:00.000Z');
+    expect(due.map(s=>s.name)).toEqual(['official-first-party']);
+    expect(due[0]).toMatchObject({poll_seconds:1200,since_id:'2098685367058612394'});
+    expect(sqlite.prepare("SELECT poll_seconds FROM source_state WHERE name='community-scouts'").get().poll_seconds).toBe(3600);
+  });
+  it('does not shorten a failure backoff when applying the new normal cadence',async()=>{
+    const {sqlite,db}=fixture();
+    sqlite.prepare("UPDATE source_state SET last_success_at='2026-09-15T14:00:00.000Z',next_poll_at='2026-09-15T15:00:00.000Z',consecutive_failures=1").run();
+    expect(await getDueSourceStates(db,'2026-09-15T14:20:00.000Z')).toEqual([]);
+  });
   it("never schedules retired sources and preserves their history and cursors", async () => {
     const { sqlite, db } = fixture();
     const states = await getDueSourceStates(db, "2026-09-15T14:00:00.000Z");
@@ -45,8 +59,8 @@ describe("Tibo-only polling with existing production state", () => {
     const now = "2026-09-15T14:00:00.000Z";
     const state = (await getDueSourceStates(db, now))[0];
     await markSourceFailure(db, state, now, "X API 402");
-    expect(await getDueSourceStates(db, "2026-09-15T14:30:00.000Z")).toEqual([]);
-    const next = await getDueSourceStates(db, "2026-09-15T15:00:00.000Z");
+    expect(await getDueSourceStates(db, "2026-09-15T14:19:59.000Z")).toEqual([]);
+    const next = await getDueSourceStates(db, "2026-09-15T14:20:00.000Z");
     expect(next).toHaveLength(1);
     expect(next[0]?.since_id).toBe(state.since_id);
     expect(next[0]?.consecutive_failures).toBe(1);

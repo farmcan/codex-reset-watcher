@@ -9,9 +9,15 @@ export async function ensureSourceState(db: D1Database): Promise<void> {
   await db.batch(QUERY_SPECS.map((spec) => statement.bind(spec.name, spec.lane, spec.query, spec.pollSeconds)));
 
   const update = db.prepare(`
-    UPDATE source_state SET lane = ?, query = ?, poll_seconds = ? WHERE name = ?
+    UPDATE source_state SET lane = ?, query = ?,
+      next_poll_at = CASE WHEN poll_seconds > ? AND consecutive_failures = 0
+        AND last_success_at IS NOT NULL
+        AND next_poll_at > strftime('%Y-%m-%dT%H:%M:%fZ',last_success_at,printf('+%d seconds',?))
+        THEN strftime('%Y-%m-%dT%H:%M:%fZ',last_success_at,printf('+%d seconds',?))
+        ELSE next_poll_at END,
+      poll_seconds = ? WHERE name = ?
   `);
-  await db.batch(QUERY_SPECS.map((spec) => update.bind(spec.lane, spec.query, spec.pollSeconds, spec.name)));
+  await db.batch(QUERY_SPECS.map((spec) => update.bind(spec.lane, spec.query, spec.pollSeconds, spec.pollSeconds, spec.pollSeconds, spec.pollSeconds, spec.name)));
 }
 
 export async function getDueSourceStates(db: D1Database, now: string): Promise<SourceStateRow[]> {

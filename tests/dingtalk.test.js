@@ -46,7 +46,19 @@ describe("durable cloud DingTalk delivery", () => {
     expect(JSON.parse(await sendGroupPersonalDing(env,group,'notice','selected-existing'))).toMatchObject({recipientCount:2,groupMemberCount:3,recipientScope:'selected_members',openMessageId:'existing-message'});
     expect(fetch).not.toHaveBeenCalled();
     expect(JSON.parse(sqlite.prepare('SELECT value FROM app_state WHERE key=?').get(key).value).blocked.c).toBe('not_colleague_or_friend');
-    expect(await dingTalkHealth(env,now)).toMatchObject({recipient_scope:'selected_members',configured_recipient_count:2,mentions_all_requested:false});
+    expect(await dingTalkHealth(env,now)).toMatchObject({recipient_scope:'selected_members',configured_recipient_count:2,mentions_all_requested:true,ding_all_requested:false});
+  });
+  it('DINGs only selected recipients while marking the group message as a real @all',async()=>{
+    const {env}=await personalFixture();env.DINGTALK_RECIPIENT_IDS='["self","er24"]';
+    const fetch=vi.fn().mockResolvedValueOnce(rpc({hasMore:false,list:[{openDingtalkId:'self'},{openDingtalkId:'er24'},{openDingtalkId:'other'}]}))
+      .mockResolvedValueOnce(rpc({openDingId:'selected-ding'})).mockResolvedValueOnce(rpc({openTaskId:'all-task'}))
+      .mockResolvedValueOnce(rpc({sendStatus:'SUCCESS',openMessageId:'all-message'}));vi.stubGlobal('fetch',fetch);
+    const receipt=JSON.parse(await sendGroupPersonalDing(env,env.DINGTALK_GROUP_ID,'new update','selected-with-all'));
+    const calls=fetch.mock.calls.map(c=>JSON.parse(c[1].body).params);
+    expect(calls[1].arguments.receiverOpenDingTalkIds).toEqual(['er24','self']);
+    expect(calls[2]).toMatchObject({name:'send_personal_message',arguments:{atAll:true,msgType:'markdown'}});
+    expect(JSON.parse(calls[2].arguments.content).text).toBe('<@all>\nnew update');
+    expect(receipt).toMatchObject({recipientCount:2,groupMemberCount:3,groupMentionsAllRequested:true});
   });
   it('fails closed for an empty selected audience and a selected person absent from the group',async()=>{
     const {env}=await personalFixture();env.DINGTALK_RECIPIENT_IDS='[]';
