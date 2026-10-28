@@ -1,5 +1,19 @@
 # Architecture
 
+## D1 read cost and CPU bounds (2026-10-28)
+
+The shared account exhausted its Free D1 daily reads. The review-health
+aggregate repeatedly scanned historic reviews; migration 0006 indexes the exact
+`lower(author)` predicate and its `post_id` join. It is additive and leaves
+source posts, review decisions and delivery records unchanged. Verify the
+production query plan and `meta.rows_read` before and after applying it.
+
+The Worker has an explicit 50 ms CPU limit per invocation. Together with the
+existing 60-second public-read cache, this reduces waste and bounds CPU for a
+single invocation. It does not cap request volume, total monthly CPU, D1 reads,
+external provider costs or the account's total invoice. Budget alerts only
+notify; they do not stop billing or enforce a spending cap.
+
 ## Design goals
 
 1. Keep X API spend bounded while preserving a predictable 20-minute evidence check.
