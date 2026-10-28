@@ -1,6 +1,7 @@
 import { shortHash } from "./db";
 import type { Env, Signal } from "./types";
 import { DwsError, sendGroupPersonalDing, selectedDingRecipients } from './dws';
+import { resetTiming } from './reset-time';
 
 export function dingtalkConfigured(env: Env): boolean {
   if(env.DINGTALK_MODE==='personal_ding')return Boolean(env.DWS_TOKEN_KEY&&env.DINGTALK_GROUP_ID);
@@ -51,7 +52,7 @@ export async function sendDingTalk(env: Env, content: string, key: string = cryp
     response = await fetch("https://api.dingtalk.com/v1.0/robot/groupMessages/send", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-acs-dingtalk-access-token": token },
-      body: JSON.stringify({ robotCode: env.DINGTALK_APP_KEY, openConversationId: env.DINGTALK_GROUP_ID,
+      body: JSON.stringify({ robotCode: env.DINGTALK_APP_KEY, openConversationId: group,
         isAtAll: true, msgKey: "sampleText", msgParam: JSON.stringify({ content }) }),
       signal: AbortSignal.timeout(20_000)
     });
@@ -112,17 +113,25 @@ export async function dingTalkHealth(env: Env, now = new Date().toISOString()): 
 
 interface Row {
   id: number; attempts: number; event_type: string; reset_mode: string; source_tier: string;
-  author: string; text: string; url: string; effective_time: string | null;
+  author: string; text: string; url: string; effective_time: string | null; created_at: string;
 }
 
 export function dingTalkContent(row: Omit<Row, "id" | "attempts">, personalDing = false): string {
-  const title = row.event_type === "scheduled_reset" ? "Codex 重置预告"
-    : row.reset_mode === "banked_reset" ? "Codex 可储存重置权益" : row.event_type === "explicit_reset" ? "Codex 重置确认" : "Codex 新信号";
-  const action = row.event_type === "scheduled_reset" && row.reset_mode === "hard_reset" && row.source_tier.startsWith("A")
-    ? "一手未来 hard reset 信号；如果本来有任务，可以考虑提前安排。预告不保证执行。"
-    : row.reset_mode === "banked_reset" ? "可储存/手动使用的重置权益，不等同自动 hard reset；请查看个人 Usage。"
-    : row.event_type === "explicit_reset" ? "请在个人 Codex Usage 检查是否实际到账。" : "公开线索仅供留意，请核对原帖。";
-  return `[Codex Reset Watcher] ${title}\n${action}\n来源：@${row.author} · ${row.source_tier}\n类型：${row.event_type} / ${row.reset_mode}${row.effective_time ? `\n预计时间：${row.effective_time}` : ""}\n\n${row.text.replace(/\s+/g, " ").slice(0, 700)}\n\n原帖：${row.url}\n雷达：https://codex-reset-watcher.weican16hit.workers.dev/\n${personalDing?'Cloudflare 云端应用内 DING':'全员 @ 普通群通知（非 DING）'}`;
+  const timing = resetTiming(row);
+  const title = timing.phase === 'scheduled' ? 'Codex 重置预告'
+    : timing.phase === 'confirmed' ? row.reset_mode === 'banked_reset' ? 'Codex 重置卡已公布' : 'Codex 重置已确认' : 'Codex 有新消息';
+  const format = (at: string) => Number.isFinite(Date.parse(at)) ? new Intl.DateTimeFormat('zh-CN', {
+    timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false
+  }).format(new Date(at)) + '（北京时间）' : '未提供';
+  const time = timing.reset_at ? `重置时间：${timing.approximate ? '约 ' : ''}${format(timing.reset_at)}`
+    : timing.phase === 'confirmed' ? '重置时间：原文未公布精确时刻'
+    : timing.scheduled_for ? `预计重置：${timing.approximate ? '约 ' : ''}${format(timing.scheduled_for)}` : '';
+  const action = row.reset_mode === 'banked_reset' ? '这是可保存、手动使用的重置卡，不是自动重置。去 Codex 额度页查看。'
+    : timing.phase === 'confirmed' ? '可以去看看你的 Codex 额度是否到账了。'
+    : timing.phase === 'scheduled' ? '有计划好的任务，可以提前安排起来。' : '有新线索，点开原文看看。';
+  const original = row.text.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim();
+  const quote = (original.length > 1000 ? original.slice(0,997) + '…' : original).split('\n').map(line=>`> ${line}`).join('\n');
+  return `${title}\n\n时间：${format(row.created_at)}${timing.phase === 'confirmed' ? ' · 确认公告' : ' · 原帖发布'}${time ? '\n'+time : ''}\n\n原文 · @${row.author}：\n${quote}\n\n${action}\n原帖：${row.url}\n我们的网站：https://codex-reset-watcher.weican16hit.workers.dev/#signals`;
 }
 
 export async function processDingTalkDeliveries(env: Env, now = new Date().toISOString()): Promise<{ sent: number; failed: number }> {
@@ -133,7 +142,7 @@ export async function processDingTalkDeliveries(env: Env, now = new Date().toISO
   await env.DB.prepare(`UPDATE deliveries SET status='unknown', last_error='Interrupted send; manual reconciliation required'
     WHERE channel='dingtalk' AND status='sending' AND next_attempt_at < ?`).bind(cutoff).run();
   const destination = await dingTalkDestination(env);
-  const { results } = await env.DB.prepare(`SELECT d.id,d.attempts,s.event_type,s.reset_mode,s.effective_time,p.author,p.text,p.url,p.source_tier
+  const { results } = await env.DB.prepare(`SELECT d.id,d.attempts,s.event_type,s.reset_mode,s.effective_time,p.author,p.text,p.url,p.source_tier,p.created_at
     FROM deliveries d JOIN signals s ON s.signal_id=d.signal_id JOIN posts p ON p.post_id=s.post_id
     WHERE d.channel='dingtalk' AND d.destination_hash=? AND d.status='pending' AND d.next_attempt_at<=?
     AND s.should_notify=1 AND s.superseded_by_post_id IS NULL ORDER BY d.created_at LIMIT 10`).bind(destination, now).all<Row>();
@@ -179,8 +188,10 @@ export async function testDingTalk(env: Env, key: string): Promise<Record<string
   try {
     const personal=env.DINGTALK_MODE==='personal_ding';
     if(personal&&!env.DINGTALK_TEST_GROUP_ID)throw new DeliveryError('An isolated DING test group is required','failed');
-    const content=personal?'[Codex-Watcher 模拟验收] 此通知由 Cloudflare Worker 发出，不是本机CLI发送，也不是真实重置公告。实时网页新增信息会写入待发送账本，向测试群成员发送应用内 DING，并通过消息元数据和占位符真正 @所有人。只在本人和二四的双人测试群验收。':'[Codex Reset Watcher] Cloudflare Worker 普通群通知通道测试；非 DING，不是重置公告。';
-    const receipt = await sendDingTalk(env,content,`test-${key}`,personal?env.DINGTALK_TEST_GROUP_ID:env.DINGTALK_GROUP_ID);
+    if (!env.DINGTALK_TEST_GROUP_ID || env.DINGTALK_TEST_GROUP_ID === env.DINGTALK_GROUP_ID) throw new DeliveryError('An isolated test group distinct from production is required','failed');
+    const mockRow = {event_type:'explicit_reset',reset_mode:'hard_reset',source_tier:'A1',author:'演示账号',text:'这是模拟重置确认，用于检查时间、原文与网站链接的展示。不是实际重置公告。',url:'https://codex-reset-watcher.weican16hit.workers.dev/#signals',effective_time:null,created_at:now};
+    const content=`【测试群专用 · 模拟消息】\n${dingTalkContent(mockRow, personal)}`;
+    const receipt = await sendDingTalk(env,content,`test-${key}`,env.DINGTALK_TEST_GROUP_ID);
     result = { status: "sent", runtime:'cloudflare_worker', provider_receipt: receipt, channel: personal?'personal_app_ding':'dingtalk_group_message', true_ding: personal, mentions_all_requested: true, mention_delivery_verified: false };
   } catch (error) { result = { status: error instanceof DeliveryError ? error.state : "unknown", error: error instanceof DeliveryError ? error.message : "Unknown result" }; }
   await env.DB.prepare("UPDATE app_state SET value=?,updated_at=? WHERE key=?").bind(JSON.stringify(result), now, stateKey).run();

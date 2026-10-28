@@ -1,4 +1,5 @@
 import { QUERY_SPECS } from "./config";
+import { resetTiming, type TimedReset } from './reset-time';
 import type { Env, PollSummary, RawPost, Signal, SourceStateRow } from "./types";
 
 export async function ensureSourceState(db: D1Database): Promise<void> {
@@ -265,7 +266,12 @@ export async function dashboardData(db: D1Database): Promise<Record<string, unkn
       ...source,
       enabled: QUERY_SPECS.some((spec) => spec.name === source.name)
     })),
-    signals: signals.results,
+    signals: (signals.results as Array<TimedReset>).map(signal => {
+      const timing = resetTiming(signal);
+      return {...signal, reset_timing:timing,
+        effective_time:timing.phase === 'confirmed' ? timing.reset_at : timing.phase === 'scheduled' ? timing.scheduled_for : signal.effective_time,
+        approximate_time:['confirmed','scheduled'].includes(timing.phase) ? +timing.approximate : signal.approximate_time};
+    }),
     poll_runs: runs.results,
     deliveries: deliveryCounts.results
   };

@@ -177,7 +177,7 @@ function latestConfirmedReset(status, history, kind = null) {
       && signal.evidence_basis === "account_observation";
     if (!isHardConfirmation && !isBankedObservation) return;
     if (kind && signal.reset_mode !== kind) return;
-    const timestamp = Date.parse(signal.created_at);
+    const timestamp = Date.parse(signal.reset_timing?.reset_at || signal.created_at);
     if (Number.isFinite(timestamp) && timestamp <= Date.now()) {
       candidates.push({ timestamp, kind: signal.reset_mode, basis: isHardConfirmation ? "first_party" : "account_observation" });
     }
@@ -231,6 +231,7 @@ function renderResetClock(status, history) {
     ? ui("可储存重置卡到账", "banked reset delivered")
     : ui("全局全量重置", "global hard reset");
   anchor.textContent = ui(`上次确认：${formatTime(new Date(resetAt).toISOString(), true)} · ${resetKind}`, `Last confirmed: ${formatTime(new Date(resetAt).toISOString(), true)} · ${resetKind}`);
+  if (resetEvent.basis === "first_party") anchor.textContent += ui(" · 据确认公告计时，精确执行时刻见下方", " · Clock uses the confirmation post; see rollout timing below");
   const hardResetAge = latestHardResetAt ? formatDuration((Date.now() - latestHardResetAt) / 60_000) : null;
   context.textContent = Number.isFinite(medianGap)
     ? ui(
@@ -744,6 +745,7 @@ function renderSignalRows() {
       el("span", "", signal.evidence_basis === "first_party" ? ui("一手来源", "First-party source") : signal.evidence_basis === "derivative" ? ui("来自同一上游", "Same upstream source") : signal.evidence_basis === "account_observation" ? ui("社区账户反馈", "Community account report") : ui("独立说法 / 待核验", "Independent claim / unverified"))
     );
     if (signal.url) meta.append(link(ui("打开原帖 →", "Open original post →"), signal.url));
+    if (["scheduled_reset", "explicit_reset"].includes(signal.event_type)) body.append(el("p", "reset-time-note", resetTimeCopy(signal)));
     body.append(meta);
     row.append(time, body);
     track.append(row);
@@ -901,11 +903,51 @@ let lastLiveRefreshAt = 0;
 
 async function fetchJson(name) {
   const response = await fetch(endpoint(name), { cache: "no-store" });
-  if (!response.ok) throw new Error(`${name} returned ${response.status}`);
+  if (!response.ok) {
+    const failure = await response.json().catch(()=>({}));
+    const error = new Error(failure.error === "storage_daily_limit"
+      ? ui("云端数据库今日额度已用完，监控与通知暂时中断；不是没有重置消息。", "Today's database allowance is exhausted. Monitoring and notifications are interrupted; reset coverage is unknown.")
+      : `${name} returned ${response.status}`);
+    error.storageQuota = failure.error === "storage_daily_limit";
+    throw error;
+  }
   return response.json();
 }
 
+function resetTimeCopy(signal) {
+  const t = signal.reset_timing || {};
+  if (t.reset_at) return ui(`重置时间：${t.approximate ? "约 " : ""}${formatTime(t.reset_at, true)}`, `Reset time: ${t.approximate ? "about " : ""}${formatTime(t.reset_at, true)}`);
+  if (signal.event_type === "explicit_reset" && ["A1", "A2"].includes(signal.source_tier)) return ui("重置时间：原文未公布精确时刻", "Reset time: exact rollout time not published");
+  if (t.scheduled_for) return ui(`预计重置：${t.approximate ? "约 " : ""}${formatTime(t.scheduled_for, true)}`, `Scheduled reset: ${t.approximate ? "about " : ""}${formatTime(t.scheduled_for, true)}`);
+  return ui("原文未给出精确重置时间", "No precise reset time in the source");
+}
+
+function renderResetTiming(status) {
+  const container = document.querySelector("#reset-time-summary");
+  container.replaceChildren();
+  const signals = (status.live.signals || []).filter(s => !s.superseded_by_post_id && ["A1", "A2"].includes(s.source_tier))
+    .sort((a,b) => Date.parse(b.created_at)-Date.parse(a.created_at));
+  const confirmed = signals.find(s => s.event_type === "explicit_reset" && s.reset_mode === "hard_reset");
+  const announcement = signals.find(s => s.event_type === "scheduled_reset" && (!confirmed || Date.parse(s.created_at) > Date.parse(confirmed.created_at)));
+  for (const signal of [announcement, confirmed].filter(Boolean)) {
+    const card = el("article", "reset-time-card");
+    card.append(el("strong", "", signal.event_type === "explicit_reset" ? ui("最近一次重置确认", "Latest reset confirmation") : ui("下一轮预告", "Next announced reset")),
+      el("p", "reset-time-value", resetTimeCopy(signal)),
+      el("p", "", `${signal.event_type === "explicit_reset" ? ui("确认公告", "Confirmation post") : ui("预告发布", "Announcement posted")}：${formatTime(signal.created_at, true)}`));
+    card.append(link(ui("查看一手原文 ↗", "Read first-party source ↗"), signal.url));
+    container.append(card);
+  }
+  if (!container.childNodes.length) container.append(el("p", "", ui("暂无一手重置确认或预告。", "No first-party reset confirmation or announcement recorded.")));
+  container.append(el("p", "reset-time-note", ui("公告时间不等于每个账号到账时间；有精确时刻才显示。确认重置后会再次 DING，并在群里 @所有人。", "Publication time is not delivery time for every account. Precise rollout time appears only when stated in the source. A confirmed reset triggers another DING and a group-wide mention.")));
+  const query = document.querySelector("#reset-query-status");
+  query.replaceChildren(el("span", "", ui(`查询：X API · 每 ${Math.round((status.live.expected_poll_seconds || 1200)/60)} 分钟 · `, `Source: X API · every ${Math.round((status.live.expected_poll_seconds || 1200)/60)} minutes · `)),
+    link(ui("Tibo 原帖", "Tibo on X"), "https://x.com/thsottiaux"),
+    el("span", "", ui(" · Dot 备用研究通道未启用 · ", " · Optional Dot research not enabled · ")),
+    link(ui("连接说明", "Connection notes"), "https://github.com/farmcan/codex-reset-watcher/blob/main/docs/research-reset-task-triggers.md"));
+}
+
 function renderLive(status) {
+  renderResetTiming(status);
   renderHealth(status);
   renderCurrent(status);
   renderResetClock(status, cachedHistory);
@@ -913,15 +955,23 @@ function renderLive(status) {
   renderSystem(status);
 }
 
-function showLoadFailure(initial) {
+function showLoadFailure(initial, error) {
   document.querySelector("#health-dot").className = `status-dot ${initial ? "down" : "stale"}`;
   document.querySelector("#health-label").textContent = initial
     ? ui("页面无法读取监控 API", "The page cannot read the monitoring API")
     : ui("自动刷新失败 · 保留上次数据", "Auto-refresh failed · showing last data");
+  if (error?.storageQuota) {
+    document.querySelector("#health-label").textContent = error.message;
+    document.querySelector("#notification-capability").textContent = ui("云端通知暂时中断 · 数据库额度恢复后继续处理，当前不能保证新消息送达", "Cloud notifications interrupted · delivery cannot be guaranteed until database access recovers");
+    document.querySelector("#system-grid").replaceChildren(el("p", "empty", error.message));
+    const timeSummary = document.querySelector("#reset-time-summary");
+    timeSummary.replaceChildren(el("p", "", error.message));
+    document.querySelector("#reset-query-status").textContent = ui("查询暂不可用，覆盖未知；恢复后继续每20分钟检查。", "Query unavailable; coverage unknown. Checks resume every 20 minutes after recovery.");
+  }
   if (!initial) return;
   const card = document.querySelector("#current-card");
   card.className = "current-card high";
-  card.replaceChildren(el("div", "", PAGES_SNAPSHOT ? ui("备用快照加载失败。请稍后刷新。", "Fallback snapshot failed to load. Refresh in a moment.") : ui("加载失败。请稍后刷新，或查看 /healthz。", "Loading failed. Refresh in a moment or check /healthz.")));
+  card.replaceChildren(el("div", "", error?.storageQuota ? error.message : PAGES_SNAPSHOT ? ui("备用快照加载失败。请稍后刷新。", "Fallback snapshot failed to load. Refresh in a moment.") : ui("加载失败。请稍后刷新，或查看 /healthz。", "Loading failed. Refresh in a moment or check /healthz.")));
   const clock = document.querySelector("#reset-clock");
   clock.className = "reset-clock error";
   document.querySelector("#reset-clock-value").textContent = ui("计时不可用", "Clock unavailable");
@@ -945,7 +995,7 @@ async function load() {
     renderSources(sources);
     lastLiveRefreshAt = Date.now();
   } catch (error) {
-    showLoadFailure(true);
+    showLoadFailure(true, error);
   } finally {
     refreshInFlight = false;
   }
@@ -958,7 +1008,7 @@ async function refreshLive() {
     renderLive(await fetchJson("status"));
     lastLiveRefreshAt = Date.now();
   } catch (error) {
-    showLoadFailure(false);
+    showLoadFailure(false, error);
   } finally {
     refreshInFlight = false;
   }

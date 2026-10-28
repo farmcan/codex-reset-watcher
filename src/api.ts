@@ -1,6 +1,6 @@
 import historical from "../data/reset-events.json";
 import scorecard from "../data/source-scorecard.json";
-import { dashboardData, ensureSourceState } from "./db";
+import { dashboardData } from "./db";
 import { emailConfigured, sendTestEmail } from "./notifications";
 import { runPoll } from "./poll";
 import type { Env } from "./types";
@@ -22,7 +22,6 @@ function json(data: unknown, status = 200): Response {
 }
 
 async function healthSnapshot(env: Env): Promise<Record<string, unknown>> {
-  await ensureSourceState(env.DB);
   const live = await dashboardData(env.DB);
   const sources = live.sources as Array<Record<string, unknown>>;
   const official = sources.find((source) => source.name === "official-first-party");
@@ -46,6 +45,15 @@ async function healthSnapshot(env: Env): Promise<Record<string, unknown>> {
     official_last_success_at: official?.last_success_at ?? null,
     official_age_seconds: ageMs === null ? null : Math.max(0, Math.round(ageMs / 1000)),
     expected_poll_seconds: pollSeconds,
+    reset_monitor: {
+      source: 'X API', author: 'thsottiaux', poll_seconds: pollSeconds,
+      confirmation_notifications: true,
+      exact_time_policy: 'source_timestamp_only',
+      personal_delivery_verified: false,
+      dot: {status:'not_configured', role:'optional_research',
+        reason:'Previous trial tunnel is offline; no active event subscription. Primary X API monitoring is independent.',
+        documentation:'https://github.com/farmcan/codex-reset-watcher/blob/main/docs/research-reset-task-triggers.md'}
+    },
     grace_seconds: Math.round(staleAfterMs / 1000),
     x_token_configured: Boolean(env.X_BEARER_TOKEN),
     model_review: await reviewHealth(env),

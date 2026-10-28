@@ -3,6 +3,7 @@ import { runPoll } from "./poll";
 import { buildRss } from "./rss";
 import type { Env } from "./types";
 import { handleEngagement } from './engagement';
+import { publicRead, storageFailure } from './public-cache';
 
 const SECURITY_HEADERS = {
   "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
@@ -18,9 +19,20 @@ export default {
     if (url.pathname === "/__scheduled") return new Response("Not Found", { status: 404 });
     const engagement = await handleEngagement(request, env);
     if (engagement) return withSecurityHeaders(engagement);
-    const api = await handleApi(request, env);
-    if (api) return withSecurityHeaders(api);
-    if (request.method === "GET" && url.pathname === "/feed.xml") return withSecurityHeaders(await buildRss(env, url.origin));
+    try {
+      if (url.pathname.startsWith('/api/') || url.pathname === '/healthz' || url.pathname === '/feed.xml') {
+        return withSecurityHeaders(await publicRead(request, async () => {
+          const api = await handleApi(request, env);
+          if (api) return api;
+          if (request.method === 'GET' && url.pathname === '/feed.xml') return buildRss(env,url.origin);
+          return new Response('Not Found',{status:404});
+        }, await caches.open('watcher-public-v1')));
+      }
+    } catch (error) {
+      const failure = storageFailure(error);
+      if (failure) return withSecurityHeaders(failure);
+      throw error;
+    }
     if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method Not Allowed", { status: 405 });
     return withSecurityHeaders(await env.ASSETS.fetch(request));
   },

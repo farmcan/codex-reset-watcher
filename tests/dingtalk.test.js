@@ -185,7 +185,8 @@ describe("durable cloud DingTalk delivery", () => {
     const payload=JSON.parse(fetch.mock.calls[1][1].body);
     expect(payload.openConversationId).toBe('fixture-group');
     expect(payload.isAtAll).toBe(true);
-    expect(JSON.parse(payload.msgParam).content).toContain('非 DING');
+    expect(JSON.parse(payload.msgParam).content).toContain('原文 · @tibo');
+    expect(JSON.parse(payload.msgParam).content).not.toContain('scheduled_reset');
   });
   it("sends a queued natural alert after review, without replaying review-only history", async () => {
     const {env,sqlite}=await queued();
@@ -239,11 +240,31 @@ describe("durable cloud DingTalk delivery", () => {
     await processDingTalkDeliveries(env,now);expect(fetch).not.toHaveBeenCalled();
   });
   it("persists test idempotency so a repeated admin request sends once", async () => {
-    const {env}=fixture();const fetch=vi.fn().mockResolvedValueOnce(tokenResponse()).mockResolvedValueOnce(new Response('{"processQueryKey":"test-receipt"}'));
+    const {env}=fixture();env.DINGTALK_TEST_GROUP_ID='fixture-isolated';const fetch=vi.fn().mockResolvedValueOnce(tokenResponse()).mockResolvedValueOnce(new Response('{"processQueryKey":"test-receipt"}'));
     vi.stubGlobal('fetch',fetch);expect((await testDingTalk(env,'release-test-1')).status).toBe('sent');
     expect(await testDingTalk(env,'release-test-1')).toMatchObject({status:'sent',deduplicated:true});expect(fetch).toHaveBeenCalledTimes(2);
   });
   it("preserves banked-reset action boundaries", () => {
-    expect(dingTalkContent({event_type:'explicit_reset',reset_mode:'banked_reset',source_tier:'A1',author:'tibo',text:'banked',url:'https://x.com/tibo/status/1',effective_time:null})).toContain('不等同自动 hard reset');
+    expect(dingTalkContent({event_type:'explicit_reset',reset_mode:'banked_reset',source_tier:'A1',author:'tibo',text:'banked',url:'https://x.com/tibo/status/1',effective_time:null})).toContain('不是自动重置');
+  });
+  it('never sends a test to the production group, for either notification mode',async()=>{
+    for(const mode of ['personal_ding','group_message']){
+      const {env}=fixture();env.DINGTALK_MODE=mode;env.DINGTALK_TEST_GROUP_ID=env.DINGTALK_GROUP_ID;
+      const fetch=vi.fn();vi.stubGlobal('fetch',fetch);
+      expect(await testDingTalk(env,'same-group-'+mode)).toMatchObject({status:'failed'});
+      expect(fetch).not.toHaveBeenCalled();
+    }
+  });
+  it('notifies a later real confirmation separately from the advance notice exactly once',async()=>{
+    const {env,sqlite}=await queued();
+    sqlite.prepare(`INSERT INTO posts SELECT 'confirmed',author,'We have now reset Codex usage limits.',?,url,lane,source_tier,source_weight,referenced_post_ids,linked_urls,raw_json,first_seen_at,1 FROM posts WHERE post_id='p'`).run(now);
+    sqlite.prepare(`INSERT INTO signals SELECT 'x:confirmed','confirmed','explicit_reset',reset_mode,severity,confidence,content_confidence,evidence_basis,NULL,0,cluster_key,NULL,1,reason,evidence,created_at FROM signals WHERE signal_id='x:p'`).run();
+    await reconcileNotificationQueue(env,now);
+    const fetch=vi.fn().mockResolvedValueOnce(tokenResponse()).mockResolvedValueOnce(new Response('{"processQueryKey":"advance"}')).mockResolvedValueOnce(new Response('{"processQueryKey":"confirmed"}'));vi.stubGlobal('fetch',fetch);
+    expect(await processDingTalkDeliveries(env,now)).toEqual({sent:2,failed:0});
+    const sent=fetch.mock.calls.slice(1).map(c=>JSON.parse(JSON.parse(c[1].body).msgParam).content);
+    expect(sent.join('\n')).toContain('Codex 重置已确认');
+    expect(sent.join('\n')).toContain('原文未公布精确时刻');
+    expect(await processDingTalkDeliveries(env,now)).toEqual({sent:0,failed:0});
   });
 });

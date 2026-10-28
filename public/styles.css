@@ -377,3 +377,13 @@ footer { flex-wrap: wrap; }
 .site-engagement button:disabled { cursor: default; }
 .engagement-note { margin: 8px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
 .engagement-note a { color: var(--accent); }
+
+/* Evidence-backed rollout timing, separate from announcement publication. */
+.reset-times { margin-top: 2rem; }
+.reset-time-summary { display: flex; flex-wrap: wrap; gap: 1rem; }
+.reset-time-card { flex: 1 1 260px; min-width: 0; padding: 1.25rem; border: 1px solid var(--line, #ddd); border-radius: 16px; background: var(--paper, #fffdf7); }
+.reset-time-card p { margin: .5rem 0; }
+.reset-time-value { font-size: 1.05rem; font-weight: 600; }
+.reset-time-note, .reset-query-status { font-size: .86rem; line-height: 1.7; color: var(--muted, #666); }
+.reset-time-summary > .reset-time-note { flex-basis: 100%; margin: 0; }
+.reset-query-status a { color: inherit; text-decoration: underline; }
