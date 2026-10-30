@@ -21,6 +21,20 @@ function post(overrides: Partial<RawPost> = {}): RawPost {
 }
 
 describe("classifyPost", () => {
+  it('confirms a terse done reply only with a verified same-author reset reference',()=>{
+    const context={postId:'parent',author:'thsottiaux',text:'Today is a Codex reset.',createdAt:'2026-08-29T22:00:00Z'};
+    const reply=post({text:'And it’s done. See you tomorrow for good news.',referencedPostIds:['parent'],raw:{reset_context:[context]}});
+    expect(classifyPost(reply)).toMatchObject({eventType:'explicit_reset',resetMode:'hard_reset',shouldNotify:true,effectiveTime:null});
+    for(const extra of [{raw:{}},{referencedPostIds:[]},{raw:{reset_context:[{...context,author:'someone'}]}},{raw:{reset_context:[{...context,text:'The new Calendar plugin is coming.'}]}}]) {
+      expect(classifyPost({...reply,...extra}).eventType).toBe('unrelated');
+    }
+    for(const text of ['No Codex reset is planned.','We will not reset Codex today.','The database reset is planned.','Please give us a Codex reset.']) {
+      expect(classifyPost({...reply,raw:{reset_context:[{...context,text}]}}).eventType).toBe('unrelated');
+    }
+    for(const text of ['The Codex reset has not completed yet.',"The reset hasn't been completed.",'It is not done yet.']) {
+      expect(classifyPost({...reply,text}).eventType).toBe('unrelated');
+    }
+  });
   it("recognizes the September 7 Astra global reset notice with a clock time", () => {
     const signal = classifyPost(post({
       text: "Thanks for reading. We will do a global reset of the usage for all paid subscriptions so that you can keep enjoying Astra after burning through all of it doing fun 3D modeling in blender. The work week is about to start. Lands around 6pm PST today.",

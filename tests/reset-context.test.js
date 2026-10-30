@@ -1,0 +1,23 @@
+import {DatabaseSync} from 'node:sqlite';
+import {afterEach,expect,it} from 'vitest';
+import {withResetContext} from '../src/reset-context';
+import {classifyPost} from '../src/classifier';
+const databases=[];afterEach(()=>databases.splice(0).forEach(db=>db.close()));
+it('recovers a verified two-hop reset thread without guessing from nearby unrelated posts',async()=>{
+  const sqlite=new DatabaseSync(':memory:');databases.push(sqlite);
+  sqlite.exec('CREATE TABLE posts(post_id TEXT PRIMARY KEY,author TEXT,text TEXT,created_at TEXT,referenced_post_ids TEXT)');
+  const insert=sqlite.prepare('INSERT INTO posts VALUES (?,?,?,?,?)');
+  insert.run('root','thsottiaux','Today is a reset.','2026-10-28T02:42:00Z','[]');
+  insert.run('timing','thsottiaux','Lands by midnight PST.','2026-10-28T02:43:00Z','["root"]');
+  insert.run('unrelated','thsottiaux','Codex reset tomorrow.','2026-10-28T02:44:00Z','[]');
+  const prepare=(sql,params=[])=>({bind:(...p)=>prepare(sql,p),all:async()=>({results:sqlite.prepare(sql).all(...params)})});
+  const reply={postId:'done',author:'thsottiaux',text:"And it's done. See you tomorrow.",createdAt:'2026-10-28T06:29:00Z',url:'https://x.com/thsottiaux/status/1',sourceTier:'A1',sourceWeight:1,lane:'official',referencedPostIds:['timing'],referencedAuthors:['thsottiaux'],linkedUrls:[],raw:{}};
+  const hydrated=await withResetContext({prepare},reply);
+  expect(classifyPost(hydrated)).toMatchObject({eventType:'explicit_reset',resetMode:'hard_reset',effectiveTime:null});
+  expect(hydrated.raw.reset_context.map(p=>p.postId)).toEqual(['root','timing']);
+  sqlite.prepare("UPDATE posts SET author='someone' WHERE post_id='timing'").run();
+  expect(classifyPost(await withResetContext({prepare},reply)).eventType).toBe('unrelated');
+  sqlite.prepare("DELETE FROM posts WHERE post_id='timing'").run();
+  const apiParent={...reply,raw:{reset_context:[{postId:'timing',author:'thsottiaux',text:'Lands by midnight PST.',createdAt:'2026-10-28T02:43:00Z',referencedPostIds:['root']}]}};
+  expect(classifyPost(await withResetContext({prepare},apiParent)).eventType).toBe('explicit_reset');
+});

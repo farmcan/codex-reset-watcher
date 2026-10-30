@@ -2,7 +2,7 @@
 
 ![拿皮鞭的小猫](https://codex-reset-watcher.weican16hit.workers.dev/brand-zh.png)
 
-不想一直刷重置消息，也不想让剩余额度闲着？我做的 **Codex Reset Watcher（猛蹬雷达）**，把公开重置信号、钉钉群提醒和有用的任务入口放到了一起。
+不想一直刷重置消息，也不想让剩余额度闲着？我做的 **Codex Reset Watcher（重置雷达）**，把公开重置信号、钉钉群提醒和有用的任务入口放到了一起。
 
 **[打开雷达](https://codex-reset-watcher.weican16hit.workers.dev/) · [直接挑任务](https://codex-reset-watcher.weican16hit.workers.dev/#pedal) · [GitHub 源码](https://github.com/farmcan/codex-reset-watcher)**
 
@@ -10,11 +10,15 @@
 
 网页把重置预告、已确认重置、可储存重置权益和个人到账分开，每条保留原帖与时间。“有人到账”不会直接写成“全员重置”。
 
-当前仅追踪 Tibo，约每 20 分钟检查一次；规则判断结合模型辅助复核。历史回看覆盖截至 2026 年 9 月 5 日的 12 次重置权益，其中 8 次事前已有清晰提醒。**这是固定样本覆盖，不是预测准确率，也不表示现在即将重置。** [历史证据与局限](https://github.com/farmcan/codex-reset-watcher/blob/main/docs/historical-audit.md)
+最新核验已补入 **10 月的 6 次完成确认**。例如 10 月 28 日，10:42 的“今天重置”是预告，14:29 的“And it's done”才是完成确认；这仍是公告时间，不能证明每个账号的精确到账时刻。[近期证据](https://github.com/farmcan/codex-reset-watcher/blob/main/docs/recent-reset-audit.md)
 
-想持续跟进，可以加入跨组织钉钉群。通知由 Cloudflare 持续处理，无需电脑在线；现已实测 **Cloudflare 发出的应用内 DING**，网页每条新增信息都会通知。DING 接收者需要是发送者的好友或同事；只入群还不一定能收到 DING，未送达会显示实际覆盖情况。
+早期 12 次回测单独保留，不拿这个固定样本宣称预测准确率，也不表示现在即将重置。
+
+想持续跟进，可以加入跨组织钉钉群。通知由 Cloudflare 持续处理，无需电脑在线；现已在双人测试群实测 **Cloudflare 发出的应用内 DING 与群内 @所有人**；新增可见信号进入持久通知队列，发送去重并记录异常。DING 接收者需要是发送者的好友或同事；只入群还不一定能收到 DING，未送达会显示实际覆盖情况。
 
 添加钉钉号 **`d4r_yr1im7hv6`**，我拉你进群。认准网页上拿皮鞭的小猫。
+
+![真实首页：看动态、收提醒、找任务](https://codex-reset-watcher.weican16hit.workers.dev/showcase/home-desktop.jpg)
 
 ## Token maxxing：有余量，就留下一份成果
 
@@ -48,5 +52,13 @@
 ```
 
 想省心：加入钉钉通知群。想现在动手：**[挑一个能验收的任务](https://codex-reset-watcher.weican16hit.workers.dev/#pedal)**。
+
+## 简单的实现，明确的边界
+
+Cloudflare 定时获取公开动态，规则与 AI 复核原文及回复链；D1 保存证据、通知队列与回执，再供网页、RSS 和钉钉使用。访问量与点赞也可在页面查看。
+
+当前自动任务触发尚未启用；过去完成的一次 Dot → Codex 概念验证，不代表已经提供多用户自动开工。
+
+[查看架构、截图与短片](https://codex-reset-watcher.weican16hit.workers.dev/showcase/) · [MIT 开源仓库](https://github.com/farmcan/codex-reset-watcher)
 
 本站非 OpenAI 官方产品，不读取你的私人额度。个人用量与重置时间仍以 [Codex Usage](https://chatgpt.com/codex/settings/usage) 为准。

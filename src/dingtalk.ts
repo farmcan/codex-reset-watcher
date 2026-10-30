@@ -93,6 +93,7 @@ export async function dingTalkHealth(env: Env, now = new Date().toISOString()): 
     FROM deliveries WHERE channel='dingtalk' AND destination_hash=?`).bind(destination).first<Record<string, unknown>>();
   const missing = await env.DB.prepare(`SELECT COUNT(*) AS n FROM signals s JOIN posts p ON p.post_id=s.post_id
     WHERE p.notification_eligible=1 AND s.should_notify=1 AND s.superseded_by_post_id IS NULL
+    AND NOT EXISTS (SELECT 1 FROM app_state a WHERE a.key='historical-repair:'||p.post_id)
     AND s.event_type!='unrelated'
     AND NOT EXISTS (SELECT 1 FROM deliveries d WHERE d.signal_id=s.signal_id AND d.channel='dingtalk' AND d.destination_hash=?)`)
     .bind(destination).first<{n:number}>();

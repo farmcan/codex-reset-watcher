@@ -8,7 +8,7 @@ export const QUERY_SPECS: QuerySpec[] = [
     maxResults: 50,
     allowedAuthors: ["thsottiaux"],
     query:
-      'from:thsottiaux (Codex OR "ChatGPT Work" OR tokens OR milestone OR banked OR "rate limits" OR "usage limits" OR "reset button" OR reset OR "you know what\'s coming") -is:retweet'
+      'from:thsottiaux (Codex OR "ChatGPT Work" OR tokens OR milestone OR banked OR limits OR "reset button" OR reset OR done OR completed OR "all set" OR "you know what\'s coming") -is:retweet'
   }
 ];
 

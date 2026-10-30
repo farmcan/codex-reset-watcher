@@ -60,8 +60,14 @@ function localDay(value) {
   }).format(new Date(value));
 }
 
+function sourceText(value) {
+  // Decode source entities as text only; never interpret source markup as HTML.
+  const entities = {amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'"};
+  return String(value || "").replace(/&(amp|lt|gt|quot|#39);/g, (_, name) => entities[name]);
+}
+
 function compactText(value, maximum = 260) {
-  const normalized = String(value || "").replace(/\s+/g, " ").trim();
+  const normalized = sourceText(value).replace(/\s+/g, " ").trim();
   return normalized.length > maximum ? `${normalized.slice(0, maximum - 1)}…` : normalized;
 }
 
@@ -92,6 +98,7 @@ function actionText(signal) {
     return ui("一手来源已经确认。现在更重要的是检查你自己的 Codex Usage 是否实际到账。", "A first-party source has confirmed it. Check your own Codex Usage to see whether the reset has reached your account.");
   }
   if (signal.reset_mode === "banked_reset") return ui("这是可保存或手动使用的重置，不等同自动全量重置。", "This is a reset you can bank or apply manually; it is not an automatic hard reset.");
+  if (signal.event_type === "rate_limit_change") return ui("额度规则有调整。查看适用套餐，再核对自己的额度。", "Usage limits have changed. Check the eligible plans and your own allowance.");
   return ui("目前只值得留意，不建议为了风声强行消耗额度。", "Worth watching, but not strong enough to justify burning usage on rumor alone.");
 }
 
@@ -118,7 +125,13 @@ function currentSignals(status) {
     rate_limit_change: 24,
     community_rumor: 48
   };
+  const completedRefs=new Set();
+  for(const signal of status.live.signals || []) {
+    if(signal.event_type!=="explicit_reset" || !["A1","A2"].includes(signal.source_tier))continue;
+    try {for(const id of JSON.parse(signal.referenced_post_ids || "[]"))completedRefs.add(id);for(const parent of JSON.parse(signal.reset_context || "[]"))completedRefs.add(parent.postId);}catch{}
+  }
   return validSignals(status).filter((signal) => {
+    if(signal.event_type==='scheduled_reset' && completedRefs.has(signal.post_id))return false;
     const ageHours = (now - Date.parse(signal.created_at)) / 3_600_000;
     return ageHours >= 0 && ageHours <= (maximumAgeHours[signal.event_type] || 24);
   });
@@ -186,6 +199,11 @@ function latestConfirmedReset(status, history, kind = null) {
     if (kind && event.kind !== kind) return;
     const timestamp = Date.parse(event.outcome_at || event.confirmed_at);
     if (Number.isFinite(timestamp) && timestamp <= Date.now()) candidates.push({ timestamp, kind: event.kind, basis: "history" });
+  });
+  (history.recent_audit?.events || []).forEach(event=>{
+    if(kind && event.kind!==kind) return;
+    const timestamp=Date.parse(event.reset_at || event.confirmed_at);
+    if(Number.isFinite(timestamp) && timestamp<=Date.now()) candidates.push({timestamp,kind:event.kind,basis:"recent_audit"});
   });
   return collapseResetCandidates(candidates);
 }
@@ -268,28 +286,19 @@ function renderHealth(status) {
   const dot = document.querySelector("#health-dot");
   dot.className = `status-dot ${health}`;
   const labels = ENGLISH
-    ? { healthy: "X monitoring healthy", degraded: "Notification delivery needs attention", initializing: "Building the first baseline", stale: "Data is stale", down: "X monitoring unavailable" }
-    : { healthy: "X 监控正常", degraded: "通知投递异常", initializing: "首次基线建立中", stale: "数据已过期", down: "X 监控异常" };
-  const prefix = PAGES_SNAPSHOT ? ui("备用快照 · ", "Fallback snapshot · ") : "";
+    ? { healthy: "Up to date", degraded: "Alerts need attention", initializing: "Preparing updates", stale: "Updates delayed", down: "Updates unavailable" }
+    : { healthy: "动态已更新", degraded: "提醒服务异常", initializing: "正在准备动态", stale: "更新延迟", down: "暂时无法获取动态" };
+  const prefix = PAGES_SNAPSHOT ? ui("备用快照 · ", "Snapshot · ") : "";
   const polledAt = status.live.official_last_success_at
-    ? ui(` · 最近轮询 ${formatTime(status.live.official_last_success_at)}`, ` · last poll ${formatTime(status.live.official_last_success_at)}`)
-    : "";
-  document.querySelector("#health-label").textContent = `${prefix}${labels[health] || ui("状态未知", "Unknown status")}${polledAt}`;
+    ? ui(` · 更新于 ${formatTime(status.live.official_last_success_at)}`, ` · updated ${formatTime(status.live.official_last_success_at)}`) : "";
+  document.querySelector("#health-label").textContent = `${prefix}${labels[health] || ui("状态未知", "Status unknown")}${polledAt}`;
   const ding = status.live.dingtalk;
   const capability = document.querySelector("#notification-capability");
-  const deliveryIssues = ding?.status === "degraded" || ding?.session?.status === "degraded" || (ding?.delivery_counts || []).some(row => ["failed", "unknown"].includes(row.status) && row.count > 0);
-  if (capability) {
-    capability.textContent = !ding?.configured
-      ? ui("支持云端钉钉通知 · 当前未配置", "Cloud DingTalk alerts supported · not configured")
-      : ding.coverage ? ui(`云端 DING 已覆盖 ${ding.coverage.notified}/${ding.coverage.total} 位成员 · 其余需要好友或同事关系`, `Cloud DING reached ${ding.coverage.notified}/${ding.coverage.total} members · the rest require colleague or friend relationships`)
-      : deliveryIssues ? ui("云端钉钉通知有异常 · 查看下方监控健康状态", "Cloud DingTalk delivery needs attention · see monitoring health below")
-      : ding.true_ding ? (ding.cloud_ding_verified
-        ? (ding.recipient_scope === "selected_members"
-          ? ui(`云端 DING 已验证 · 每条新增信息通知指定的 ${ding.configured_recipient_count} 位接收者，并在群里 @所有人 · 无需本机在线`, `Cloud DING verified · every new update notifies ${ding.configured_recipient_count} selected recipients and @everyone in the group · no local computer needed`)
-          : ui("云端应用内 DING 已验证 · 网页每条新增信息都通知群成员 · 无需本机在线", "Cloud app DING verified · every new website update notifies group members · no local computer needed"))
-        : ui("云端应用内 DING 已配置 · 实际发送待验证", "Cloud app DING configured · live delivery not yet verified"))
-      : ui("云端钉钉群消息 · 普通消息，非 DING", "Cloud DingTalk group messages · not DING");
-  }
+  const deliveryIssues = ding?.status === "degraded" || ding?.session?.status === "degraded";
+  if (capability) capability.textContent = deliveryIssues
+    ? ui("提醒暂有异常，最新动态可在这里查看。", "Alerts need attention. Check the latest updates here.")
+    : ui("重置有消息，钉钉提醒。", "Reset news, straight to your DingTalk.");
+
 }
 
 function renderCurrent(status) {
@@ -297,14 +306,14 @@ function renderCurrent(status) {
   card.replaceChildren();
   const signal = currentSignals(status)[0];
   const body = el("div");
-  body.append(el("span", "signal-kicker", ui("当前判断", "Current assessment")));
+  body.append(el("span", "signal-kicker", ui("最新动态", "Latest update")));
   if (!signal) {
     card.className = "current-card clear";
     body.append(el("h2", "", status.live.overall === "healthy" ? ui("暂未发现新的有效信号", "No new actionable signal") : ui("监控数据还没有准备好", "Monitoring data is not ready")));
     const latestConfirmed = validSignals(status).find((candidate) => candidate.event_type === "explicit_reset" && candidate.reset_mode === "hard_reset");
     const healthyMessage = latestConfirmed
-      ? ui(`系统会继续轮询。最近一次官方确认在 ${formatTime(latestConfirmed.created_at)}，已经不再算作当前行动信号。`, `Polling continues. The latest official confirmation was at ${formatTime(latestConfirmed.created_at)} and is no longer treated as a current action signal.`)
-      : ui("系统会继续轮询；没有新信号不等于预测下一次不会重置。", "Polling continues. No new signal is not a prediction that another reset will not happen.");
+      ? ui(`最近一次确认在 ${formatTime(latestConfirmed.created_at)}。新预告和确认会继续在这里更新。`, `Last confirmed at ${formatTime(latestConfirmed.created_at)}. New announcements and confirmations will appear here.`)
+      : ui("有新的预告或确认，会在这里更新。", "New announcements and confirmations will appear here.");
     body.append(el("p", "", status.live.overall === "healthy" ? healthyMessage : ui("请先看下方监控健康状态，缺失数据不会被显示为“无事发生”。", "Check monitoring health below; missing data is never presented as an all-clear.")));
     card.append(body);
     return;
@@ -314,8 +323,7 @@ function renderCurrent(status) {
   body.append(el("span", "pill", eventLabel(signal)));
   body.append(el("p", "", actionText(signal)));
   const meta = el("div", "card-meta");
-  meta.append(el("span", `pill ${signal.severity}`, signal.severity === "high" ? ui("高优先级", "High priority") : signal.severity === "medium" ? ui("中等置信", "Medium confidence") : ui("低置信", "Low confidence")));
-  meta.append(el("span", `pill ${signal.source_tier}`, `@${signal.author} · ${signal.source_tier}`));
+
   meta.append(el("span", "pill", formatTime(signal.created_at)));
   body.append(meta);
   card.append(body, link(ui("打开原帖 →", "Open original post →"), signal.url, "primary-link"));
@@ -489,7 +497,27 @@ function timingLabel(node) {
   return ui(`提前 ${formatDuration(node.distance_minutes)}`, `${formatDuration(node.distance_minutes)} early`);
 }
 
+function renderRecentHistory(audit) {
+  const box=document.querySelector("#recent-history");
+  box.replaceChildren();
+  document.querySelector("#recent-audit-date").textContent=audit ? ui(`最近核验 ${formatTime(audit.reviewed_at,true)} · 北京时间`, `Reviewed ${formatTime(audit.reviewed_at,true)} · Beijing time`) : ui("最近核验记录待同步", "Recent review pending sync");
+  for (const event of audit?.events || []) {
+    const card=el("details","recent-reset");
+    const summary=el("summary");
+    summary.append(el("strong","",formatTime(event.confirmed_at,true)),el("span","",ui("重置已确认","Reset confirmed")),el("span","", "+"));
+    card.append(summary,el("p","",ui("这是确认公告时间；精确执行时刻未公布。","This is the confirmation-post time; exact rollout time was not published.")));
+    for(const node of event.timeline) {
+      const row=el("p","recent-evidence");
+      row.append(el("span","",`${formatTime(node.at)} · ${node.stage === 'confirmation' ? ui("确认","Confirmed") : node.stage === 'announcement' ? ui("预告","Announced") : ui("时间补充","Timing update")} · `),link(sourceText(node.quote),node.url));
+      card.append(row);
+    }
+    box.append(card);
+  }
+  box.append(el("p","reset-time-note",ui("仅列已核实的近期记录，不代表当月全部重置；下方旧样本的回测统计单独保留。","A verified recent subset, not a complete monthly census. Earlier backtest statistics remain separate below.")));
+}
+
 function renderHistory(history) {
+  renderRecentHistory(history.recent_audit);
   renderHistoryMetrics(history);
   const container = document.querySelector("#history-list");
   container.replaceChildren();
@@ -608,6 +636,7 @@ function monitorSignals(status) {
 function signalLevel(signal) {
   const lane = signalLane(signal);
   if (lane === "personal") return [ui("个人弱观察", "Weak personal observation"), "personal"];
+  if (lane === "official" && signal.event_type === "rate_limit_change") return [ui("额度更新", "Limits update"), "low"];
   if (lane === "official" && signal.event_type === "explicit_reset") return [ui("官方确认", "Official confirmation"), "high"];
   if (lane === "official" && signal.event_type === "scheduled_reset") return [ui("明确预告", "Clear warning"), "high"];
   if (lane === "official") return [ui("一手弱暗示", "Weak first-party hint"), "medium"];
@@ -674,10 +703,15 @@ function groupResetSignals(signals, history = { events: [] }) {
   for (const signal of [...official].sort((a,b) => Date.parse(a.created_at)-Date.parse(b.created_at))) {
     if (membership.has(signal.post_id)) continue;
     const at = Date.parse(signal.effective_time || signal.created_at);
-    const closest = [...groups.values()].filter(g => g.kind === signal.reset_mode && Math.abs(g.at-at) <= 2*3600000)
+    let references=[];let context=[];
+    try {references=JSON.parse(signal.referenced_post_ids || "[]");context=JSON.parse(signal.reset_context || "[]");}catch{}
+    const referenceId=[...references,...context.map(parent=>parent.postId)].map(id=>membership.get(id)).find(Boolean);
+    const linked=referenceId && groups.get(referenceId)?.kind===signal.reset_mode ? groups.get(referenceId) : null;
+    const closest = linked || [...groups.values()].filter(g => g.kind === signal.reset_mode && Math.abs(g.at-at) <= 2*3600000)
       .sort((a,b) => Math.abs(a.at-at)-Math.abs(b.at-at))[0];
     const group = closest || addGroup(`event:${signal.post_id}`, signal.reset_mode, at, null);
     membership.set(signal.post_id, group.id);
+    if(signal.event_type === "explicit_reset") group.at=at;
   }
   for (const signal of signals) {
     let id = membership.get(signal.post_id);
@@ -701,6 +735,7 @@ function groupResetSignals(signals, history = { events: [] }) {
 }
 
 const eventOpenState = new Map();
+let showAllSignalGroups=false;
 
 function renderSignalRows() {
   const container = document.querySelector("#signal-list");
@@ -710,7 +745,8 @@ function renderSignalRows() {
     container.append(el("p", "empty", ui("这个筛选下暂无节点。个人反馈为 0 时，只表示当前监控窗口没有收录，不代表所有账号都正常。", "No nodes match this filter. Zero personal reports only means none were captured in the current window; it does not prove every account is healthy.")));
     return;
   }
-  groupResetSignals(latestMonitorSignals, cachedHistory).forEach((group, index) => {
+  const visibleGroups=groupResetSignals(latestMonitorSignals,cachedHistory).filter(group=>group.signals.some(signal=>signalMatchesFilter(signal,activeSignalFilter)));
+  visibleGroups.slice(0,showAllSignalGroups ? undefined : 6).forEach((group, index) => {
     const visible = group.signals.filter(signal => signalMatchesFilter(signal, activeSignalFilter));
     if (!visible.length) return;
     const event = el("details", "reset-event");
@@ -719,7 +755,7 @@ function renderSignalRows() {
     const summary = el("summary", "reset-event-summary");
     const official = group.signals.filter(s => String(s.source_tier).startsWith("A"))
       .sort((a,b) => Date.parse(b.created_at)-Date.parse(a.created_at));
-    const lead = official.find(s => s.event_type === "explicit_reset") || official.find(s => s.event_type === "scheduled_reset");
+    const lead = official.find(s => s.event_type === "explicit_reset") || official.find(s => s.event_type === "scheduled_reset") || official.find(s => s.event_type === "rate_limit_change");
     const title = lead ? signalTitle(lead) : group.kind === "unknown" ? ui("尚未归属的消息", "Unassigned updates") : ui("重置相关反馈", "Reset reports");
     const heading = el("div");
     heading.append(el("span", "event-eyebrow", `${formatTime(new Date(group.at).toISOString(), true)} · ${group.kind === "banked_reset" ? ui("重置卡", "Banked reset") : group.kind === "hard_reset" ? ui("全量重置", "Hard reset") : ui("待核验", "Unverified")}`), el("h3", "", title));
@@ -751,6 +787,10 @@ function renderSignalRows() {
     track.append(row);
     });
   });
+  if(visibleGroups.length>6) {
+    const more=el("button","more-signals",showAllSignalGroups ? ui("收起早期动态","Show fewer updates") : ui(`查看更早的 ${visibleGroups.length-6} 组动态`,`Show ${visibleGroups.length-6} earlier updates`));
+    more.type="button";more.addEventListener("click",()=>{showAllSignalGroups=!showAllSignalGroups;renderSignalRows();});container.append(more);
+  }
 }
 
 function setupSignalFilters() {
@@ -881,7 +921,7 @@ function renderSystem(status) {
     : ding.true_ding ? ui("云端应用内 DING", "Cloud app DING") : ui("云端群消息", "Cloud group messages");
   const cards = [
     [ui("抓取范围", "Polling scope"), ui("仅 Tibo", "Tibo only"), ui("每 20 分钟检查新帖；社区账号和全网搜索已停用。历史记录仍保留。", "New posts checked every 20 minutes; community polling and broad search are disabled. Historical records are preserved.")],
-    [ui("Tibo 内容复核", "Tibo content review"), review.configured ? ui(`${Number(review.completed || 0)}/${Number(review.total || 0)} 已完成${Number(review.retrying || 0) ? " · 有失败" : ""}`, `${Number(review.completed || 0)}/${Number(review.total || 0)} completed${Number(review.retrying || 0) ? " · failures" : ""}`) : ui("尚未启用", "Not enabled"), review.configured ? ui(`${review.model} · 排队 ${Number(review.pending || 0)} 条 · 失败待重试 ${Number(review.retrying || 0)} 条。仅新内容进入复核。`, `${review.model} · ${Number(review.pending || 0)} queued · ${Number(review.retrying || 0)} failed, awaiting retry. Only unreviewed content is processed.`) : ui("使用规则识别", "Rule-based classification")],
+    [ui("Tibo 内容复核", "Tibo content review"), review.configured ? ui(`${Number(review.completed || 0)}/${Number(review.total || 0)} 已完成${Number(review.retrying || 0) ? " · 有失败" : ""}`, `${Number(review.completed || 0)}/${Number(review.total || 0)} completed${Number(review.retrying || 0) ? " · failures" : ""}`) : ui("尚未启用", "Not enabled"), review.configured ? ui(`${review.model} · 模型复核 ${Number(review.model_completed ?? review.completed ?? 0)} 条 · 原文证据复核 ${Number(review.source_reviewed || 0)} 条 · 排队 ${Number(review.pending || 0)} 条 · 失败待重试 ${Number(review.retrying || 0)} 条。仅新内容进入复核。`, `${review.model} · ${Number(review.model_completed ?? review.completed ?? 0)} model reviews · ${Number(review.source_reviewed || 0)} source-evidence reviews · ${Number(review.pending || 0)} queued · ${Number(review.retrying || 0)} failed, awaiting retry. Only unreviewed content is processed.`) : ui("使用规则识别", "Rule-based classification")],
     [ui("整体状态", "Overall status"), status.live.overall === "healthy" ? ui("正常", "Healthy") : status.live.overall === "initializing" ? ui("初始化", "Initializing") : ui("需关注", "Needs attention"), PAGES_SNAPSHOT ? ui(`备用页面约每 10 分钟同步；实时源每 ${status.live.expected_poll_seconds || 120} 秒检查`, `Fallback page syncs about every 10 minutes; live source checks every ${status.live.expected_poll_seconds || 120} seconds`) : ui(`官方源每 ${status.live.expected_poll_seconds || 120} 秒检查`, `First-party source checks every ${status.live.expected_poll_seconds || 120} seconds`)],
     [ui("官方源最后成功", "Last first-party success"), official.last_success_at ? formatTime(official.last_success_at, true) : ui("尚未成功", "No success yet"), official.last_error || ui("没有记录错误", "No recorded error")],
     [ui("邮件提醒", "Email alerts"), status.live.email.configured ? ui("已启用", "Enabled") : ui("未配置", "Not configured"), status.live.email.configured ? ui(`最低 ${status.live.email.minimum_severity} 才发送`, `Sends at ${status.live.email.minimum_severity} severity or above`) : ui("补收件人、发件域名和 Resend Secret 后启用", "Add recipient, verified sender domain, and Resend secret to enable")],
@@ -927,7 +967,11 @@ function renderResetTiming(status) {
   container.replaceChildren();
   const signals = (status.live.signals || []).filter(s => !s.superseded_by_post_id && ["A1", "A2"].includes(s.source_tier))
     .sort((a,b) => Date.parse(b.created_at)-Date.parse(a.created_at));
-  const confirmed = signals.find(s => s.event_type === "explicit_reset" && s.reset_mode === "hard_reset");
+  let confirmed = signals.find(s => s.event_type === "explicit_reset" && s.reset_mode === "hard_reset");
+  const audited=cachedHistory?.recent_audit?.events?.find(event=>event.kind==='hard_reset');
+  if(audited && (!confirmed || Date.parse(audited.confirmed_at)>Date.parse(confirmed.created_at))) {
+    confirmed={event_type:'explicit_reset',reset_mode:'hard_reset',source_tier:'A1',created_at:audited.confirmed_at,url:audited.confirmation_url,reset_timing:{reset_at:audited.reset_at,confirmed_at:audited.confirmed_at}};
+  }
   const announcement = signals.find(s => s.event_type === "scheduled_reset" && (!confirmed || Date.parse(s.created_at) > Date.parse(confirmed.created_at)));
   for (const signal of [announcement, confirmed].filter(Boolean)) {
     const card = el("article", "reset-time-card");
@@ -938,7 +982,7 @@ function renderResetTiming(status) {
     container.append(card);
   }
   if (!container.childNodes.length) container.append(el("p", "", ui("暂无一手重置确认或预告。", "No first-party reset confirmation or announcement recorded.")));
-  container.append(el("p", "reset-time-note", ui("公告时间不等于每个账号到账时间；有精确时刻才显示。确认重置后会再次 DING，并在群里 @所有人。", "Publication time is not delivery time for every account. Precise rollout time appears only when stated in the source. A confirmed reset triggers another DING and a group-wide mention.")));
+  container.append(el("p", "reset-time-note", ui("确认后会再次提醒。精确执行时刻以原文为准，个人到账请查看自己的额度页。", "A confirmed reset triggers another alert. Exact rollout time comes from the source; check your own account for delivery.")));
   const query = document.querySelector("#reset-query-status");
   query.replaceChildren(el("span", "", ui(`查询：X API · 每 ${Math.round((status.live.expected_poll_seconds || 1200)/60)} 分钟 · `, `Source: X API · every ${Math.round((status.live.expected_poll_seconds || 1200)/60)} minutes · `)),
     link(ui("Tibo 原帖", "Tibo on X"), "https://x.com/thsottiaux"),

@@ -19,6 +19,7 @@ export async function reconcileNotificationQueue(env: Env, now: string): Promise
   for (const destination of destinations) {
     const {results} = await env.DB.prepare(`SELECT s.signal_id,s.severity FROM signals s JOIN posts p ON p.post_id=s.post_id
       WHERE p.notification_eligible=1 AND s.should_notify=1 AND s.superseded_by_post_id IS NULL
+      AND NOT EXISTS (SELECT 1 FROM app_state a WHERE a.key='historical-repair:'||p.post_id)
       AND s.event_type!='unrelated'
       AND (p.source_tier!='D' OR (s.event_type='community_observation' AND s.content_confidence>=0.7
         AND EXISTS (SELECT 1 FROM model_reviews r WHERE r.post_id=p.post_id AND r.status='complete')))

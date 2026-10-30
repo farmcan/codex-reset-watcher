@@ -1,4 +1,5 @@
 import type { EvidenceBasis, EventType, RawPost, ResetMode, Severity, Signal } from "./types";
+import { sourceResetTime } from './reset-time';
 
 const CONTEXT = ["codex", "chatgpt work", "astra", "usage limit", "usage limits", "rate limit", "quota", "allowance", "tokens"];
 const EXPLICIT = [
@@ -63,6 +64,31 @@ const WISHES = ["please give us a reset", "please drop a banked reset", "i'd tak
 
 function normalize(value: string): string {
   return value.toLowerCase().replace(/[’]/g, "'").replace(/\s+/g, " ").trim();
+}
+
+function blockedResetContext(text:string):boolean {
+  const normalized=normalize(text);
+  return matches(normalized,[...NEGATIONS,...EXCLUSIONS,...WISHES]).length>0
+    || /\bno\s+(?:codex\s+|global\s+|usage\s+)?reset\b/.test(normalized)
+    || /\b(?:please|wish|hope|want|would like)\b.{0,60}\breset\b/.test(normalized);
+}
+
+export function resetReplyContext(post: RawPost): string | null {
+  const context = (post.raw as {reset_context?: Array<{postId:string;author:string;text:string;createdAt:string;referencedPostIds?:string[]}>})?.reset_context ?? [];
+  let ids=post.referencedPostIds;
+  const seen=new Set<string>();
+  for(let depth=0;depth<3;depth++) {
+    const parents=context.filter(parent=>ids.includes(parent.postId) && !seen.has(parent.postId)
+      && parent.author.toLowerCase()===post.author.toLowerCase()
+      && !blockedResetContext(parent.text)
+      && Date.parse(parent.createdAt)<=Date.parse(post.createdAt)
+      && Date.parse(post.createdAt)-Date.parse(parent.createdAt)<=72*3_600_000);
+    const reset=parents.find(parent=>/\breset\b/i.test(parent.text) && !blockedResetContext(parent.text));
+    if (reset) return reset.text;
+    parents.forEach(parent=>seen.add(parent.postId));
+    ids=parents.flatMap(parent=>parent.referencedPostIds ?? []);
+  }
+  return null;
 }
 
 function matches(text: string, phrases: string[]): string[] {
@@ -143,7 +169,12 @@ export function classifyPost(post: RawPost): Signal {
   const banked = text.includes("banked reset") || text.includes("reset bank") || text.includes("banked");
   const basis = evidenceBasis(post, text);
   const timing = inferEffectiveTime(text, post.createdAt);
-  const blocked = matches(text, NEGATIONS).length > 0 || matches(text, EXCLUSIONS).length > 0 || matches(text, WISHES).length > 0;
+  const resetParent = resetReplyContext(post);
+  const completionWords = /\b(?:it'?s done|it is done|all done|completed|has been done|all propagated|reset has been processed)\b/.test(text);
+  const negatedCompletion=/\b(?:not(?:\s+yet)?|hasn'?t(?:\s+been)?|isn'?t)\s+(?:done|completed|propagated)\b|\bnot\s+(?:been\s+)?(?:fully\s+)?(?:done|completed|propagated)\b/.test(text);
+  const completedReply = Boolean(completionWords && !negatedCompletion && !blockedResetContext(text)
+    && (resetParent || /\breset\b/.test(text)));
+  const blocked = negatedCompletion || matches(text, NEGATIONS).length > 0 || matches(text, EXCLUSIONS).length > 0 || matches(text, WISHES).length > 0;
 
   let eventType: EventType = "unrelated";
   let resetMode: ResetMode = "unknown";
@@ -163,7 +194,13 @@ export function classifyPost(post: RawPost): Signal {
 
   if (!blocked) {
     if (post.sourceTier === "A1" || post.sourceTier === "A2") {
-      if (completeHits.length && (contextHits.length || resetWord)) {
+      if (completedReply) {
+        eventType = 'explicit_reset';
+        resetMode = /\bbanked\b/i.test(resetParent || text) ? 'banked_reset' : 'hard_reset';
+        severity = 'high';
+        shouldNotify = true;
+        evidence.push('done');
+      } else if (completeHits.length && (contextHits.length || resetWord)) {
         eventType = "explicit_reset";
         resetMode = banked ? "banked_reset" : "hard_reset";
         severity = "high";
@@ -218,11 +255,11 @@ export function classifyPost(post: RawPost): Signal {
     eventType,
     resetMode,
     severity,
-    confidence,
-    contentConfidence,
+    confidence: completedReply ? post.sourceWeight : confidence,
+    contentConfidence: completedReply ? 1 : contentConfidence,
     evidenceBasis: basis,
-    effectiveTime: timing.at,
-    approximateTime: timing.approximate,
+    effectiveTime: eventType === 'explicit_reset' ? sourceResetTime(post.text,post.createdAt)?.at ?? null : timing.at,
+    approximateTime: eventType === 'explicit_reset' ? sourceResetTime(post.text,post.createdAt)?.approximate ?? false : timing.approximate,
     clusterKey: clusterKey(resetMode, timing.at, post.createdAt),
     supersededByPostId: null,
     shouldNotify,

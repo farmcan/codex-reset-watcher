@@ -7,6 +7,7 @@
 <p align="center">
   <a href="https://codex-reset-watcher.weican16hit.workers.dev/">打开雷达</a> ·
   <a href="https://codex-reset-watcher.weican16hit.workers.dev/en/">English</a> ·
+  <a href="https://codex-reset-watcher.weican16hit.workers.dev/showcase/">作品介绍与素材</a> ·
   <a href="https://farmcan.github.io/codex-reset-watcher/">备用站</a> ·
   <a href="https://codex-reset-watcher.weican16hit.workers.dev/feed.xml">RSS</a>
 </p>
@@ -17,12 +18,12 @@
 </p>
 
 追踪 Codex 的公开额度重置信号：**什么时候说的、谁说的、是预告还是已完成，点开都有原帖。**
-当前每 20 分钟检查 Tibo 的新帖与回复，Cloudflare 在云端持续运行，无需维护者本机在线。
+有新消息接收钉钉提醒；不知道做什么时，从任务 Ideas 中选一件能留下成果的事。
 
 <details>
 <summary>查看主页截图</summary>
 
-![实时主页：指定目标的云端DING健康](docs/assets/dashboard-zh.png)
+![首页：看重置、收提醒、找任务](public/showcase/home-desktop.jpg)
 
 </details>
 
@@ -30,7 +31,7 @@
 
 1. **看信号**：[打开雷达](https://codex-reset-watcher.weican16hit.workers.dev/)，查看当前判断和每轮事件的证据。
 2. **收通知**：钉钉添加 `d4r_yr1im7hv6`，联系维护者加入跨组织通知群。应用内 DING 需要接收者与发送账号为好友或同事；接收范围以页面实际状态为准。
-3. **安排任务**：[看看怎么蹬](https://codex-reset-watcher.weican16hit.workers.dev/#pedal)，从维护、调研、开源贡献和悬赏中选一个能验收的任务。
+3. **安排任务**：[不知道怎么蹬？看一些 Ideas](https://codex-reset-watcher.weican16hit.workers.dev/#pedal)，从维护、调研、开源贡献和悬赏中选一个能验收的任务。
 4. **核对额度**：[个人 Codex Usage](https://chatgpt.com/codex/settings/usage) 才能确认你的实际剩余额度和到账情况。
 
 ## 现在能做什么
@@ -51,7 +52,7 @@
 
 目标是：**可信的重置前信号 → 自己的 Dot → Codex 执行预先准备的任务目录。**
 
-个人账号已实测：Cloudflare 事件自动触发 Dot，真实委派 Codex 并产出核验通过的文件。
+此前用个人账号完成过一次 Cloudflare → Dot → Codex 文件产出的概念验证。临时网关与订阅已清理，**当前没有启用自动开工**。
 自然 Reset 自动执行和多用户接入尚未开放；长期订阅管理仍需完善。
 多用户方案将让每个人授权自己的 Dot，各自配置任务、预算与停止条件，使用各自的 Codex 额度。
 
@@ -63,7 +64,8 @@
 - **Banked reset 不等于自动清空额度**，它是可储存或手动使用的权益。
 - **公开信号不等于个人额度**；本站不读取你的 Codex 登录，也不预测私人 5 小时或周窗口。
 
-[12 轮历史审计](docs/historical-audit.md)用于回看证据，不能当作未来预测准确率。[信源判断方法](docs/credibility-methodology.md) · [怎么蹬的筛选依据](docs/research-pedaling-workflows.md)
+[10 月新增核验](docs/recent-reset-audit.md)已补入 6 次完成确认，精确执行时刻未公布；它是核验子集，不代表全月清单。
+[早期 12 轮历史审计](docs/historical-audit.md)用于回看证据，不能当作未来预测准确率。[信源判断方法](docs/credibility-methodology.md) · [怎么蹬的筛选依据](docs/research-pedaling-workflows.md)
 
 ## 本地运行与自托管
 
@@ -74,9 +76,10 @@ cp .dev.vars.example .dev.vars
 npm run dev
 ```
 
+当前使用 Cloudflare Workers + D1，约每 20 分钟检查 Tibo 的新帖与回复；规则结合 AI 复核，并用持久投递记录去重。
 需要 Node.js 22+；真实抓取需要自己的 X API 凭据。完整检查运行 `npm run check`。
 
 部署、Cloudflare Secrets、通知接收者、邮件及 API 说明统一放在 [自托管与运维](docs/self-hosting.md)。
-[架构](docs/architecture.md) · [贡献](CONTRIBUTING.md) · [安全反馈](SECURITY.md) · [许可证](LICENSE)
+[架构图与截图](https://codex-reset-watcher.weican16hit.workers.dev/showcase/) · [技术文档](docs/architecture.md) · [贡献](CONTRIBUTING.md) · [安全反馈](SECURITY.md) · [许可证](LICENSE)
 
 中文网页与钉钉使用中文小猫图，英文网页使用英文小猫图。项目与 OpenAI、X 或被追踪账号无官方隶属关系。

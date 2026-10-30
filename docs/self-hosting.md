@@ -131,7 +131,7 @@ npx wrangler secret put ALERT_EMAIL_TO
 接口与地域说明：[百炼 OpenAI 兼容接口](https://help.aliyun.com/zh/model-studio/compatibility-of-openai-with-dashscope)、
 [Base URL 总览](https://help.aliyun.com/zh/model-studio/base-url)。
 
-受保护的 `POST /api/admin/review?limit=1` 可直接验证线上复核流程（上限 20 条），使用 `ADMIN_TOKEN` 或专用于复核的 `REVIEW_ADMIN_TOKEN`。失败原因区分模型调用与数据库写入，敏感凭据经过脱敏；首页分别显示排队和失败待重试数量。
+受保护的 `POST /api/admin/review?limit=1` 可直接验证线上复核流程（上限 4 条，适配 Free D1 单次查询限制），使用 `ADMIN_TOKEN` 或专用于复核的 `REVIEW_ADMIN_TOKEN`。失败原因区分模型调用与数据库写入，敏感凭据经过脱敏；首页分别显示排队和失败待重试数量。
 
 
 ### 访问量与点赞

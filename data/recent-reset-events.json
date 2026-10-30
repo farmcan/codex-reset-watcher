@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-10-30T14:41:41.332632+00:00",
+  "coverage": "Six source-verified October completions; not an exhaustive monthly census or a new prediction backtest.",
+  "events": [
+    {
+      "id": "reset-2026-10-28-verified",
+      "kind": "hard_reset",
+      "confirmed_at": "2026-10-28T06:29:38.000Z",
+      "reset_at": null,
+      "time_basis": "confirmation_post",
+      "confirmation_post_id": "2115330127886463244",
+      "confirmation_url": "https://x.com/thsottiaux/status/2115330127886463244",
+      "author": "thsottiaux",
+      "timeline": [
+        {
+          "stage": "announcement",
+          "post_id": "2115273064481218829",
+          "at": "2026-10-28T02:42:53.000Z",
+          "url": "https://x.com/thsottiaux/status/2115273064481218829",
+          "quote": "Just kidding, today is a reset."
+        },
+        {
+          "stage": "timing_update",
+          "post_id": "2115273253711409208",
+          "at": "2026-10-28T02:43:38.000Z",
+          "url": "https://x.com/thsottiaux/status/2115273253711409208",
+          "quote": "Lands by midnight PST."
+        },
+        {
+          "stage": "confirmation",
+          "post_id": "2115330127886463244",
+          "at": "2026-10-28T06:29:38.000Z",
+          "url": "https://x.com/thsottiaux/status/2115330127886463244",
+          "quote": "And it's done. See you tomorrow for some good news. https://t.co/WhJle2cWRG"
+        }
+      ]
+    },
+    {
+      "id": "reset-2026-10-25-verified",
+      "kind": "hard_reset",
+      "confirmed_at": "2026-10-25T06:06:16.000Z",
+      "reset_at": null,
+      "time_basis": "confirmation_post",
+      "confirmation_post_id": "2114237083652882932",
+      "confirmation_url": "https://x.com/thsottiaux/status/2114237083652882932",
+      "author": "thsottiaux",
+      "timeline": [
+        {
+          "stage": "announcement",
+          "post_id": "2114200152701575656",
+          "at": "2026-10-25T03:39:31.000Z",
+          "url": "https://x.com/thsottiaux/status/2114200152701575656",
+          "quote": "Day 20/ Rest and reset"
+        },
+        {
+          "stage": "timing_update",
+          "post_id": "2114200291319124163",
+          "at": "2026-10-25T03:40:04.000Z",
+          "url": "https://x.com/thsottiaux/status/2114200291319124163",
+          "quote": "By midnight PST"
+        },
+        {
+          "stage": "confirmation",
+          "post_id": "2114237083652882932",
+          "at": "2026-10-25T06:06:16.000Z",
+          "url": "https://x.com/thsottiaux/status/2114237083652882932",
+          "quote": "It is all propagated. Enjoy some mad codexing tomorrow. Fun week ahead too. https://t.co/qOrzwSeIZZ https://t.co/xKaK95EAly"
+        }
+      ]
+    },
+    {
+      "id": "reset-2026-10-13-verified",
+      "kind": "hard_reset",
+      "confirmed_at": "2026-10-13T05:06:06.000Z",
+      "reset_at": null,
+      "time_basis": "confirmation_post",
+      "confirmation_post_id": "2109873287853707513",
+      "confirmation_url": "https://x.com/thsottiaux/status/2109873287853707513",
+      "author": "thsottiaux",
+      "timeline": [
+        {
+          "stage": "announcement",
+          "post_id": "2109812360596865224",
+          "at": "2026-10-13T01:03:59.000Z",
+          "url": "https://x.com/thsottiaux/status/2109812360596865224",
+          "quote": "Global reset landing by EOD PST time. Enjoy"
+        },
+        {
+          "stage": "confirmation",
+          "post_id": "2109873287853707513",
+          "at": "2026-10-13T05:06:06.000Z",
+          "url": "https://x.com/thsottiaux/status/2109873287853707513",
+          "quote": "What would you like with your side of reset? It's done. https://t.co/gpNaB6otgy"
+        }
+      ]
+    },
+    {
+      "id": "reset-2026-10-11-verified",
+      "kind": "hard_reset",
+      "confirmed_at": "2026-10-11T04:01:09.000Z",
+      "reset_at": null,
+      "time_basis": "confirmation_post",
+      "confirmation_post_id": "2109132167112782291",
+      "confirmation_url": "https://x.com/thsottiaux/status/2109132167112782291",
+      "author": "thsottiaux",
+      "timeline": [
+        {
+          "stage": "announcement",
+          "post_id": "2109045392684032299",
+          "at": "2026-10-10T22:16:20.000Z",
+          "url": "https://x.com/thsottiaux/status/2109045392684032299",
+          "quote": "Global reset by EOD. May the tokens do good things for you."
+        },
+        {
+          "stage": "confirmation",
+          "post_id": "2109132167112782291",
+          "at": "2026-10-11T04:01:09.000Z",
+          "url": "https://x.com/thsottiaux/status/2109132167112782291",
+          "quote": "Put the reset in the bag. All propagated. https://t.co/HGxaD3Zdcj"
+        }
+      ]
+    },
+    {
+      "id": "reset-2026-10-07-verified",
+      "kind": "hard_reset",
+      "confirmed_at": "2026-10-07T03:35:09.000Z",
+      "reset_at": null,
+      "time_basis": "confirmation_post",
+      "confirmation_post_id": "2107676072871600470",
+      "confirmation_url": "https://x.com/thsottiaux/status/2107676072871600470",
+      "author": "thsottiaux",
+      "timeline": [
+        {
+          "stage": "confirmation",
+          "post_id": "2107676072871600470",
+          "at": "2026-10-07T03:35:09.000Z",
+          "url": "https://x.com/thsottiaux/status/2107676072871600470",
+          "quote": "Therefore ... the reset has been processed. Enjoy!"
+        }
+      ]
+    },
+    {
+      "id": "reset-2026-10-02-verified",
+      "kind": "hard_reset",
+      "confirmed_at": "2026-10-02T21:18:48.000Z",
+      "reset_at": null,
+      "time_basis": "confirmation_post",
+      "confirmation_post_id": "2106131810921136451",
+      "confirmation_url": "https://x.com/thsottiaux/status/2106131810921136451",
+      "author": "thsottiaux",
+      "timeline": [
+        {
+          "stage": "announcement",
+          "post_id": "2105843926221660585",
+          "at": "2026-10-02T02:14:51.000Z",
+          "url": "https://x.com/thsottiaux/status/2105843926221660585",
+          "quote": "Global reset landing tomorrow 10am PST for all paid ChatGPT accounts. Apologies for the slow start with GPT-6.1"
+        },
+        {
+          "stage": "confirmation",
+          "post_id": "2106131810921136451",
+          "at": "2026-10-02T21:18:48.000Z",
+          "url": "https://x.com/thsottiaux/status/2106131810921136451",
+          "quote": "Reset all propagated. Enjoy. https://t.co/GaVJhbptR0"
+        }
+      ]
+    }
+  ],
+  "excluded_examples": [
+    {
+      "post_id": "2112592264686149749",
+      "reason": "Credits correction for affected accounts, not a global or banked reset."
+    },
+    {
+      "post_id": "2109778880341151901",
+      "reason": "Tokens per second is speed, not a quota change."
+    }
+  ],
+  "limitations": [
+    "Confirmation-post time is not an exact rollout or per-account delivery timestamp.",
+    "Original 12-event backtest sample and its metrics remain frozen separately."
+  ]
+}

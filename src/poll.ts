@@ -22,6 +22,7 @@ import { fetchXQuery } from "./x-source";
 import { processReviews } from "./model-review";
 import { queueDingTalkDelivery, processDingTalkDeliveries } from "./dingtalk";
 import { reconcileNotificationQueue } from "./notification-queue";
+import { withResetContext } from './reset-context';
 
 export async function runPoll(env: Env, now = new Date()): Promise<PollSummary> {
   const startedAt = now.toISOString();
@@ -87,7 +88,7 @@ async function runPollWithLock(env: Env, startedAt: string): Promise<PollSummary
       for (const post of [...result.posts].sort((a, b) => a.createdAt.localeCompare(b.createdAt))) {
         if (!await insertPost(env.DB, post, startedAt, !priming)) continue;
         insertedCount += 1;
-        let signal = classifyPost(post);
+        let signal = classifyPost(await withResetContext(env.DB,post));
         if (!isRelevant(signal)) continue;
         relevantCount += 1;
         if (!await insertSignal(env.DB, signal)) continue;

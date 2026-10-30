@@ -43,7 +43,7 @@ describe("public bilingual dashboard", () => {
     expect(app).toContain("const LIVE_REFRESH_MS = 60_000");
     expect(app).toContain("async function refreshLive()");
     expect(app).toContain('document.addEventListener("visibilitychange"');
-    expect(app).toContain("最近轮询");
+    expect(app).toContain("更新于");
     expect(app).toContain("Auto-refresh failed · showing last data");
     expect(app).toContain('signal.evidence_basis === "account_observation" || personalSignal(signal)');
   });

@@ -1,5 +1,6 @@
 import historical from "../data/reset-events.json";
 import scorecard from "../data/source-scorecard.json";
+import recentAudit from '../data/recent-reset-events.json';
 import { dashboardData } from "./db";
 import { emailConfigured, sendTestEmail } from "./notifications";
 import { runPoll } from "./poll";
@@ -10,6 +11,10 @@ import { dingtalkConfigured, dingTalkHealth, processDingTalkDeliveries, testDing
 import { dwsAccessToken, dwsSessionHealth } from './dws';
 import { reconcileNotificationQueue } from './notification-queue';
 import { QUERY_SPECS } from './config';
+import { fetchXPostsByIds } from './x-source';
+import { insertPost, insertSignal } from './db';
+import { classifyPost } from './classifier';
+import { withResetContext } from './reset-context';
 
 const JSON_HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
@@ -103,7 +108,7 @@ export async function handleApi(request: Request, env: Env): Promise<Response | 
   if (request.method === "GET" && url.pathname === "/api/events") {
     return json((await dashboardData(env.DB)).signals);
   }
-  if (request.method === "GET" && url.pathname === "/api/history") return json(historical);
+  if (request.method === "GET" && url.pathname === "/api/history") return json({...historical,recent_audit:recentAudit});
   if (request.method === "GET" && url.pathname === "/api/sources") return json(scorecard);
   if (request.method === "GET" && url.pathname === "/healthz") {
     const health = await healthSnapshot(env);
@@ -113,8 +118,39 @@ export async function handleApi(request: Request, env: Env): Promise<Response | 
     if (!await authorized(request, env)) return json({ error: "unauthorized" }, 401);
     return json(await runPoll(env));
   }
+  if (request.method === 'POST' && url.pathname === '/api/admin/import-reset-context') {
+    if (!await authorized(request,env) && !await authorized(request,{...env,ADMIN_TOKEN:env.REVIEW_ADMIN_TOKEN})
+      && !await authorized(request,{...env,ADMIN_TOKEN:env.DINGTALK_TEST_TOKEN})) return json({error:'unauthorized'},401);
+    const ids = (await request.json().catch(()=>null) as {ids?:unknown})?.ids;
+    if (!Array.isArray(ids) || !ids.length || ids.length > 4 || ids.some(id=>typeof id !== 'string'||!/^\d{10,25}$/.test(id))) return json({error:'invalid_ids'},400);
+    if (!env.X_BEARER_TOKEN) return json({error:'source_unavailable'},503);
+    const lock=crypto.randomUUID(), now=new Date().toISOString();
+    if (!await acquirePollLock(env.DB,lock,now)) return json({error:'poll_in_progress'},409);
+    try {
+      const found=await fetchXPostsByIds(QUERY_SPECS[0]!,env.X_BEARER_TOKEN,ids);
+      if(found.posts.length) await env.DB.batch(found.posts.map(post=>env.DB.prepare(
+        'INSERT OR IGNORE INTO app_state(key,value,updated_at) VALUES (?,?,?)')
+        .bind(`historical-repair:${post.postId}`,JSON.stringify({reason:'silent_source_context_repair'}),now)));
+      let imported=0;
+      const updates:D1PreparedStatement[]=[];
+      for (const post of found.posts) {
+        if (await insertPost(env.DB,post,now,false)) imported++;
+        // This bounded historical repair is silent: no backdated notification.
+        // Refresh trusted reference context for existing source posts as well.
+        updates.push(env.DB.prepare('UPDATE posts SET raw_json=? WHERE post_id=?').bind(JSON.stringify(post.raw),post.postId));
+        updates.push(env.DB.prepare("UPDATE model_reviews SET status='pending',next_attempt_at=? WHERE post_id=?").bind(now,post.postId));
+      }
+      if(updates.length) await env.DB.batch(updates);
+      for (const post of found.posts) {
+        const signal=classifyPost(await withResetContext(env.DB,post));
+        if (signal.eventType!=='unrelated') await insertSignal(env.DB,{...signal,shouldNotify:false});
+      }
+      return json({imported,historical_notifications:false,posts:found.posts.map(post=>({post_id:post.postId,text:post.text,url:post.url,created_at:post.createdAt,referenced_post_ids:post.referencedPostIds,context:(post.raw as {reset_context?:unknown}).reset_context}))});
+    } finally {await releasePollLock(env.DB,lock);}
+  }
   if (request.method === "POST" && url.pathname === "/api/admin/review") {
-    if (!await authorized(request, env) && !await authorized(request, {...env, ADMIN_TOKEN:env.REVIEW_ADMIN_TOKEN})) return json({error:'unauthorized'},401);
+    if (!await authorized(request, env) && !await authorized(request, {...env, ADMIN_TOKEN:env.REVIEW_ADMIN_TOKEN})
+      && !await authorized(request,{...env,ADMIN_TOKEN:env.DINGTALK_TEST_TOKEN})) return json({error:'unauthorized'},401);
     const lock = crypto.randomUUID();
     if (!await acquirePollLock(env.DB,lock,new Date().toISOString())) return json({error:'poll_in_progress'},409);
     try {

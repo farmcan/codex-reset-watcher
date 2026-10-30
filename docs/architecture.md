@@ -1,5 +1,13 @@
 # Architecture
 
+[Current architecture diagram and product screenshots](../public/showcase/index.html).
+
+## Current deployment (2026-10-30)
+
+Cloudflare Cron checks due work. The enabled Tibo X API source runs about every 20 minutes; rules and Qwen review verified reference chains before D1 stores evidence and delivery state. A persistent outbox sends group messages with @everyone and personal in-app DING to the configured two recipients. The public read API serves the website and RSS; D1 is never exposed directly. Email is optional and currently unconfigured. Dot execution is not enabled.
+
+`data/recent-reset-events.json` is a separately reviewed October subset with six completion confirmations. Confirmation publication time is distinct from the unknown exact execution time. The original twelve-event backtest is unchanged.
+
 ## D1 read cost and CPU bounds (2026-10-28)
 
 The shared account exhausted its Free D1 daily reads. The review-health
@@ -27,7 +35,8 @@ notify; they do not stop billing or enforce a spending cap.
 ```text
 Cron -> due query selection -> X Recent Search -> author validation -> normalization
      -> deterministic classification -> evidence grouping / inhibition
-     -> D1 event ledger -> notification outbox -> Resend
+     -> D1 event ledger -> notification outbox -> DingTalk message + selected personal DING
+     -> optional Resend (currently unconfigured)
      -> dashboard / JSON / RSS / health
      -> GitHub Pages public snapshot fallback (10 min)
 ```
@@ -60,7 +69,7 @@ Two independent B/C community authors within six hours and the same event-day cl
 
 `data/source-scorecard.json` keeps event coverage, exact sample scope, lead-time sample counts, stale/miss/contradiction counts and a false-positive-denominator flag. The public page therefore says “event coverage” and “historical median lead,” never “prediction accuracy.”
 
-The primary clock anchors to the latest confirmed reset benefit: a first-party hard-reset confirmation, or a banked-reset delivery backed by an explicit first-party grant and a retained account observation. It labels the event kind and separately reports time since the latest hard reset. A scheduled banked grant does not move the clock before delivery evidence arrives.
+The primary clock explicitly measures time since the latest public reset confirmation, not a personal account execution timestamp. It anchors to the latest confirmed reset benefit: a first-party hard-reset confirmation, or a banked-reset delivery backed by an explicit first-party grant and a retained account observation. It labels the event kind and separately reports time since the latest hard reset. A scheduled banked grant does not move the clock before delivery evidence arrives.
 
 ### Idempotency
 

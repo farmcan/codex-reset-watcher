@@ -33,6 +33,20 @@ export async function fetchXQuery(spec: QuerySpec, bearerToken: string, sinceId?
   url.searchParams.set("user.fields", "username,name,verified,verified_type");
   if (sinceId) url.searchParams.set("since_id", sinceId);
 
+  return fetchXUrl(spec, url, bearerToken);
+}
+
+export async function fetchXPostsByIds(spec: QuerySpec, bearerToken: string, ids: string[]): Promise<XFetchResult> {
+  if (!ids.length || ids.length > 8 || ids.some(id => !/^\d{10,25}$/.test(id))) throw new Error('Invalid post IDs');
+  const url = new URL('https://api.x.com/2/tweets');
+  url.searchParams.set('ids', [...new Set(ids)].join(','));
+  url.searchParams.set('tweet.fields','created_at,author_id,note_tweet,entities,referenced_tweets');
+  url.searchParams.set('expansions','author_id,referenced_tweets.id,referenced_tweets.id.author_id');
+  url.searchParams.set('user.fields','username');
+  return fetchXUrl(spec,url,bearerToken,true);
+}
+
+async function fetchXUrl(spec: QuerySpec, url: URL, bearerToken: string, includeParents = false): Promise<XFetchResult> {
   const response = await fetch(url, {
     headers: { Authorization: `Bearer ${bearerToken}` },
     signal: AbortSignal.timeout(25_000)
@@ -48,7 +62,9 @@ export async function fetchXQuery(spec: QuerySpec, bearerToken: string, sinceId?
   const allowed = spec.allowedAuthors?.map((author) => author.toLowerCase()) ?? null;
   const posts: RawPost[] = [];
 
-  for (const row of payload.data ?? []) {
+  const rows = includeParents ? [...(payload.data ?? []), ...(payload.includes?.tweets ?? [])] : payload.data ?? [];
+  for (const row of rows) {
+    if (posts.some(post => post.postId === String(row.id))) continue;
     const author = users.get(String(row.author_id ?? ""))?.username ?? String(row.author_id ?? "unknown");
     if (allowed && !allowed.includes(author.toLowerCase())) continue;
     const references = row.referenced_tweets ?? [];
@@ -72,7 +88,10 @@ export async function fetchXQuery(spec: QuerySpec, bearerToken: string, sinceId?
       referencedPostIds: references.map((reference) => String(reference.id)),
       referencedAuthors,
       linkedUrls,
-      raw: row
+      raw: {...row, reset_context: references.map(reference => referenced.get(reference.id))
+        .filter((parent): parent is XTweet => Boolean(parent && parent.author_id === row.author_id))
+        .map(parent => ({postId:String(parent.id),author,text:parent.note_tweet?.text || parent.text,createdAt:parent.created_at,
+          referencedPostIds:(parent.referenced_tweets ?? []).map(ref=>String(ref.id))}))}
     });
   }
 

@@ -36,6 +36,15 @@ async function personalFixture() {
 }
 
 describe("durable cloud DingTalk delivery", () => {
+  it('keeps an existing eligible historical repair silent, including newly reviewed signals and missing outbox entries',async()=>{
+    const {env,sqlite}=fixture();
+    sqlite.prepare("UPDATE posts SET notification_eligible=1").run();
+    sqlite.prepare("INSERT INTO app_state VALUES ('historical-repair:p','{}',?)").run(now);
+    expect(await reconcileNotificationQueue(env,now)).toBe(0);
+    expect(sqlite.prepare('SELECT notification_eligible FROM posts').get().notification_eligible).toBe(1);
+    expect(sqlite.prepare('SELECT COUNT(*) AS n FROM deliveries').get().n).toBe(0);
+    expect(await dingTalkHealth(env,now)).toMatchObject({status:'healthy',unqueued_eligible:0});
+  });
   it('completes the newly selected audience using existing receipts without resending or discarding the group audit',async()=>{
     const {env,sqlite}=await personalFixture();env.DINGTALK_RECIPIENT_IDS=JSON.stringify(['a','b']);
     const group=env.DINGTALK_GROUP_ID;
