@@ -504,7 +504,7 @@ function renderRecentHistory(audit) {
   for (const event of audit?.events || []) {
     const card=el("details","recent-reset");
     const summary=el("summary");
-    summary.append(el("strong","",formatTime(event.confirmed_at,true)),el("span","",ui("重置已确认","Reset confirmed")),el("span","", "+"));
+    summary.append(el("strong","",formatTime(event.confirmed_at,true)),el("span","",ui("重置已确认","Reset confirmed")),el("span","recent-toggle", "+"));
     card.append(summary,el("p","",ui("这是确认公告时间；精确执行时刻未公布。","This is the confirmation-post time; exact rollout time was not published.")));
     for(const node of event.timeline) {
       const row=el("p","recent-evidence");
@@ -1065,3 +1065,17 @@ window.setInterval(() => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden && Date.now() - lastLiveRefreshAt >= LIVE_REFRESH_MS) refreshLive();
 });
+
+// Open linked reading sections even when a repeated fragment does not fire hashchange.
+function revealLinkedSection(hash = location.hash) {
+  let target;
+  try { target = document.getElementById(decodeURIComponent(hash.replace(/^#/, ""))); } catch { return; }
+  const panel = target?.firstElementChild;
+  if (panel?.tagName === "DETAILS") panel.open = true;
+}
+document.addEventListener("click", (event) => {
+  const anchor = event.target.closest?.('a[href^="#"]');
+  if (anchor) revealLinkedSection(anchor.getAttribute("href"));
+});
+window.addEventListener("hashchange", () => revealLinkedSection());
+revealLinkedSection();

@@ -6,9 +6,9 @@
     <meta name="description" content="Know when Codex resets, get notified, and turn spare tokens into work worth shipping.">
     <title>Codex Reset Watcher</title>
     <link rel="icon" href="../brand-en.png" type="image/png">
-    <link rel="stylesheet" href="../styles.css?v=20261030-3">
+    <link rel="stylesheet" href="../styles.css?v=20261030-mobile-2">
     <script type="module" src="../engagement.js?v=20261025-1"></script>
-    <script type="module" src="../app.js?v=20261030-3"></script>
+    <script type="module" src="../app.js?v=20261030-mobile-2"></script>
   </head>
   <body>
     <header class="site-header">
@@ -28,6 +28,7 @@
         </a>
       </div>
     </header>
+    <nav class="mobile-nav" aria-label="Quick page navigation"><a href="#latest">Updates</a><a href="#subscribe">Alerts</a><a href="#pedal">Ideas</a><a href="#history">History</a></nav>
 
     <main>
       <section class="hero" aria-labelledby="page-title">
@@ -51,7 +52,7 @@
           </figure>
         </div>
         <div class="update-status" role="status"><span id="health-dot" class="status-dot pending"></span><span id="health-label">Checking latest updates…</span><a href="#system">Service status ↗</a></div>
-        <div class="hero-status-grid">
+        <div class="hero-status-grid" id="latest">
           <div id="current-card" class="current-card loading" aria-live="polite">
             <div>
               <span class="signal-kicker">Current assessment</span>
@@ -107,49 +108,49 @@
               <article class="source-card pedal-card">
                 <header><div><small>Find worthwhile work first</small><h3><a href="https://github.com/ravsau/token-maxxing-prompts" target="_blank" rel="noreferrer noopener">Token maxxing prompts ↗</a></h3></div></header>
                 <p>A meta prompt turns existing projects, notes and unfinished work into 10–15 artifact-producing jobs, plus ten audit, testing, ADR and maintenance templates.</p><p><strong>Output: </strong>A ranked task list with outputs and acceptance checks.</p>
-                <pre class="token-task">Read this project and the supplied sources. Suggest ten evidence-backed jobs with outputs, value, acceptance and stop conditions; recommend one first.</pre>
+                <details class="task-prompt"><summary>Task prompt</summary><pre class="token-task">Read this project and the supplied sources. Suggest ten evidence-backed jobs with outputs, value, acceptance and stop conditions; recommend one first.</pre></details>
                 <p class="source-caveat">Use the prompt in your existing Codex context; no new agent framework required. Keep source access scoped.</p>
                 <p class="pedal-meta">MIT · <a href="https://github.com/ravsau/token-maxxing-prompts/blob/master/README.md" target="_blank" rel="noreferrer noopener">Source / method ↗</a></p>
               </article>
               <article class="source-card pedal-card">
                 <header><div><small>Support open source</small><h3><a href="https://github.com/omribz156/oss-supporter" target="_blank" rel="noreferrer noopener">OSS Supporter ↗</a></h3></div></header>
                 <p>An agent-agnostic playbook for selecting, verifying and following up on small OSS maintenance tasks.</p><p><strong>Output: </strong>A reproduction, patch, verification evidence and PR draft.</p>
-                <pre class="token-task">Choose a dependency I use, check existing issues and PRs, and prepare a minimal verified fix under its contribution rules. Deliver a draft before posting.</pre>
+                <details class="task-prompt"><summary>Task prompt</summary><pre class="token-task">Choose a dependency I use, check existing issues and PRs, and prepare a minimal verified fix under its contribution rules. Deliver a draft before posting.</pre></details>
                 <p class="source-caveat">Published token and merge totals are author reports, not our test results or your expected success rate.</p>
                 <p class="pedal-meta">MIT · <a href="https://github.com/omribz156/oss-supporter/blob/main/docs/validation-gates.md" target="_blank" rel="noreferrer noopener">Source / method ↗</a></p>
               </article>
               <article class="source-card pedal-card">
                 <header><div><small>Implement and challenge a contribution</small><h3><a href="https://github.com/Nitjsefnie/burn-usage-skill" target="_blank" rel="noreferrer noopener">burn-usage-skill ↗</a></h3></div></header>
                 <p>A contribution skill separates coordination, implementation and adversarial verification, with GitHub scouting and follow-up tools.</p><p><strong>Output: </strong>A focused fix, independent challenge and acceptance report.</p>
-                <pre class="token-task">Reproduce and fix one selected issue, then challenge the result independently. Report supported claims and follow the project AI policy.</pre>
+                <details class="task-prompt"><summary>Task prompt</summary><pre class="token-task">Reproduce and fix one selected issue, then challenge the result independently. Report supported claims and follow the project AI policy.</pre></details>
                 <p class="source-caveat">Requires a configured GitHub identity and harness. Adapt the Claude-oriented examples; merge results are author-reported.</p>
                 <p class="pedal-meta">MIT · <a href="https://github.com/Nitjsefnie/burn-usage-skill/blob/main/SKILL.md" target="_blank" rel="noreferrer noopener">Source / method ↗</a></p>
               </article>
               <article class="source-card pedal-card">
                 <header><div><small>Pick a public-good task</small><h3><a href="https://github.com/LuizPiccini/spare-tokens" target="_blank" rel="noreferrer noopener">Spare Tokens ↗</a></h3></div></header>
                 <p>Task packets for science, civic and health OSS, with Codex prompt export and a tested-PR-draft workflow.</p><p><strong>Output: </strong>An artifact and a compact human-verification packet.</p>
-                <pre class="token-task">Review the upstream task and acceptance criteria, pick one reproducible task, and prepare a patch and check log without automatic upstream posting.</pre>
+                <details class="task-prompt"><summary>Task prompt</summary><pre class="token-task">Review the upstream task and acceptance criteria, pick one reproducible task, and prepare a patch and check log without automatic upstream posting.</pre></details>
                 <p class="source-caveat">The CLI does not call models or manage subscriptions. Upstream entry: npx spare-tokens@latest start --target codex; not run here.</p>
                 <p class="pedal-meta">MIT · <a href="https://github.com/LuizPiccini/spare-tokens/blob/main/skills/spare-tokens/SKILL.md" target="_blank" rel="noreferrer noopener">Source / method ↗</a></p>
               </article>
               <article class="source-card pedal-card">
                 <header><div><small>Post or claim a token task</small><h3><a href="https://github.com/Jia-wei-cui/TokenHunt" target="_blank" rel="noreferrer noopener">TokenHunt · g0v ↗</a></h3></div></header>
                 <p>A civic-tech board for posting, claiming, submitting and accepting AI tasks, implemented with Pages, Workers and D1.</p><p><strong>Output: </strong>A scoped task, claim, deliverable and acceptance record.</p>
-                <pre class="token-task">Draft a public-good task card with inputs, deliverable, reviewer and stop conditions. Do not commit payment.</pre>
+                <details class="task-prompt"><summary>Task prompt</summary><pre class="token-task">Draft a public-good task card with inputs, deliverable, reviewer and stop conditions. Do not commit payment.</pre></details>
                 <p class="source-caveat">Source flow reviewed; no public deployment verified. Token tasks do not imply cash payouts. README declares CC-BY 4.0; no standalone license file found.</p>
                 <p class="pedal-meta">README: CC-BY 4.0 · <a href="https://github.com/Jia-wei-cui/TokenHunt/blob/main/workers/src/issues.js" target="_blank" rel="noreferrer noopener">Source / method ↗</a></p>
               </article>
               <article class="source-card pedal-card">
                 <header><div><small>Trade multiple attempts for quality</small><h3><a href="https://github.com/yzfly/TokenCode" target="_blank" rel="noreferrer noopener">TokenCode · /race ↗</a></h3></div></header>
                 <p>Independent attempts in isolated worktrees are filtered by checks and compared by a judge.</p><p><strong>Output: </strong>Candidate patches, checks and selection evidence.</p>
-                <pre class="token-task">Plan at most three independent attempts on one reproduced problem. Fix tests and budget first; keep only a result that can be explained and verified.</pre>
+                <details class="task-prompt"><summary>Task prompt</summary><pre class="token-task">Plan at most three independent attempts on one reproduced problem. Fix tests and budget first; keep only a result that can be explained and verified.</pre></details>
                 <p class="source-caveat">Uses model API credentials, not Codex subscription quota. Parallel attempts multiply cost; this page does not launch a race.</p>
                 <p class="pedal-meta">CC-BY-NC 4.0 · <a href="https://github.com/yzfly/TokenCode/blob/main/internal/race/race.go" target="_blank" rel="noreferrer noopener">Source / method ↗</a></p>
               </article>
               <article class="source-card pedal-card">
                 <header><div><small>Budgeted feedback loops</small><h3><a href="https://github.com/Eunho-J/timework-skill" target="_blank" rel="noreferrer noopener">timework-skill ↗</a></h3></div></header>
                 <p>Repeated proposals, tests and evidence are stored in a work log and knowledge notes under a time or loop budget.</p><p><strong>Output: </strong>Experiment logs, counterevidence, notes and open questions.</p>
-                <pre class="token-task">Run at most three feedback rounds on this proposal, with real evidence each round. Stop at acceptance or two rounds without value.</pre>
+                <details class="task-prompt"><summary>Task prompt</summary><pre class="token-task">Run at most three feedback rounds on this proposal, with real evidence each round. Stop at acceptance or two rounds without value.</pre></details>
                 <p class="source-caveat">Upstream requires spending a minimum budget; our example retains early stop conditions. No explicit license found; verify before copying.</p>
                 <p class="pedal-meta">许可待核对 / license unverified · <a href="https://github.com/Eunho-J/timework-skill/blob/main/SKILL.md" target="_blank" rel="noreferrer noopener">Source / method ↗</a></p>
               </article>
@@ -157,7 +158,7 @@
                 <header><div><small>Clean up technical debt</small><h3><a href="https://github.com/peteromallet/desloppify" target="_blank" rel="noreferrer noopener">Desloppify ↗</a></h3></div></header>
                 <p>Turn duplication, complex modules and inconsistent error handling into a prioritized repair queue.</p>
                 <p><strong>Output: </strong>Small patches, regression checks and a before/after diff.</p>
-                <pre class="token-task">Scan src/ and fix at most three high-value issues. Preserve behavior, run regression checks and stop after 40 minutes. Deliver patches and evidence.</pre>
+                <details class="task-prompt"><summary>Task prompt</summary><pre class="token-task">Scan src/ and fix at most three high-value issues. Preserve behavior, run regression checks and stop after 40 minutes. Deliver patches and evidence.</pre></details>
                 <p class="source-caveat">Codex supported. Treat its score as a signal, not the goal. Review the custom OSNL license before commercial redistribution.</p>
                 <p class="pedal-meta">OSNL 0.2 · <a href="https://github.com/peteromallet/desloppify/blob/main/desloppify/data/global/CODEX.md" target="_blank" rel="noreferrer noopener">Source / pattern ↗</a></p>
               </article>
@@ -165,7 +166,7 @@
                 <header><div><small>Run measured performance experiments</small><h3><a href="https://github.com/TheGreenCedar/codex-autoresearch" target="_blank" rel="noreferrer noopener">Codex Autoresearch ↗</a></h3></div></header>
                 <p>Try small changes against a repeatable runtime, build, memory or throughput benchmark.</p>
                 <p><strong>Output: </strong>A baseline, experiment log, measurements and a reviewable patch.</p>
-                <pre class="token-task">Choose one real slow path. Freeze the benchmark and correctness checks. Stop after five experiments or 30 minutes; repeat measurements and keep only stable improvements.</pre>
+                <details class="task-prompt"><summary>Task prompt</summary><pre class="token-task">Choose one real slow path. Freeze the benchmark and correctness checks. Stop after five experiments or 30 minutes; repeat measurements and keep only stable improvements.</pre></details>
                 <p class="source-caveat">Built for Codex. If no trustworthy evaluator exists, start with a direct investigation.</p>
                 <p class="pedal-meta">Apache-2.0 · <a href="https://github.com/TheGreenCedar/codex-autoresearch/blob/main/plugins/codex-autoresearch/skills/codex-autoresearch/SKILL.md" target="_blank" rel="noreferrer noopener">Source / pattern ↗</a></p>
               </article>
@@ -173,7 +174,7 @@
                 <header><div><small>Find bugs and add regressions</small><h3><a href="https://github.com/uditgoenka/autoresearch" target="_blank" rel="noreferrer noopener">Autoresearch ↗</a></h3></div></header>
                 <p>Use hypothesis, reproduction and verification loops for bugs and quality gaps, with a Codex skill entry.</p>
                 <p><strong>Output: </strong>Reproductions, failing tests, fixes and remaining gaps.</p>
-                <pre class="token-task">Inspect input validation and error recovery in this repository. Confirm at most three bugs with a failing test before each fix. Stop after 30 minutes; keep the scope local.</pre>
+                <details class="task-prompt"><summary>Task prompt</summary><pre class="token-task">Inspect input validation and error recovery in this repository. Confirm at most three bugs with a failing test before each fix. Stop after 30 minutes; keep the scope local.</pre></details>
                 <p class="source-caveat">Codex uses its skill entry. Claude Code hook protections do not imply equivalent Codex coverage.</p>
                 <p class="pedal-meta">MIT · <a href="https://github.com/uditgoenka/autoresearch/blob/master/.agents/skills/autoresearch/SKILL.md" target="_blank" rel="noreferrer noopener">Source / pattern ↗</a></p>
               </article>
@@ -181,7 +182,7 @@
                 <header><div><small>Turn source material into reusable knowledge</small><h3><a href="https://github.com/danielmiessler/Fabric" target="_blank" rel="noreferrer noopener">Fabric · extract_wisdom ↗</a></h3></div></header>
                 <p>Reuse extraction patterns to turn articles, transcripts or notes into traceable knowledge cards and checklists.</p>
                 <p><strong>Output: </strong>Claims, source locations, counterexamples and a practical checklist.</p>
-                <pre class="token-task">Use only the three supplied sources. Produce knowledge cards with source locations and limits. Separate author claims from inference; mark missing evidence and do not pad the count.</pre>
+                <details class="task-prompt"><summary>Task prompt</summary><pre class="token-task">Use only the three supplied sources. Produce knowledge cards with source locations and limits. Separate author claims from inference; mark missing evidence and do not pad the count.</pre></details>
                 <p class="source-caveat">Give the pattern to Codex directly. Running the full Fabric CLI has separate model configuration and billing.</p>
                 <p class="pedal-meta">MIT · <a href="https://github.com/danielmiessler/Fabric/blob/main/data/patterns/extract_wisdom/system.md" target="_blank" rel="noreferrer noopener">Source / pattern ↗</a></p>
               </article>
@@ -189,7 +190,7 @@
                 <header><div><small>Claim a funded issue</small><h3><a href="https://opire.dev/" target="_blank" rel="noreferrer noopener">Opire · earn a bounty ↗</a></h3></div></header>
                 <p>Find real GitHub issues with rewards, then use Codex to reproduce, repair and verify one that fits your skills.</p>
                 <p><strong>Output: </strong>A patch, tests and a PR that meet the issue acceptance criteria.</p>
-                <pre class="token-task">Shortlist three open, reproducible bounties. Check reward, acceptance criteria, competing PRs, maintainer activity and AI policy. Do not claim or submit automatically; after selection, complete one small patch.</pre>
+                <details class="task-prompt"><summary>Task prompt</summary><pre class="token-task">Shortlist three open, reproducible bounties. Check reward, acceptance criteria, competing PRs, maintainer activity and AI policy. Do not claim or submit automatically; after selection, complete one small patch.</pre></details>
                 <p class="source-caveat">A claim is not a payout. Official payment docs say each funder reviews the PR and arranges payment directly. Check eligibility, ownership and payout conditions first.</p>
                 <p class="pedal-meta"><a href="https://docs.opire.dev/rewards/pricing" target="_blank" rel="noreferrer noopener">Official payment conditions ↗</a></p>
               </article>
@@ -197,7 +198,7 @@
                 <header><div><small>Publish work for contributors</small><h3><a href="https://docs.opire.dev/overview/introduction" target="_blank" rel="noreferrer noopener">GitHub Issue + Opire bounty ↗</a></h3></div></header>
                 <p>Turn a real repair into a scoped issue with clear acceptance checks before funding it under the current platform rules.</p>
                 <p><strong>Output: </strong>Reproduction, scope, acceptance commands and draft reward terms.</p>
-                <pre class="token-task">Draft an issue for this bug: reproduction, expected behavior, exclusions, acceptance commands, deadline and reward terms. Save a draft; do not make a payment or commit a bounty for me.</pre>
+                <details class="task-prompt"><summary>Task prompt</summary><pre class="token-task">Draft an issue for this bug: reproduction, expected behavior, exclusions, acceptance commands, deadline and reward terms. Save a draft; do not make a payment or commit a bounty for me.</pre></details>
                 <p class="source-caveat">Confirm current repository and funding eligibility. The official homepage and payment docs differ on who may create bounties; verify before committing funds.</p>
                 <p class="pedal-meta"><a href="https://opire.dev/" target="_blank" rel="noreferrer noopener">Platform ↗</a> · <a href="https://docs.opire.dev/rewards/pricing" target="_blank" rel="noreferrer noopener">Payment and eligibility docs ↗</a></p>
               </article>
@@ -205,7 +206,7 @@
                 <header><div><small>Find welcoming open-source tasks</small><h3><a href="https://up-for-grabs.net/" target="_blank" rel="noreferrer noopener">Up For Grabs / Good First Issue ↗</a></h3></div></header>
                 <p>Use curated directories and GitHub good first issue or help wanted labels to find a real contribution.</p>
                 <p><strong>Output: </strong>A tested code, documentation or test improvement with a focused PR.</p>
-                <pre class="token-task">Shortlist three recent, scoped issues in a familiar language without a competing PR. Read CONTRIBUTING and the AI policy, reproduce first, then finish one small patch and the repository checks within 60 minutes.</pre>
+                <details class="task-prompt"><summary>Task prompt</summary><pre class="token-task">Shortlist three recent, scoped issues in a familiar language without a competing PR. Read CONTRIBUTING and the AI policy, reproduce first, then finish one small patch and the repository checks within 60 minutes.</pre></details>
                 <p class="source-caveat">A label does not mean unclaimed or paid. Follow the project AI policy and contribute only changes you can explain and verify.</p>
                 <p class="pedal-meta"><a href="https://www.goodfirstissue.org/guide" target="_blank" rel="noreferrer noopener">Contributor guide ↗</a> · <a href="https://github.com/up-for-grabs/up-for-grabs.net" target="_blank" rel="noreferrer noopener">Directory source ↗</a></p>
               </article>
@@ -213,7 +214,7 @@
                 <header><div><small>Contribute to a dependency you use</small><h3><a href="https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-open-source" target="_blank" rel="noreferrer noopener">Send a real fix upstream ↗</a></h3></div></header>
                 <p>Start with a bug you actually encounter in a library or tool you use; a real reproduction gives the contribution a clear purpose.</p>
                 <p><strong>Output: </strong>A minimal reproduction, regression test, compatibility notes and PR draft.</p>
-                <pre class="token-task">Pick one observed bug in a dependency of this project. Check existing issues and PRs, reproduce it, follow the contribution guide and verify the smallest fix. Deliver a reviewable PR draft without unrelated refactors.</pre>
+                <details class="task-prompt"><summary>Task prompt</summary><pre class="token-task">Pick one observed bug in a dependency of this project. Check existing issues and PRs, reproduce it, follow the contribution guide and verify the smallest fix. Deliver a reviewable PR draft without unrelated refactors.</pre></details>
                 <p class="source-caveat">Ordinary contributions usually have no reward and maintainers decide whether to merge. Check the license, CLA/DCO and AI policy before submission.</p>
                 <p class="pedal-meta"><a href="https://github.com/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22help%20wanted%22" target="_blank" rel="noreferrer noopener">GitHub help wanted ↗</a></p>
               </article>

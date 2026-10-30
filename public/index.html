@@ -6,9 +6,9 @@
     <meta name="description" content="追踪 Codex 重置动态，及时收到提醒，把剩余额度花在值得做的任务上。">
     <title>Codex 重置雷达</title>
     <link rel="icon" href="brand-zh.png" type="image/png">
-    <link rel="stylesheet" href="styles.css?v=20261030-3">
+    <link rel="stylesheet" href="styles.css?v=20261030-mobile-2">
     <script type="module" src="engagement.js?v=20261025-1"></script>
-    <script type="module" src="app.js?v=20261030-3"></script>
+    <script type="module" src="app.js?v=20261030-mobile-2"></script>
   </head>
   <body>
     <header class="site-header">
@@ -28,6 +28,7 @@
         </a>
       </div>
     </header>
+    <nav class="mobile-nav" aria-label="手机快捷目录"><a href="#latest">动态</a><a href="#subscribe">提醒</a><a href="#pedal">Ideas</a><a href="#history">历史</a></nav>
 
     <main>
       <section class="hero" aria-labelledby="page-title">
@@ -51,7 +52,7 @@
           </figure>
         </div>
         <div class="update-status" role="status"><span id="health-dot" class="status-dot pending"></span><span id="health-label">正在读取最新动态…</span><a href="#system">运行状态 ↗</a></div>
-        <div class="hero-status-grid">
+        <div class="hero-status-grid" id="latest">
           <div id="current-card" class="current-card loading" aria-live="polite">
             <div>
               <span class="signal-kicker">当前判断</span>
@@ -107,49 +108,49 @@
               <article class="source-card pedal-card">
                 <header><div><small>先找值得做的事</small><h3><a href="https://github.com/ravsau/token-maxxing-prompts" target="_blank" rel="noreferrer noopener">Token maxxing prompts ↗</a></h3></div></header>
                 <p>从项目、笔记、日志和半成品生成 10–15 个有持久产物的任务；附审计、补测试、ADR、代码考古等 10 类模板。</p><p><strong>交付什么：</strong>任务清单、排序依据、每项产物与验收方式。</p>
-                <pre class="token-task">只读当前项目与我指定的资料，提出 10 个有依据的余量任务。每项写明产物、价值、验收和停止条件；先推荐最值得做的一项。</pre>
+                <details class="task-prompt"><summary>展开任务模板</summary><pre class="token-task">只读当前项目与我指定的资料，提出 10 个有依据的余量任务。每项写明产物、价值、验收和停止条件；先推荐最值得做的一项。</pre></details>
                 <p class="source-caveat">提示词可交给现有 Codex；不需要另建 Agent 框架。不自动扫描私人资料。</p>
                 <p class="pedal-meta">MIT · <a href="https://github.com/ravsau/token-maxxing-prompts/blob/master/README.md" target="_blank" rel="noreferrer noopener">源码 / 方法依据 ↗</a></p>
               </article>
               <article class="source-card pedal-card">
                 <header><div><small>把余量贡献给开源</small><h3><a href="https://github.com/omribz156/oss-supporter" target="_blank" rel="noreferrer noopener">OSS Supporter ↗</a></h3></div></header>
                 <p>面向任意 Agent 的开源维护手册：筛选小任务、验证、提交并跟进，优先减少维护者负担。</p><p><strong>交付什么：</strong>最小复现、补丁、验证证据与 PR 草稿。</p>
-                <pre class="token-task">选择一个我实际使用的开源依赖，查重 issue/PR，按维护者规则准备最小复现与修复。先交付可审阅草稿，不批量发 PR。</pre>
+                <details class="task-prompt"><summary>展开任务模板</summary><pre class="token-task">选择一个我实际使用的开源依赖，查重 issue/PR，按维护者规则准备最小复现与修复。先交付可审阅草稿，不批量发 PR。</pre></details>
                 <p class="source-caveat">作者公布的 token/合入成绩属于作者报告，不代表本站实测或成功率。</p>
                 <p class="pedal-meta">MIT · <a href="https://github.com/omribz156/oss-supporter/blob/main/docs/validation-gates.md" target="_blank" rel="noreferrer noopener">源码 / 方法依据 ↗</a></p>
               </article>
               <article class="source-card pedal-card">
                 <header><div><small>贡献实现 + 对抗验证</small><h3><a href="https://github.com/Nitjsefnie/burn-usage-skill" target="_blank" rel="noreferrer noopener">burn-usage-skill ↗</a></h3></div></header>
                 <p>将开源贡献拆为主控、实现与独立验证角色，并提供 GitHub 筛选和跟进脚本。</p><p><strong>交付什么：</strong>窄范围修复、独立反证与验收报告。</p>
-                <pre class="token-task">对一个已选 issue 先复现再修复，另做一次独立反证检查；只报告被证据支持的结论，遵守项目 AI 政策。</pre>
+                <details class="task-prompt"><summary>展开任务模板</summary><pre class="token-task">对一个已选 issue 先复现再修复，另做一次独立反证检查；只报告被证据支持的结论，遵守项目 AI 政策。</pre></details>
                 <p class="source-caveat">需配置 GitHub 身份与执行环境；默认示例偏 Claude harness，采用前适配。PR 成绩为作者自述。</p>
                 <p class="pedal-meta">MIT · <a href="https://github.com/Nitjsefnie/burn-usage-skill/blob/main/SKILL.md" target="_blank" rel="noreferrer noopener">源码 / 方法依据 ↗</a></p>
               </article>
               <article class="source-card pedal-card">
                 <header><div><small>领取公益开源任务</small><h3><a href="https://github.com/LuizPiccini/spare-tokens" target="_blank" rel="noreferrer noopener">Spare Tokens ↗</a></h3></div></header>
                 <p>从科研、公民科技、健康等项目整理任务包，支持面向 Codex 导出提示词与 PR 草稿流程。</p><p><strong>交付什么：</strong>任务产物与便于人快速验收的证据包。</p>
-                <pre class="token-task">先查看上游任务来源与验收要求，选一个可复现的小任务，准备补丁和检查记录；不自动发布到上游。</pre>
+                <details class="task-prompt"><summary>展开任务模板</summary><pre class="token-task">先查看上游任务来源与验收要求，选一个可复现的小任务，准备补丁和检查记录；不自动发布到上游。</pre></details>
                 <p class="source-caveat">CLI 不调用模型，也不代管订阅。官方入口 npx spare-tokens@latest start --target codex；本轮未安装实跑。</p>
                 <p class="pedal-meta">MIT · <a href="https://github.com/LuizPiccini/spare-tokens/blob/main/skills/spare-tokens/SKILL.md" target="_blank" rel="noreferrer noopener">源码 / 方法依据 ↗</a></p>
               </article>
               <article class="source-card pedal-card">
                 <header><div><small>发布 / 领取 token 任务</small><h3><a href="https://github.com/Jia-wei-cui/TokenHunt" target="_blank" rel="noreferrer noopener">TokenHunt · g0v ↗</a></h3></div></header>
                 <p>公民科技任务板：发布、认领、提交成果和验收。仓库提供 Pages + Worker + D1 实现。</p><p><strong>交付什么：</strong>任务说明、认领记录、交付物与验收。</p>
-                <pre class="token-task">参考任务板结构，把我的一个公益需求写成任务卡：输入、交付物、验收人和停止条件。先写草案，不承诺付款。</pre>
+                <details class="task-prompt"><summary>展开任务模板</summary><pre class="token-task">参考任务板结构，把我的一个公益需求写成任务卡：输入、交付物、验收人和停止条件。先写草案，不承诺付款。</pre></details>
                 <p class="source-caveat">已核对源码流程，未验证可用公共服务；“token 赏金”不等于现金结算。README 声明 CC-BY 4.0，未见独立许可证文件。</p>
                 <p class="pedal-meta">README: CC-BY 4.0 · <a href="https://github.com/Jia-wei-cui/TokenHunt/blob/main/workers/src/issues.js" target="_blank" rel="noreferrer noopener">源码 / 方法依据 ↗</a></p>
               </article>
               <article class="source-card pedal-card">
                 <header><div><small>用冗余换质量</small><h3><a href="https://github.com/yzfly/TokenCode" target="_blank" rel="noreferrer noopener">TokenCode · /race ↗</a></h3></div></header>
                 <p>同一道难题在隔离 worktree 中独立尝试，再用检查和裁判比较结果。</p><p><strong>交付什么：</strong>候选补丁、测试结果与择优依据。</p>
-                <pre class="token-task">对一个已复现难题设计最多 3 个独立尝试，先固定测试与预算。比较客观结果，只保留能解释、能复验的方案。</pre>
+                <details class="task-prompt"><summary>展开任务模板</summary><pre class="token-task">对一个已复现难题设计最多 3 个独立尝试，先固定测试与预算。比较客观结果，只保留能解释、能复验的方案。</pre></details>
                 <p class="source-caveat">工具走模型 API 凭据，不是 Codex 订阅余量入口；并行会增加账单，本页不启动竞赛。</p>
                 <p class="pedal-meta">CC-BY-NC 4.0 · <a href="https://github.com/yzfly/TokenCode/blob/main/internal/race/race.go" target="_blank" rel="noreferrer noopener">源码 / 方法依据 ↗</a></p>
               </article>
               <article class="source-card pedal-card">
                 <header><div><small>有预算的持续验证</small><h3><a href="https://github.com/Eunho-J/timework-skill" target="_blank" rel="noreferrer noopener">timework-skill ↗</a></h3></div></header>
                 <p>在时间或轮数约束中反复提出、验证并记录，把证据和结论存入工作日志与知识库。</p><p><strong>交付什么：</strong>实验记录、反证、知识笔记与剩余问题。</p>
-                <pre class="token-task">围绕这个方案最多做 3 轮反馈，每轮补一个真实验证并保存证据；达到验收或连续两轮无收益就停，不为耗尽时间空转。</pre>
+                <details class="task-prompt"><summary>展开任务模板</summary><pre class="token-task">围绕这个方案最多做 3 轮反馈，每轮补一个真实验证并保存证据；达到验收或连续两轮无收益就停，不为耗尽时间空转。</pre></details>
                 <p class="source-caveat">上游强调用满最低预算；这里仅借鉴反馈方法，并保留提前停止条件。未发现明确许可证，复制前核对。</p>
                 <p class="pedal-meta">许可待核对 / license unverified · <a href="https://github.com/Eunho-J/timework-skill/blob/main/SKILL.md" target="_blank" rel="noreferrer noopener">源码 / 方法依据 ↗</a></p>
               </article>
@@ -157,7 +158,7 @@
                 <header><div><small>清技术债</small><h3><a href="https://github.com/peteromallet/desloppify" target="_blank" rel="noreferrer noopener">Desloppify ↗</a></h3></div></header>
                 <p>把重复代码、复杂模块和错误处理问题变成可逐项修复的队列。适合已有项目的集中整理。</p>
                 <p><strong>交付什么：</strong>小补丁、回归测试、修改前后差异。</p>
-                <pre class="token-task">扫描当前项目的 src/，只修复 3 个高价值问题。保留现有行为，运行回归测试；40 分钟停止，交付补丁与验证结果。</pre>
+                <details class="task-prompt"><summary>展开任务模板</summary><pre class="token-task">扫描当前项目的 src/，只修复 3 个高价值问题。保留现有行为，运行回归测试；40 分钟停止，交付补丁与验证结果。</pre></details>
                 <p class="source-caveat">支持 Codex；评分是辅助，不是任务终点。自定义 OSNL 许可，商业再分发先读 LICENSE。</p>
                 <p class="pedal-meta">OSNL 0.2 · <a href="https://github.com/peteromallet/desloppify/blob/main/desloppify/data/global/CODEX.md" target="_blank" rel="noreferrer noopener">源码 / 模板依据 ↗</a></p>
               </article>
@@ -165,7 +166,7 @@
                 <header><div><small>反复测性能</small><h3><a href="https://github.com/TheGreenCedar/codex-autoresearch" target="_blank" rel="noreferrer noopener">Codex Autoresearch ↗</a></h3></div></header>
                 <p>针对测试耗时、构建速度、内存或吞吐量，循环尝试小改动，只保留实测有效的结果。</p>
                 <p><strong>交付什么：</strong>基线、实验日志、测量结果、保留或回滚的补丁。</p>
-                <pre class="token-task">选当前项目一个真实慢路径，固定基准与正确性检查。最多 5 轮或 30 分钟；重复测量，只保留稳定改善，交付前后数据。</pre>
+                <details class="task-prompt"><summary>展开任务模板</summary><pre class="token-task">选当前项目一个真实慢路径，固定基准与正确性检查。最多 5 轮或 30 分钟；重复测量，只保留稳定改善，交付前后数据。</pre></details>
                 <p class="source-caveat">原生面向 Codex；没有可靠指标时先做普通调查，不为循环而循环。</p>
                 <p class="pedal-meta">Apache-2.0 · <a href="https://github.com/TheGreenCedar/codex-autoresearch/blob/main/plugins/codex-autoresearch/skills/codex-autoresearch/SKILL.md" target="_blank" rel="noreferrer noopener">源码 / 模板依据 ↗</a></p>
               </article>
@@ -173,7 +174,7 @@
                 <header><div><small>找 bug、补回归</small><h3><a href="https://github.com/uditgoenka/autoresearch" target="_blank" rel="noreferrer noopener">Autoresearch ↗</a></h3></div></header>
                 <p>用假设、复现、验证、保留或丢弃的循环处理 bug 和质量问题；提供 Codex 技能入口。</p>
                 <p><strong>交付什么：</strong>可复现问题、失败用例、修复及剩余风险。</p>
-                <pre class="token-task">检查本仓库输入校验与错误恢复路径，最多确认 3 个真实 bug。每个先做失败用例再修复，30 分钟停止，不扫描外部系统。</pre>
+                <details class="task-prompt"><summary>展开任务模板</summary><pre class="token-task">检查本仓库输入校验与错误恢复路径，最多确认 3 个真实 bug。每个先做失败用例再修复，30 分钟停止，不扫描外部系统。</pre></details>
                 <p class="source-caveat">Codex 使用技能入口；上游的 Claude Code hooks 不等于 Codex 也有相同防护。</p>
                 <p class="pedal-meta">MIT · <a href="https://github.com/uditgoenka/autoresearch/blob/master/.agents/skills/autoresearch/SKILL.md" target="_blank" rel="noreferrer noopener">源码 / 模板依据 ↗</a></p>
               </article>
@@ -181,7 +182,7 @@
                 <header><div><small>把资料变成知识资产</small><h3><a href="https://github.com/danielmiessler/Fabric" target="_blank" rel="noreferrer noopener">Fabric · extract_wisdom ↗</a></h3></div></header>
                 <p>复用长文、字幕和笔记提炼模板，把已有资料整理成可追溯的知识卡与行动清单。</p>
                 <p><strong>交付什么：</strong>观点—原文位置—反例—可执行清单。</p>
-                <pre class="token-task">只处理我提供的 3 份资料，提炼知识卡：每条附原文位置与适用边界。分开作者观点与推断，找不到依据标未知，不凑条数。</pre>
+                <details class="task-prompt"><summary>展开任务模板</summary><pre class="token-task">只处理我提供的 3 份资料，提炼知识卡：每条附原文位置与适用边界。分开作者观点与推断，找不到依据标未知，不凑条数。</pre></details>
                 <p class="source-caveat">可把模板交给 Codex，不必运行 Fabric CLI；完整 CLI 的模型配置与费用另算。</p>
                 <p class="pedal-meta">MIT · <a href="https://github.com/danielmiessler/Fabric/blob/main/data/patterns/extract_wisdom/system.md" target="_blank" rel="noreferrer noopener">源码 / 模板依据 ↗</a></p>
               </article>
@@ -189,7 +190,7 @@
                 <header><div><small>领取公开悬赏</small><h3><a href="https://opire.dev/" target="_blank" rel="noreferrer noopener">Opire · 找任务赚赏金 ↗</a></h3></div></header>
                 <p>从带赏金的 GitHub issue 找匹配技能的真实任务，用 Codex 辅助复现、修复与验证。</p>
                 <p><strong>交付什么：</strong>满足 issue 验收条件的补丁、测试与 PR。</p>
-                <pre class="token-task">筛选 3 个可复现且仍开放的悬赏，列出金额、验收条件、竞争 PR、维护者活跃度和 AI 政策；先给短名单，不自动认领或提交。选定后只完成一个最小补丁。</pre>
+                <details class="task-prompt"><summary>展开任务模板</summary><pre class="token-task">筛选 3 个可复现且仍开放的悬赏，列出金额、验收条件、竞争 PR、维护者活跃度和 AI 政策；先给短名单，不自动认领或提交。选定后只完成一个最小补丁。</pre></details>
                 <p class="source-caveat">认领不等于到账；按官方支付说明，出赏人审核后自行安排支付。开始前核对报酬、归属、地区与收款条件。</p>
                 <p class="pedal-meta"><a href="https://docs.opire.dev/rewards/pricing" target="_blank" rel="noreferrer noopener">官方支付与领取条件 ↗</a></p>
               </article>
@@ -197,7 +198,7 @@
                 <header><div><small>发布任务让人来做</small><h3><a href="https://docs.opire.dev/overview/introduction" target="_blank" rel="noreferrer noopener">GitHub Issue + Opire 悬赏 ↗</a></h3></div></header>
                 <p>把你真正需要的修复写成 issue，再按平台规则设置悬赏，让交付物和验收方式先于金额。</p>
                 <p><strong>交付什么：</strong>可复现步骤、最小任务边界、验收测试与赏金规则草案。</p>
-                <pre class="token-task">把这个 bug 整理成可发布 issue：复现步骤、预期行为、范围外事项、验收命令、交付期限与报酬条件。先保存草稿，不创建付款或代替我承诺赏金。</pre>
+                <details class="task-prompt"><summary>展开任务模板</summary><pre class="token-task">把这个 bug 整理成可发布 issue：复现步骤、预期行为、范围外事项、验收命令、交付期限与报酬条件。先保存草稿，不创建付款或代替我承诺赏金。</pre></details>
                 <p class="source-caveat">发布资格、仓库权限和支付安排以当时平台规则为准；官方首页与支付文档对创建资格表述不一致，发赏前须核对。</p>
                 <p class="pedal-meta"><a href="https://opire.dev/" target="_blank" rel="noreferrer noopener">平台入口 ↗</a> · <a href="https://docs.opire.dev/rewards/pricing" target="_blank" rel="noreferrer noopener">费用与资格依据 ↗</a></p>
               </article>
@@ -205,7 +206,7 @@
                 <header><div><small>找欢迎贡献的开源任务</small><h3><a href="https://up-for-grabs.net/" target="_blank" rel="noreferrer noopener">Up For Grabs / Good First Issue ↗</a></h3></div></header>
                 <p>从新手任务目录和 GitHub 的 good first issue、help wanted 标签找真实待修问题。</p>
                 <p><strong>交付什么：</strong>可验证的修复、文档或测试贡献，以及维护者能快速审阅的 PR。</p>
-                <pre class="token-task">按我熟悉的语言选 3 个近期有人维护、范围明确且没有重复 PR 的 issue。阅读 CONTRIBUTING 与 AI 使用政策，先复现；选一个在 60 分钟内完成小补丁并运行仓库检查。</pre>
+                <details class="task-prompt"><summary>展开任务模板</summary><pre class="token-task">按我熟悉的语言选 3 个近期有人维护、范围明确且没有重复 PR 的 issue。阅读 CONTRIBUTING 与 AI 使用政策，先复现；选一个在 60 分钟内完成小补丁并运行仓库检查。</pre></details>
                 <p class="source-caveat">标签不保证任务未认领，也不代表有赏金。遵守项目 AI 政策，只提交自己能解释和验证的改动。</p>
                 <p class="pedal-meta"><a href="https://www.goodfirstissue.org/guide" target="_blank" rel="noreferrer noopener">贡献指南 ↗</a> · <a href="https://github.com/up-for-grabs/up-for-grabs.net" target="_blank" rel="noreferrer noopener">目录源码 ↗</a></p>
               </article>
@@ -213,7 +214,7 @@
                 <header><div><small>给自己依赖的项目回馈</small><h3><a href="https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-open-source" target="_blank" rel="noreferrer noopener">把真实故障修复提交上游 ↗</a></h3></div></header>
                 <p>优先解决你实际使用的库或工具遇到的问题，贡献更容易验证，也能减少长期维护本地补丁的成本。</p>
                 <p><strong>交付什么：</strong>最小复现、回归测试、兼容性说明与上游 PR 草案。</p>
-                <pre class="token-task">从当前项目依赖中选一个已经遇到的真实 bug。核对上游 issue 和 PR，建立最小复现，按贡献规范修复并测试，交付一份可审阅 PR 草稿，避免无关重构。</pre>
+                <details class="task-prompt"><summary>展开任务模板</summary><pre class="token-task">从当前项目依赖中选一个已经遇到的真实 bug。核对上游 issue 和 PR，建立最小复现，按贡献规范修复并测试，交付一份可审阅 PR 草稿，避免无关重构。</pre></details>
                 <p class="source-caveat">普通开源贡献通常没有报酬；是否合入由维护者决定。提交前核对许可证、CLA/DCO、贡献与 AI 规则。</p>
                 <p class="pedal-meta"><a href="https://github.com/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22help%20wanted%22" target="_blank" rel="noreferrer noopener">GitHub help wanted ↗</a></p>
               </article>
