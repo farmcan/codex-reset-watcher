@@ -114,6 +114,18 @@ def delayed_checks(state, live, now, recovered):
     if live.get('source_status') != 'healthy':
         raise ValueError('public_source_unhealthy')
     pending = state.setdefault('signals', {})
+    # On installation, also watch the latest still-open, typed announcement.
+    # It may predate our baseline, but must not replay elapsed reminders.
+    bootstrap = None
+    if not state.get('current_round_bootstrapped'):
+        completed = {s.get('cluster_key') for s in live.get('signals', []) if s.get('event_type') == 'explicit_reset'}
+        candidates = [s for s in live.get('signals', []) if s.get('source_tier') in ('A1', 'A2')
+                      and s.get('event_type') == 'scheduled_reset' and s.get('reset_mode') in ('hard_reset', 'banked_reset')
+                      and not s.get('superseded_by_post_id') and s.get('cluster_key') not in completed
+                      and 0 <= now - dt.datetime.fromisoformat(s['created_at'].replace('Z', '+00:00')).timestamp() <= 86400]
+        if candidates:
+            bootstrap = max(candidates, key=lambda s: s['created_at']).get('post_id')
+        state['current_round_bootstrapped'] = True
     for signal in sorted(live.get('signals', []), key=lambda s: s['created_at']):
         key = str(signal.get('cluster_key') or signal.get('post_id') or signal['id'])
         try:
@@ -132,12 +144,14 @@ def delayed_checks(state, live, now, recovered):
         if signal.get('event_type') not in ('scheduled_reset', 'explicit_reset'):
             continue
         published = dt.datetime.fromisoformat(signal['created_at'].replace('Z', '+00:00')).timestamp()
-        if published < state['started_at']:
+        if published < state['started_at'] and signal.get('post_id') != bootstrap:
             continue  # Never replay historical announcements on installation.
         timing = signal.get('reset_timing') or {}
         when = timing.get('scheduled_for')
         due = max(published, dt.datetime.fromisoformat(when.replace('Z', '+00:00')).timestamp()) if when else published
         entry = pending.setdefault(key, {'due': due, 'checks': [], 'resolved': False, 'post_ids': []})
+        if signal.get('post_id') == bootstrap and published < state['started_at']:
+            entry['checks'] = [d for d in (3600, 10800) if now >= due + d]
         if signal.get('reset_mode') != 'unknown' or 'mode' not in entry:
             entry['mode'] = signal.get('reset_mode')
         if signal.get('post_id') and signal['post_id'] not in entry.setdefault('post_ids', []):

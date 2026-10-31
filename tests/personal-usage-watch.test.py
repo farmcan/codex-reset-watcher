@@ -74,6 +74,18 @@ class PersonalUsageTest(unittest.TestCase):
         watch.delayed_checks(state, {'source_status': 'healthy'}, 200, [{'kind': 'reset_card_granted'}])
         self.assertTrue(state['signals']['banked']['resolved'])
 
+    def test_current_open_round_is_watched_without_old_reminder_replay(self):
+        state = {'started_at': 20000}
+        signal = {'post_id': '1234567890123', 'cluster_key': 'current', 'created_at': watch.dt.datetime.fromtimestamp(10000, watch.dt.timezone.utc).isoformat(),
+                  'source_tier': 'A1', 'event_type': 'scheduled_reset', 'reset_mode': 'banked_reset'}
+        live = {'source_status': 'healthy', 'signals': [signal]}
+        self.assertEqual(watch.delayed_checks(state, live, 22000, []), [])
+        self.assertIn('current', state['signals'])
+        self.assertEqual(state['signals']['current']['checks'], [3600, 10800])
+        events = [{'kind': 'reset_card_granted'}]
+        watch.delayed_checks(state, live, 23000, events)
+        self.assertEqual(events[0]['related_signal'], 'current')
+
 
 if __name__ == '__main__':
     unittest.main()
