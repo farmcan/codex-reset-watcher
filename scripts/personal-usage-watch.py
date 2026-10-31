@@ -144,13 +144,13 @@ def delayed_checks(state, live, now, recovered):
         if signal.get('event_type') not in ('scheduled_reset', 'explicit_reset'):
             continue
         published = dt.datetime.fromisoformat(signal['created_at'].replace('Z', '+00:00')).timestamp()
-        if published < state['started_at'] and signal.get('post_id') != bootstrap:
+        if published < state['started_at'] and not (bootstrap and signal.get('post_id') == bootstrap):
             continue  # Never replay historical announcements on installation.
         timing = signal.get('reset_timing') or {}
         when = timing.get('scheduled_for')
         due = max(published, dt.datetime.fromisoformat(when.replace('Z', '+00:00')).timestamp()) if when else published
         entry = pending.setdefault(key, {'due': due, 'checks': [], 'resolved': False, 'post_ids': []})
-        if signal.get('post_id') == bootstrap and published < state['started_at']:
+        if bootstrap and signal.get('post_id') == bootstrap and published < state['started_at']:
             entry['checks'] = [d for d in (3600, 10800) if now >= due + d]
         if signal.get('reset_mode') != 'unknown' or 'mode' not in entry:
             entry['mode'] = signal.get('reset_mode')
