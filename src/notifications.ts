@@ -51,7 +51,9 @@ function actionCopy(row: DeliveryRow): string {
     return "重置已经被一手来源确认。请在 Codex Usage 中检查自己的账号是否实际到账。";
   }
   if (row.reset_mode === "banked_reset") {
-    return "这是可保存或手动使用的 banked reset，不等同于自动 hard reset。请查看 Codex Usage 中的可用数量和有效期。";
+    return row.event_type === 'scheduled_reset' ? '这是可储存重置的预告，尚未确认发放。'
+      : row.event_type === 'explicit_reset' ? '这是可储存重置的确认公告，不等同于自动全量重置；请在额度页核对到账与使用说明。'
+      : '原文涉及可储存重置，尚不能确认发放状态；以原帖及账户显示为准。';
   }
   return "这是社区风声，只值得留意，不建议仅据此强行消耗额度。请先打开原帖确认。";
 }

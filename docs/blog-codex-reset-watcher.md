@@ -1,64 +1,43 @@
-# Codex 还有余量？看重置信号，挑一件值得做的事
+# Codex 重置雷达：看动态、收提醒、找任务
 
-![拿皮鞭的小猫](https://codex-reset-watcher.weican16hit.workers.dev/brand-zh.png)
+不想反复刷重置消息，也不想让 Codex 的剩余额度闲着？我把公开动态、钉钉提醒和任务 Ideas 放到一起：**看懂消息，再选一件值得做的事。**
 
-不想一直刷重置消息，也不想让剩余额度闲着？我做的 **Codex Reset Watcher（重置雷达）**，把公开重置信号、钉钉群提醒和有用的任务入口放到了一起。
+[打开雷达](https://codex-reset-watcher.weican16hit.workers.dev/) · [挑一个任务](https://codex-reset-watcher.weican16hit.workers.dev/#pedal) · [GitHub 源码](https://github.com/farmcan/codex-reset-watcher)
 
-**[打开雷达](https://codex-reset-watcher.weican16hit.workers.dev/) · [直接挑任务](https://codex-reset-watcher.weican16hit.workers.dev/#pedal) · [GitHub 源码](https://github.com/farmcan/codex-reset-watcher)**
+## 看懂消息，不把预告当到账
 
-## 看信号，不必自己追消息
+首页先给最新动态，展开可看原帖、时间和后续回复。手机有快捷目录，证据与任务模板按需展开，不必翻完一长页。
 
-网页把重置预告、已确认重置、可储存重置权益和个人到账分开，每条保留原帖与时间。“有人到账”不会直接写成“全员重置”。
+**预告、完成公告、个人到账是三件事。** 原文没给精确执行时刻，就标“未公布”；公开确认也不能证明每个账号同时到账。个人额度以 [Codex Usage](https://chatgpt.com/codex/settings/usage) 为准。
 
-最新核验已补入 **10 月的 6 次完成确认**。例如 10 月 28 日，10:42 的“今天重置”是预告，14:29 的“And it's done”才是完成确认；这仍是公告时间，不能证明每个账号的精确到账时刻。[近期证据](https://github.com/farmcan/codex-reset-watcher/blob/main/docs/recent-reset-audit.md)
+![手机首页：快捷目录与重置动态](https://codex-reset-watcher.weican16hit.workers.dev/showcase/home-mobile.jpg?v=20261031)
 
-早期 12 次回测单独保留，不拿这个固定样本宣称预测准确率，也不表示现在即将重置。
+## 有新消息，钉钉提醒
 
-想持续跟进，可以加入跨组织钉钉群。通知由 Cloudflare 持续处理，无需电脑在线；现已在双人测试群实测 **Cloudflare 发出的应用内 DING 与群内 @所有人**；新增可见信号进入持久通知队列，发送去重并记录异常。DING 接收者需要是发送者的好友或同事；只入群还不一定能收到 DING，未送达会显示实际覆盖情况。
+实时收录的新动态会在群里 **@所有人**，应用内 **DING 面向已配置的指定接收者**。通知由 Cloudflare 持续处理，无需维护者电脑在线；两种提醒均已在独立测试群实发核验。历史补录不会重放通知。
 
-添加钉钉号 **`d4r_yr1im7hv6`**，我拉你进群。认准网页上拿皮鞭的小猫。
+想加入通知群，添加钉钉号 **`d4r_yr1im7hv6`** 联系我。DING 需要好友或同事关系，入群不会自动开通；也可[订阅 RSS](https://codex-reset-watcher.weican16hit.workers.dev/feed.xml)。
 
-![真实首页：看动态、收提醒、找任务](https://codex-reset-watcher.weican16hit.workers.dev/showcase/home-desktop.jpg)
+## Token maxxing：留下能验收的成果
 
-## Token maxxing：有余量，就留下一份成果
+“怎么蹬”整理了 **15 个外部工具与任务入口**，覆盖修 bug、补测试、整理资料、开源贡献和任务悬赏。每项都说明产物、用法和使用条件。
 
-“怎么蹬”现在整理了 **15 个外部工具与任务入口**，中英文都有具体产物、用法和边界。可以先选一条路：
+不必开启大工程：修一个已复现的问题，留回归测试；或把零散资料整理成有出处的知识卡。**先定义结果与时间预算，达到验收条件就停止。**
 
-- **改好自己的项目**：补一类 bug、清技术债、优化一个真实慢路径，或把已有资料整理成知识卡。
-- **贡献开源**：从自己用过的依赖、维护者欢迎的小任务开始，交付最小复现、测试和小补丁。
-- **领取或发布任务**：找公益任务，也可以看现金悬赏；先核对验收条件和报酬规则。
+可以直接交给 Codex：
 
-不知道从哪里开始，可以看这些更贴题的项目：
+> 从当前项目选一个值得做的任务。先说明问题依据、交付物和验收命令，再完成最小改动；交付结果、证据和剩余问题。
 
-| 入口 | 能帮你做什么 |
-| --- | --- |
-| [token-maxxing-prompts](https://github.com/ravsau/token-maxxing-prompts) | 从项目、笔记和半成品里找值得做的任务，附 10 类任务模板 |
-| [OSS Supporter](https://github.com/omribz156/oss-supporter)、[burn-usage-skill](https://github.com/Nitjsefnie/burn-usage-skill) | 筛选开源任务，准备小修复并独立验证 |
-| [Spare Tokens](https://github.com/LuizPiccini/spare-tokens)、[TokenHunt](https://github.com/Jia-wei-cui/TokenHunt) | 公益任务包与任务板方案，不等于现金赏金 |
-| [Opire](https://opire.dev/) | 找带赏金的 issue，或按规则发布悬赏 |
-| [TokenCode](https://github.com/yzfly/TokenCode)、[timework-skill](https://github.com/Eunho-J/timework-skill) | 用独立尝试或反馈循环，提高一个难题的解答质量 |
+外部工具未全部安装实测，部分使用另计费 API；开源贡献与悬赏也有各自规则，使用前请看卡片说明。
 
-这些是外部方案，未全部安装实测；TokenHunt 的公共服务本轮未验证。**TokenCode 使用另计费的模型 API，不是 Codex 订阅余量入口。** 作者报告的 PR 成绩不代表你的成功率。完整适用条件见首页卡片。
+## 实现方案，保持简单
 
-开源贡献先读项目的贡献与 AI 使用规则，只提交自己能解释、能验证的改动；领取悬赏不保证付款，开始前确认验收和支付安排。
+公开信息进入 Cloudflare Worker，规则与 AI 核验原文及回复关系；D1 保存证据、通知队列与回执，再供网页、RSS 和钉钉使用。通知去重，异常和未知状态明确保留。
 
-## 现在就能交给 Codex 的一个任务
+![当前已部署架构，点击查看大图](https://codex-reset-watcher.weican16hit.workers.dev/showcase/architecture.jpg?v=20261031)
 
-```text
-根据当前项目，选一个值得做、60 分钟内可验收的任务。
-先给出问题依据、预期产物和验收命令，再完成最小改动。
-保留修改前后证据；不要为了用量增加范围。
-达到验收条件就停止，交付补丁、测试结果与剩余问题。
-```
+手机点图查看大图；[交互架构图](https://codex-reset-watcher.weican16hit.workers.dev/showcase/architecture)可在图框内左右滑动。
 
-想省心：加入钉钉通知群。想现在动手：**[挑一个能验收的任务](https://codex-reset-watcher.weican16hit.workers.dev/#pedal)**。
+项目 MIT 开源，不读取你的个人 Codex 登录。**Dot 自动开工目前未启用**，当前聚焦看动态、收提醒、找任务。
 
-## 简单的实现，明确的边界
-
-Cloudflare 定时获取公开动态，规则与 AI 复核原文及回复链；D1 保存证据、通知队列与回执，再供网页、RSS 和钉钉使用。访问量与点赞也可在页面查看。
-
-当前自动任务触发尚未启用；过去完成的一次 Dot → Codex 概念验证，不代表已经提供多用户自动开工。
-
-[查看架构、截图与短片](https://codex-reset-watcher.weican16hit.workers.dev/showcase/) · [MIT 开源仓库](https://github.com/farmcan/codex-reset-watcher)
-
-本站非 OpenAI 官方产品，不读取你的私人额度。个人用量与重置时间仍以 [Codex Usage](https://chatgpt.com/codex/settings/usage) 为准。
+[体验产品](https://codex-reset-watcher.weican16hit.workers.dev/) · [截图、架构与短片](https://codex-reset-watcher.weican16hit.workers.dev/showcase/)

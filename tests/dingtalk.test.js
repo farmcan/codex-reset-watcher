@@ -256,6 +256,15 @@ describe("durable cloud DingTalk delivery", () => {
   it("preserves banked-reset action boundaries", () => {
     expect(dingTalkContent({event_type:'explicit_reset',reset_mode:'banked_reset',source_tier:'A1',author:'tibo',text:'banked',url:'https://x.com/tibo/status/1',effective_time:null})).toContain('不是自动重置');
   });
+  it('describes a banked reset announcement as pending, with only a bare source link at the end',()=>{
+    const source='https://x.com/thsottiaux/status/2116405414921384099';
+    const content=dingTalkContent({event_type:'scheduled_reset',reset_mode:'banked_reset',source_tier:'A1',author:'thsottiaux',text:'Next two days will be resets… banked…',url:source,effective_time:null,created_at:'2026-10-31T05:42:26.000Z'});
+    expect(content).toContain('可储存重置的预告，尚未确认发放');
+    expect(content).not.toContain('手动使用');
+    expect(content).not.toContain('我们的网站');
+    expect(content.trim().split('\n\n').at(-1)).toBe(source);
+    expect(content).not.toContain('codex-reset-watcher.weican16hit.workers.dev');
+  });
   it('never sends a test to the production group, for either notification mode',async()=>{
     for(const mode of ['personal_ding','group_message']){
       const {env}=fixture();env.DINGTALK_MODE=mode;env.DINGTALK_TEST_GROUP_ID=env.DINGTALK_GROUP_ID;

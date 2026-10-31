@@ -429,6 +429,7 @@ const COMMUNITY_NOTES_EN = {
 
 function zhTerms(value) {
   return String(value || "")
+    .replace(/银行化重置/g, "可储存重置")
     .replace(/banked\s+reset/gi, "可储存重置")
     .replace(/hard\s+reset/gi, "全量重置")
     .replace(/full\s+reset/gi, "全量重置")
@@ -646,7 +647,7 @@ function signalLevel(signal) {
 
 function signalTitle(signal) {
   const generated = ENGLISH ? signal.title_en : signal.title_zh;
-  if (generated) return generated;
+  if (generated) return ENGLISH ? generated : zhTerms(generated);
   const lane = signalLane(signal);
   if (lane === "personal") {
     return /error|missing|lost|failed|unable|not reset|异常|消失|没到账/i.test(signal.text)
@@ -774,7 +775,8 @@ function renderSignalRows() {
     const body = el("div", "monitor-body");
     const header = el("div", "monitor-header");
     header.append(el("span", `pill ${levelClass}`, levelLabel), el("h3", "", signalTitle(signal)), el("span", "monitor-author", `@${signal.author}`));
-    body.append(header, el("p", "", (ENGLISH ? signal.summary_en : signal.summary_zh) || compactText(signal.text)));
+    const summary = ENGLISH ? signal.summary_en : signal.summary_zh && zhTerms(signal.summary_zh);
+    body.append(header, el("p", "", summary || compactText(signal.text)));
     const meta = el("div", "monitor-meta");
     meta.append(
       el("span", "", ui(`信源 ${signal.source_tier}`, `Source ${signal.source_tier}`)),

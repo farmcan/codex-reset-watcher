@@ -119,7 +119,7 @@ interface Row {
 
 export function dingTalkContent(row: Omit<Row, "id" | "attempts">, personalDing = false): string {
   const timing = resetTiming(row);
-  const title = timing.phase === 'scheduled' ? 'Codex 重置预告'
+  const title = timing.phase === 'scheduled' ? row.reset_mode === 'banked_reset' ? 'Codex 可储存重置预告' : 'Codex 重置预告'
     : timing.phase === 'confirmed' ? row.reset_mode === 'banked_reset' ? 'Codex 重置卡已公布' : 'Codex 重置已确认' : 'Codex 有新消息';
   const format = (at: string) => Number.isFinite(Date.parse(at)) ? new Intl.DateTimeFormat('zh-CN', {
     timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false
@@ -127,12 +127,15 @@ export function dingTalkContent(row: Omit<Row, "id" | "attempts">, personalDing 
   const time = timing.reset_at ? `重置时间：${timing.approximate ? '约 ' : ''}${format(timing.reset_at)}`
     : timing.phase === 'confirmed' ? '重置时间：原文未公布精确时刻'
     : timing.scheduled_for ? `预计重置：${timing.approximate ? '约 ' : ''}${format(timing.scheduled_for)}` : '';
-  const action = row.reset_mode === 'banked_reset' ? '这是可保存、手动使用的重置卡，不是自动重置。去 Codex 额度页查看。'
+  const action = row.reset_mode === 'banked_reset' ? timing.phase === 'scheduled'
+    ? '这是可储存重置的预告，尚未确认发放。'
+    : timing.phase === 'confirmed' ? '这是可储存重置的确认公告，不是自动重置；请在额度页核对到账与使用说明。'
+    : '原文涉及可储存重置，尚不能确认发放状态；以原帖及账户显示为准。'
     : timing.phase === 'confirmed' ? '可以去看看你的 Codex 额度是否到账了。'
     : timing.phase === 'scheduled' ? '有计划好的任务，可以提前安排起来。' : '有新线索，点开原文看看。';
   const original = row.text.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim();
   const quote = (original.length > 1000 ? original.slice(0,997) + '…' : original).split('\n').map(line=>`> ${line}`).join('\n');
-  return `${title}\n\n时间：${format(row.created_at)}${timing.phase === 'confirmed' ? ' · 确认公告' : ' · 原帖发布'}${time ? '\n'+time : ''}\n\n原文 · @${row.author}：\n${quote}\n\n${action}\n原帖：${row.url}\n我们的网站：https://codex-reset-watcher.weican16hit.workers.dev/#signals`;
+  return `${title}\n\n时间：${format(row.created_at)}${timing.phase === 'confirmed' ? ' · 确认公告' : ' · 原帖发布'}${time ? '\n'+time : ''}\n\n原文 · @${row.author}：\n${quote}\n\n${action}\n\n${row.url}`;
 }
 
 export async function processDingTalkDeliveries(env: Env, now = new Date().toISOString()): Promise<{ sent: number; failed: number }> {
@@ -190,8 +193,8 @@ export async function testDingTalk(env: Env, key: string): Promise<Record<string
     const personal=env.DINGTALK_MODE==='personal_ding';
     if(personal&&!env.DINGTALK_TEST_GROUP_ID)throw new DeliveryError('An isolated DING test group is required','failed');
     if (!env.DINGTALK_TEST_GROUP_ID || env.DINGTALK_TEST_GROUP_ID === env.DINGTALK_GROUP_ID) throw new DeliveryError('An isolated test group distinct from production is required','failed');
-    const mockRow = {event_type:'explicit_reset',reset_mode:'hard_reset',source_tier:'A1',author:'演示账号',text:'这是模拟重置确认，用于检查时间、原文与网站链接的展示。不是实际重置公告。',url:'https://codex-reset-watcher.weican16hit.workers.dev/#signals',effective_time:null,created_at:now};
-    const content=`【测试群专用 · 模拟消息】\n${dingTalkContent(mockRow, personal)}`;
+    const mockRow = {event_type:'scheduled_reset',reset_mode:'banked_reset',source_tier:'A1',author:'thsottiaux',text:'Next two days will be resets… banked…',url:'https://x.com/thsottiaux/status/2116405414921384099',effective_time:null,created_at:'2026-10-31T05:42:26.000Z'};
+    const content=`【测试群专用 · 历史样例，不是新公告】\n${dingTalkContent(mockRow, personal)}`;
     const receipt = await sendDingTalk(env,content,`test-${key}`,env.DINGTALK_TEST_GROUP_ID);
     result = { status: "sent", runtime:'cloudflare_worker', provider_receipt: receipt, channel: personal?'personal_app_ding':'dingtalk_group_message', true_ding: personal, mentions_all_requested: true, mention_delivery_verified: false };
   } catch (error) { result = { status: error instanceof DeliveryError ? error.state : "unknown", error: error instanceof DeliveryError ? error.message : "Unknown result" }; }
