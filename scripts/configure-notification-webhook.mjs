@@ -17,12 +17,11 @@ const allowed = url.protocol === 'https:' && !url.username && !url.password && !
       && [...url.searchParams.keys()].length === 1 && /^[a-zA-Z0-9_-]+$/.test(url.searchParams.get('key') ?? ''));
 if (!allowed) throw new Error('Only the official channel webhook endpoint is allowed');
 const prefix = `${channel.toUpperCase()}_${mode === 'test' ? 'TEST_' : ''}WEBHOOK_`;
-const entries = [[prefix + 'URL', value]];
-if (channel === 'feishu' && data.signing_secret) entries.push([prefix + 'SECRET', data.signing_secret]);
-for (const [key, secret] of entries) {
-  const result = spawnSync('node_modules/.bin/wrangler', ['secret', 'put', key], {
-    input: secret, encoding: 'utf8', timeout: 90_000, maxBuffer: 1024 * 1024
-  });
-  if (result.status !== 0) throw new Error(`Secret configuration failed for ${key}; no values printed`);
-  console.log(`Configured ${key}`);
-}
+const values = { [prefix + 'URL']: value };
+if (channel === 'feishu') values[prefix + 'SECRET'] = data.signing_secret || null;
+// One request avoids briefly enabling a signed destination with its old/missing key.
+const result = spawnSync('node_modules/.bin/wrangler', ['secret', 'bulk'], {
+  input: JSON.stringify(values), encoding: 'utf8', timeout: 90_000, maxBuffer: 1024 * 1024
+});
+if (result.status !== 0) throw new Error('Secret configuration failed; no values printed');
+console.log(`Configured ${channel} ${mode} webhook atomically`);
