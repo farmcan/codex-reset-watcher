@@ -80,6 +80,7 @@ npm run dev
 需要 Node.js 22+；真实抓取需要自己的 X API 凭据。完整检查运行 `npm run check`。
 
 部署、Cloudflare Secrets、通知接收者、邮件及 API 说明统一放在 [自托管与运维](docs/self-hosting.md)。
+[通知通道与验收范围](docs/self-hosting.md#通知通道与验收范围) · [同类产品核查](docs/research-competitors.md) · [分享文案](docs/launch/sharing-plan.md)
 [架构图与截图](https://codex-reset-watcher.weican16hit.workers.dev/showcase/) · [技术文档](docs/architecture.md) · [贡献](CONTRIBUTING.md) · [安全反馈](SECURITY.md) · [许可证](LICENSE)
 
 中文网页与钉钉使用中文小猫图，英文网页使用英文小猫图。项目与 OpenAI、X 或被追踪账号无官方隶属关系。

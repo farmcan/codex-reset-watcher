@@ -101,6 +101,32 @@ npx wrangler secret put ALERT_EMAIL_TO
 
 公开交付事件同步 Seed 的 `/tasks/`。该页目前为审查后发布的状态快照；Worker 的逐轮心跳尚未自动回写，实时状态以本服务 API 为准。
 
+### 通知通道与验收范围
+
+截至 2026-10-31。API 受理、客户端收件、自然新增信号投递是三项独立验收，不能相互替代。这里记录维护者已有配置，不表示任意访客已获得这些账号的通知权限。
+
+| 通道 | 已有验证 | 当前生产范围与待验项 |
+| --- | --- | --- |
+| 钉钉 | Worker 实发 DING、回执与隔离群读回；群内真实 @所有人 | 沿用已配置的指定接收者 DING 与群消息；受好友/同事关系限制，不承诺全员 DING |
+| 飞书 | 独立测试群 Worker 实发与读回；@所有人为平台富提及；签名校验已保存核对 | 独立正式群已配置，仅本人；正式群自然新增信号待验收，不向正式群发 mock |
+| 微信 ClawBot / iLink | Worker 无上下文发送被 API 受理，本人确认收到 | 本人专用持久队列已启用；未收取云端入站、未自动刷新；自然新增信号、跨天可用性与凭据寿命待验 |
+| QQ | 官方主动 C2C 路径的 Worker 测试获回执，创建者本人客户端读回确认 | 本人持久队列已部署并启用，线上健康检查通过；无需 Gateway。自然新增信号、主动配额与长期送达待验；名称/小猫头像仍待设置 |
+| 企业微信 | 尚无本项目实发验收 | 用户已明确暂缓；保持未配置，不为完成矩阵另建应用或群 |
+| 邮件 | 有实现和配置说明 | 当前部署未配置，不宣传邮件已在运行 |
+
+飞书与企微共用 `src/webhook-client.ts`、`src/webhook-notifications.ts`；微信复用同一持久投递队列与 `src/weixin-client.ts`。QQ 也复用该队列，使用 `src/qq-client.ts` 与 `src/qq-test.ts`；主动发送契约核对[腾讯官方 SDK 固定版本](https://github.com/tencent-connect/qqbot-nodejs/tree/429a0f1b798f3b0fcef3679e207dbc0469a1df2d)，不沿用旧版被动回复限制。先复用这些适配器，不另起通知包、重复队列或网关。微信实验与协议边界见[专项核验](research-weixin-ilink.md)。
+
+飞书的测试与正式 Webhook 必须独立。已获授权的私有配置文件使用 `0600`，可由下列脚本经 stdin 原子写入 Cloudflare Secrets；不要在命令行参数、聊天、截图或公开日志中放 Webhook 值、签名、Bearer token、AppSecret 或本人目标 ID。
+
+```sh
+node scripts/configure-notification-webhook.mjs feishu /absolute/private-test.json test
+node scripts/configure-notification-webhook.mjs feishu /absolute/private-production.json production
+```
+
+私有 JSON 字段为 `webhook_url`、`signing_secret`。对应 Secrets 为 `FEISHU_TEST_WEBHOOK_URL` / `FEISHU_TEST_WEBHOOK_SECRET` 与 `FEISHU_WEBHOOK_URL` / `FEISHU_WEBHOOK_SECRET`。微信生产使用 `WEIXIN_BOT_TOKEN`、`WEIXIN_OWNER_ID`，并显式设置 `WEIXIN_NOTIFICATIONS_ENABLED=true`；本人专用测试使用独立的 `WEIXIN_TEST_*` 配置。QQ 本人测试使用 `QQ_TEST_APP_ID`、`QQ_TEST_APP_SECRET`、`QQ_TEST_OWNER_OPENID`；生产使用 `QQ_APP_ID`、`QQ_APP_SECRET`、`QQ_OWNER_OPENID` 并显式设置 `QQ_NOTIFICATIONS_ENABLED=true`。获取 token 前的网络、限流及服务端临时故障按队列最多尝试三次；消息提交后的未知结果不重发。
+
+新目的地启用时建立激活时间，只接收之后实时新增且有通知资格的网页信号，旧历史不重放。管理员测试需固定 `Idempotency-Key`；发送结果未知会隔离，不自动重发。队列正常或一次测试成功不等于自然信号与长期凭据均已验收；以通道实际回执和状态为准。
+
 ## API
 
 - `GET /api/status`：历史结论、实时信号、数据源/轮询/通知健康度

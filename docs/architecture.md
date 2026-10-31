@@ -2,9 +2,11 @@
 
 [Current architecture diagram and product screenshots](../public/showcase/index.html).
 
-## Current deployment (2026-10-30)
+## Current deployment (2026-10-31)
 
 Cloudflare Cron checks due work. The enabled Tibo X API source runs about every 20 minutes; rules and Qwen review verified reference chains before D1 stores evidence and delivery state. A persistent outbox sends group messages with @everyone and personal in-app DING to the configured two recipients. The public read API serves the website and RSS; D1 is never exposed directly. Email is optional and currently unconfigured. Dot execution is not enabled.
+
+The same outbox also supports Feishu group messages and owner-only Weixin and QQ alerts through direct HTTPS calls from the Worker. Their isolated cloud tests have reached the intended recipients; each new destination skips older history. Natural new-signal delivery and long-term credential validity remain separate checks. WeCom is implemented but unconfigured at the owner's request. See the [channel acceptance matrix](self-hosting.md#通知通道与验收范围) for current limits.
 
 `data/recent-reset-events.json` is a separately reviewed October subset with six completion confirmations. Confirmation publication time is distinct from the unknown exact execution time. The original twelve-event backtest is unchanged.
 
@@ -36,6 +38,7 @@ notify; they do not stop billing or enforce a spending cap.
 Cron -> due query selection -> X Recent Search -> author validation -> normalization
      -> deterministic classification -> evidence grouping / inhibition
      -> D1 event ledger -> notification outbox -> DingTalk message + selected personal DING
+     -> shared durable outbox -> Feishu group / owner-only Weixin and QQ
      -> optional Resend (currently unconfigured)
      -> dashboard / JSON / RSS / health
      -> GitHub Pages public snapshot fallback (10 min)
