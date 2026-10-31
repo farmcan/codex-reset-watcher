@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "reviewed_at": "2026-10-30T14:41:41.332632+00:00",
-  "coverage": "Six source-verified October completions; not an exhaustive monthly census or a new prediction backtest.",
+  "reviewed_at": "2026-10-31T17:29:55.669412+00:00",
+  "coverage": "Eight source-verified October completion announcements; scope remains unspecified where not stated. Not an exhaustive monthly census or a new prediction backtest.",
   "events": [
     {
       "id": "reset-2026-10-28-verified",
@@ -66,6 +66,52 @@
           "at": "2026-10-25T06:06:16.000Z",
           "url": "https://x.com/thsottiaux/status/2114237083652882932",
           "quote": "It is all propagated. Enjoy some mad codexing tomorrow. Fun week ahead too. https://t.co/qOrzwSeIZZ https://t.co/xKaK95EAly"
+        }
+      ]
+    },
+    {
+      "id": "reset-2026-10-20-verified",
+      "kind": "hard_reset",
+      "confirmed_at": "2026-10-20T06:33:48.000Z",
+      "reset_at": null,
+      "time_basis": "confirmation_post",
+      "confirmation_post_id": "2112432076767289678",
+      "confirmation_url": "https://x.com/thsottiaux/status/2112432076767289678",
+      "author": "thsottiaux",
+      "timeline": [
+        {
+          "stage": "confirmation",
+          "post_id": "2112432076767289678",
+          "at": "2026-10-20T06:33:48.000Z",
+          "url": "https://x.com/thsottiaux/status/2112432076767289678",
+          "quote": "Nevermind, we're still cooking... and reset. Enjoy."
+        }
+      ]
+    },
+    {
+      "id": "reset-2026-10-15-verified",
+      "kind": "unknown",
+      "confirmed_at": "2026-10-15T06:28:13.000Z",
+      "reset_at": null,
+      "time_basis": "confirmation_post",
+      "confirmation_post_id": "2110618732666257557",
+      "confirmation_url": "https://x.com/thsottiaux/status/2110618732666257557",
+      "author": "thsottiaux",
+      "scope_note": "Completion quotes the timing reply, but reset mechanics and eligible plans are not specified.",
+      "timeline": [
+        {
+          "stage": "timing_update",
+          "post_id": "2110595554036400151",
+          "at": "2026-10-15T04:56:07.000Z",
+          "url": "https://x.com/thsottiaux/status/2110595554036400151",
+          "quote": "Landing within the next 2 hours"
+        },
+        {
+          "stage": "confirmation",
+          "post_id": "2110618732666257557",
+          "at": "2026-10-15T06:28:13.000Z",
+          "url": "https://x.com/thsottiaux/status/2110618732666257557",
+          "quote": "Done and dusted"
         }
       ]
     },
@@ -175,6 +221,10 @@
     {
       "post_id": "2109778880341151901",
       "reason": "Tokens per second is speed, not a quota change."
+    },
+    {
+      "post_id": "2111566005684289735",
+      "reason": "Standalone Done has no reply or quote linking it to a reset in the returned X API record; do not infer completion from temporal proximity."
     }
   ],
   "limitations": [

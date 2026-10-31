@@ -21,6 +21,16 @@ describe('bounded public D1 reads',()=>{
     await publicRead(new Request('https://example.com/api/admin/test-dingtalk',{method:'POST'}),async()=>Response.json({sent:true}),c);
     expect(c.put).not.toHaveBeenCalled();
   });
+  it('never serves or caches account observations, including a stale formerly public entry',async()=>{
+    const c=cache();
+    await c.put(new Request('https://example.com/api/arrival-observations'),Response.json({private:'old cached account record'}));
+    const respond=vi.fn(async()=>Response.json({error:'unauthorized'},{status:401}));
+    const response=await publicRead(new Request('https://example.com/api/arrival-observations'),respond,c);
+    expect(response.status).toBe(401);
+    expect(await response.text()).not.toContain('old cached account record');
+    expect(c.match).not.toHaveBeenCalled();
+    expect(respond).toHaveBeenCalledTimes(1);
+  });
   it('reports quota exhaustion as unknown coverage, without claiming delivery or exposing diagnostics',async()=>{
     const r=storageFailure(new Error("D1_ERROR: Your account has exceeded D1's free tier daily row read limit. private diagnostic"))!;
     expect(r.status).toBe(503);

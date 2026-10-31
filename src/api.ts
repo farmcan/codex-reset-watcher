@@ -118,7 +118,10 @@ export async function handleApi(request: Request, env: Env): Promise<Response | 
   if (request.method === "GET" && url.pathname === "/api/events") {
     return json((await dashboardData(env.DB)).signals);
   }
-  if(request.method==='GET' && url.pathname==='/api/arrival-observations') return json(await readObservations(env));
+  if(request.method==='GET' && ['/api/arrival-observations','/api/admin/arrival-observations'].includes(url.pathname)) {
+    if(!await authorized(request,{...env,ADMIN_TOKEN:env.PERSONAL_OBSERVATION_TOKEN})) return json({error:'unauthorized'},401);
+    return json(await readObservations(env));
+  }
   if(request.method==='POST' && url.pathname==='/api/admin/arrival-observations') {
     if(!await authorized(request,{...env,ADMIN_TOKEN:env.PERSONAL_OBSERVATION_TOKEN})) return json({error:'unauthorized'},401);
     try {return json(await writeObservations(env,await request.json()));}

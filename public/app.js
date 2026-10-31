@@ -1,5 +1,4 @@
-import { renderCycleTimeline } from './cycle-timeline.js?v=20261031-2';
-let cachedObservations = {observations:[],unavailable:true};
+import { publicConfirmations } from './confirmed-history.js?v=20261101-1';
 const TZ = "Asia/Shanghai";
 const ENGLISH = document.documentElement.lang.toLowerCase().startsWith("en");
 const PAGES_SNAPSHOT = location.hostname.endsWith("github.io") || new URLSearchParams(location.search).has("snapshot");
@@ -1009,8 +1008,24 @@ function renderResetTiming(status) {
     link(ui("连接说明", "Connection notes"), "https://github.com/farmcan/codex-reset-watcher/blob/main/docs/research-reset-task-triggers.md"));
 }
 
+function renderPublicConfirmations(status) {
+  const container = document.querySelector('#recent-confirmation-list');
+  container.replaceChildren();
+  for (const row of publicConfirmations(cachedHistory, status.live.signals || []).slice(0, 12)) {
+    const item = el('li', 'confirmation-row');
+    const time = el('time', '', formatTime(row.at, true));
+    time.dateTime = row.at;
+    const label = row.kind === 'banked_reset' ? ui('重置卡发放确认', 'Reset-card grant confirmation')
+      : row.kind === 'hard_reset' ? ui('重置完成确认', 'Reset completion')
+      : ui('重置完成 · 形式未注明', 'Reset completed · type unspecified');
+    item.append(time, el('span', '', label), link(ui('官方原帖 ↗', 'Original source ↗'), row.url));
+    container.append(item);
+  }
+  if (!container.childNodes.length) container.append(el('li', 'empty', ui('暂无可列出的一手完成公告。', 'No sourced completion announcements recorded.')));
+}
+
 function renderLive(status) {
-  renderCycleTimeline(status,cachedHistory,cachedObservations);
+  renderPublicConfirmations(status);
   renderResetTiming(status);
   renderHealth(status);
   renderCurrent(status);
@@ -1048,14 +1063,12 @@ async function load() {
   try {
     document.querySelector("#status-api-link").href = endpoint("status");
     document.querySelector("#history-api-link").href = endpoint("history");
-    const [status, history, sources, observations] = await Promise.all([
+    const [status, history, sources] = await Promise.all([
       fetchJson("status"),
       fetchJson("history"),
-      fetchJson("sources"),
-      fetchJson("arrival-observations").catch(()=>({...cachedObservations,unavailable:true}))
+      fetchJson("sources")
     ]);
     cachedHistory = history;
-    cachedObservations = observations;
     renderLive(status);
     renderHistory(history);
     renderSources(sources);
@@ -1071,8 +1084,7 @@ async function refreshLive() {
   if (refreshInFlight || !cachedHistory) return;
   refreshInFlight = true;
   try {
-    const [status,observations]=await Promise.all([fetchJson("status"),fetchJson("arrival-observations").catch(()=>({...cachedObservations,unavailable:true}))]);
-    cachedObservations=observations;
+    const status = await fetchJson("status");
     renderLive(status);
     lastLiveRefreshAt = Date.now();
   } catch (error) {

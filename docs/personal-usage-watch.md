@@ -19,6 +19,14 @@
 
 用户最终选择钉钉：Codex heartbeat 每30分钟运行 `python3 scripts/personal-usage-watch.py --notify-dingtalk`，使用既有DWS登录给本人私聊。绑定来自`auth status`和`contact +me`交叉核对；每次发送再次核对本人身份。2026-10-31接入测试返回`deliveryStatus=delivered`与消息ID；这是普通钉钉私聊，不是真DING或手机已读回执。不广播给现有两人群。发送意图先持久化，unknown/中断不盲目重发，失败在聊天提示处理。
 
-个人额度监测依赖这台Mac在线与既有登录状态。公开Worker的X监控与原通知渠道不变。调度配置成功、首次自然执行、真实额度变化、实际通知分别验收，不能互相替代。公共观察写入/API/横向周期图已接线，见 [cycle-timeline.md](cycle-timeline.md)；接口专用令牌仅在本机私有文件中，后续恢复/发卡事件只上传固定脱敏字段。
+个人额度监测依赖这台Mac在线与既有登录状态。公开Worker的X监控与原通知渠道不变。调度配置成功、首次自然执行、真实额度变化、实际通知分别验收，不能互相替代。2026-11-01修正：个人观察仅保存本机并按既有授权发本人私聊；停止自动上传观察账本。公共主页图表已撤除，观察API读取改为专用令牌鉴权并排除公共缓存/快照，见 [cycle-timeline.md](cycle-timeline.md)。Seed状态页仍只发布脱敏的执行、覆盖与异常记录。
 
 检查：`python3 tests/personal-usage-watch.test.py`。本次已用真实账号完成只读采样并建立基线；真实重置事件尚待发生，不用合成样例冒充到账验收。历史提取运行 `python3 scripts/reconstruct-weekly-history.py`，私有结果在`.wrangler/personal-usage-watch/history-review.md`；只读额度遥测，不保留聊天正文，不将历史账号不明的窗口变化当成全局到账证据。
+
+## 2026-11-01账号历史核对
+
+本轮已用当前登录账号真实读回 `account/rateLimits/read`，weekly窗口可读，账号指纹与既有私有基线一致。该检查没有发通知、使用重置卡或购买额度。实际额度恢复仍需前后两次样本对比；只能记录采样区间，不能补造未保存的过去时刻。
+
+同时通过官方设置 → 使用情况 → 使用限额重置 → 历史记录，读到过去30天的发卡与用卡记录；它不是所有自动/全局重置的完整流水。当前接口还可返回可用重置卡的 `grantedAt`，但详情可能受服务端行数限制。个人日期及原始记录只保存在本机私有证据中，不复制到公共历史。
+
+[官方字段说明](https://learn.chatgpt.com/docs/app-server#6-rate-limits-chatgpt)区分当前窗口、下一次重置和可用卡详情。本轮人工读回证明读取能力可用，不等于新的自然重置或通知已发生；30分钟heartbeat的自然执行及真实变化仍各自保留验收证据。

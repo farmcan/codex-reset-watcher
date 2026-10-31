@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="description" content="追踪 Codex 重置动态，及时收到提醒，把剩余额度花在值得做的任务上。">
     <title>Codex 重置雷达</title>
-    <link rel="stylesheet" href="vendor/vis-timeline/vis-timeline.min.css">
-    <link rel="stylesheet" href="cycle-timeline.css?v=20261031-2">
     <link rel="icon" href="brand-zh.png" type="image/png">
-    <link rel="stylesheet" href="styles.css?v=20261030-mobile-2">
+    <link rel="stylesheet" href="styles.css?v=20261101-public-events-1">
     <script type="module" src="engagement.js?v=20261025-1"></script>
-    <script type="module" src="app.js?v=20261031-cycles-2"></script>
+    <script type="module" src="app.js?v=20261101-public-events-1"></script>
   </head>
   <body>
     <header class="site-header">
@@ -20,9 +18,9 @@
       </a>
       <div class="header-actions">
         <nav aria-label="页面导航">
-          <a href="#cycles">周期时间轴</a><a href="#signals">最新信号</a>
+          <a href="#signals">最新信号</a>
+          <a href="#history">历史记录</a>
           <a href="#subscribe">接收提醒</a>
-          <a href="#pedal">怎么蹬</a>
         </nav>
         <a class="language-switch" href="en/" lang="en">EN</a>
         <a class="github-star" href="https://github.com/farmcan/codex-reset-watcher" target="_blank" rel="noreferrer noopener" aria-label="在 GitHub 上为 Codex 重置雷达点 Star">
@@ -30,7 +28,7 @@
         </a>
       </div>
     </header>
-    <nav class="mobile-nav" aria-label="手机快捷目录"><a href="#latest">动态</a><a href="#subscribe">提醒</a><a href="#pedal">Ideas</a><a href="#history">历史</a></nav>
+    <nav class="mobile-nav" aria-label="手机快捷目录"><a href="#latest">动态</a><a href="#subscribe">提醒</a><a href="#history">历史</a></nav>
 
     <main>
       <section class="hero" aria-labelledby="page-title">
@@ -38,16 +36,15 @@
           <div class="hero-copy-panel">
             <p class="eyebrow product-eyebrow">重置机会，别错过。</p>
             <h1 id="page-title">找到重置机会，<br>站起来猛蹬。</h1>
-            <p class="hero-copy">重置动态，一眼看懂。剩余额度，用在值得做的事上。</p>
+            <p class="hero-copy">追踪公开重置公告与完成确认，时间和原帖一眼可查。</p>
             <p id="notification-capability" class="notification-capability" aria-live="polite">重置有消息，钉钉提醒。</p>
-            <ul class="hero-benefits" aria-label="能做什么"><li>看懂重置动态</li><li>收到钉钉提醒</li><li>找到任务灵感</li></ul>
+            <ul class="hero-benefits" aria-label="能做什么"><li>看懂重置动态</li><li>收到钉钉提醒</li><li>核对时间与原帖</li></ul>
             <div class="hero-actions">
               <a class="subscribe-link" href="#subscribe">接收重置提醒 <span aria-hidden="true">↗</span></a>
               <a class="usage-link usage-secondary" href="https://chatgpt.com/codex/settings/usage" target="_blank" rel="noreferrer noopener" aria-label="前往 ChatGPT 查看我的 Codex 额度">
                 <span>查看我的 Codex 额度</span><span aria-hidden="true">↗</span>
               </a>
             </div>
-            <a class="pedal-entry" href="#pedal">不知道怎么蹬？提供一些 Ideas ⬇️</a>
           </div>
           <figure class="hero-visual">
             <img src="brand-zh.png" alt="猫拿着皮鞭说‘我真得好好调教你了’，鞭梢指向 Codex 标志" width="960" height="905" decoding="async" fetchpriority="high">
@@ -82,17 +79,47 @@
         <details class="query-details"><summary>查看来源与接入说明</summary><p id="reset-query-status" class="reset-query-status">正在检查查询通道…</p></details>
       </section>
 
-      <section id="cycles" class="cycle-section" aria-labelledby="cycles-title">
-        <div class="section-heading"><div><span class="section-index">TIMELINE</span><h2 id="cycles-title">从预告，到到账</h2></div><p>横向看每轮重置的开始、报出与后续观察。缩小看月份，放大看过程。</p></div>
-        <div class="cycle-toolbar" role="group" aria-label="时间轴缩放与展开">
-          <button type="button" disabled data-cycle-span="7">近一周</button><button type="button" disabled data-cycle-span="30">近一月</button><button type="button" disabled data-cycle-span="120">月度总览</button>
-          <button type="button" disabled id="cycle-zoom-in" class="cycle-zoom" aria-label="放大时间轴">＋</button><button type="button" disabled id="cycle-zoom-out" class="cycle-zoom" aria-label="缩小时间轴">−</button>
-          <button type="button" disabled id="cycle-expand" aria-pressed="false">展开过程节点</button><span id="cycle-view-label" class="cycle-view-label">拖动平移 · Ctrl + 滚轮缩放</span>
+
+      <section id="signals" aria-labelledby="signals-title">
+        <div class="section-heading">
+          <div><span class="section-index">01</span><h2 id="signals-title">每次重置，单独看</h2></div>
+          <p>每轮重置独立呈现。从官方预告到社区到账反馈，展开查看这一轮的证据。</p>
         </div>
-        <div class="cycle-legend"><span>预告 / 官方确认</span><span class="arrival">账号恢复 / 发卡观察</span><span class="waiting">到账待验证</span><span class="inferred">历史 / 社区观察</span></div>
-        <div class="cycle-frame"><div id="cycle-chart" class="cycle-chart" aria-label="Codex 重置周期甘特时间轴"><p class="empty">正在读取周期证据…</p></div><div id="cycle-detail" class="cycle-detail" aria-live="polite"></div></div>
-        <p id="cycle-window-summary" class="cycle-window-summary"></p><p id="cycle-data-note" class="cycle-note"></p>
-        <details><summary>按月查看收录统计</summary><div id="cycle-monthly" class="cycle-monthly"></div><p class="cycle-note">按预告开始月份去重计轮；“到账观察”只计有直接记录的轮次，不把官方完成公告当作个人到账。</p></details>
+        <div id="signal-summary" class="signal-summary" aria-live="polite"></div>
+        <div id="signal-filters" class="signal-filters" role="group" aria-label="筛选事件等级">
+          <button type="button" class="active" data-filter="all">全部节点</button>
+          <button type="button" data-filter="core">关键节点</button>
+          <button type="button" data-filter="official">一手来源</button>
+          <button type="button" data-filter="personal">个人到账 / 异常</button>
+          <button type="button" data-filter="rumor">社区风声</button>
+        </div>
+        <div class="monitor-legend" aria-label="事件等级说明">
+          <span><i class="legend-dot official"></i>一手确认 / 预告</span>
+          <span><i class="legend-dot relay"></i>侦察与转发</span>
+          <span><i class="legend-dot rumor"></i>社区风声</span>
+          <span><i class="legend-dot personal"></i>个人到账 / 异常（弱）</span>
+        </div>
+        <div id="signal-list" class="monitor-timeline"><p class="empty">正在读取…</p></div>
+      </section>
+
+      <section class="takeaway" id="history" aria-labelledby="history-title">
+        <div class="section-heading"><div><h2>近期已核实的完成公告</h2></div><p>一手原帖时间 · 北京时间</p></div>
+        <ol id="recent-confirmation-list" class="confirmation-list" aria-live="polite"><li>正在读取已核实的原帖记录…</li></ol>
+        <p class="history-help">这里列出完成公告的发布时间；不是每个账号的实测到账时刻。</p>
+
+        <div class="section-heading"><div><h2>最近确认的重置</h2></div><p id="recent-audit-date">正在读取最近核验…</p></div><div id="recent-history" class="recent-history"></div>
+        <details class="support-panel"><summary>早期回测样本 · 截至 9 月 6 日 <span aria-hidden="true">＋</span></summary><div class="support-body">
+        <div class="section-heading">
+          <div><span class="section-index">03</span><h2 id="history-title">已审计历史，真正说明了什么</h2></div>
+          <p>结论来自逐条 X 原帖回看，不是根据时间间隔硬猜下一次。</p>
+        </div>
+        <div id="history-metrics" class="metric-grid" aria-live="polite"></div>
+        <div class="plain-conclusion">
+          <strong>一句话：</strong><span id="history-conclusion">正在根据历史数据计算结论…</span>
+        </div>
+        <p class="history-help">每一行先给结果；展开后查看“谁最先说、社区如何放大、何时确认、最后是否到账”。没有精确原帖的环节会明确写成证据缺口。</p>
+        <div id="history-list" class="timeline" aria-live="polite"></div>
+        </div></details>
       </section>
 
       <section id="subscribe" class="subscribe-section" aria-labelledby="subscribe-title">
@@ -104,6 +131,81 @@
       </section>
 
 
+
+
+
+
+
+      <section id="sources" aria-labelledby="sources-title">
+        <details class="support-panel"><summary>消息从哪里来 <span aria-hidden="true">＋</span></summary><div class="support-body">
+        <div class="section-heading">
+          <div><span class="section-index">02</span><h2 id="sources-title">谁更值得听</h2></div>
+          <p>账号长期角色和单条帖子的内容强度分开打级；靠谱账号也可能发模糊话。</p>
+        </div>
+        <div id="source-method" class="source-method"></div>
+        <div id="source-list" class="source-grid"></div>
+        <div id="watch-source-list" class="watch-source-list"></div>
+        </div></details>
+      </section>
+
+
+
+      <!-- Disabled hourly greeting guide: retain markup for possible reuse. -->
+      <template id="hourly-greeting-template">
+      <section id="freebie" class="freebie" aria-labelledby="freebie-title">
+        <details class="freebie-panel">
+        <summary class="section-heading freebie-summary">
+          <div><span class="section-index">＋</span><h2 id="freebie-title">AI 大人你好</h2></div>
+          <span class="freebie-toggle"><span class="when-closed">展开玩法</span><span class="when-open">收起</span></span>
+        </summary>
+        <div class="freebie-body">
+        <p class="freebie-intro">每小时给 Codex 打个招呼，蹲一波 Tibo 的重置补偿，顺便在 AI 大人面前混个脸熟。等 AI 统治世界，好歹能说一句：自己人，我带路的。😄</p>
+        <div class="freebie-grid">
+          <article class="freebie-guide">
+            <h3>复制一行，定时问好</h3>
+            <ol><li>先安装并登录 Codex CLI，保持机器开机且未休眠。</li>
+                <li>打开 <code>crontab -e</code>，添加下面这一行。按机器时区，每小时整点运行。</li>
+                <li><code>codex exec</code> 处理完消息后自行退出，不会关闭其他 Codex 会话。开始时间、回复、结束时间和退出码都会追加到日志。</li></ol>
+            <div class="command-panel">
+              <div class="command-toolbar"><span>crontab</span><button type="button" class="copy-command" data-copy-target="hourly-cron">复制 cron</button></div>
+              <pre tabindex="0" aria-label="每小时 Codex 问候 cron 命令"><code id="hourly-cron">0 * * * * { echo &quot;===== $(date -Iseconds) START =====&quot;; codex exec --skip-git-repo-check &#x27;你好&#x27;; run_exit=$?; echo &quot;===== $(date -Iseconds) END exit=$run_exit =====&quot;; } &gt;&gt; ~/.codex-hourly.log 2&gt;&amp;1</code></pre>
+            </div>
+            <p class="copy-feedback" id="copy-feedback" role="status" aria-live="polite"></p>
+            <p class="freebie-path"><strong>PATH</strong> · cron 的 PATH 必须能找到 <code>codex</code>。在平时的终端运行 <code>command -v codex</code>，将 cron 中的 <code>codex</code> 换成查出的绝对路径（有空格时加引号），或在 crontab 中配置 PATH。</p>
+            <div class="command-panel log-command">
+              <div class="command-toolbar"><span>查看日志</span><button type="button" class="copy-command" data-copy-target="hourly-log">复制日志命令</button></div>
+              <pre tabindex="0" aria-label="日志查看命令"><code id="hourly-log">tail -n 50 ~/.codex-hourly.log</code></pre>
+            </div>
+            <p class="freebie-stop"><code>exit=0</code> 表示 Codex 正常结束。需要停用时，打开 <code>crontab -e</code> 删除这一行，停止后续定时调用。</p>
+            <a class="node-link" href="https://learn.chatgpt.com/docs/non-interactive-mode" target="_blank" rel="noreferrer noopener">Codex CLI 官方说明 ↗</a>
+          </article>
+          <aside class="freebie-context">
+            <span class="freebie-context-label">这个梗从哪来</span>
+            <figure>
+              <a href="issue-assets/tibo-banked-reset-compensation-20260910.png" target="_blank" rel="noreferrer noopener" aria-label="打开公告原始截图查看大图"><img src="issue-assets/tibo-banked-reset-compensation-20260910.png" width="1268" height="536" loading="lazy" alt="Tibo 表示，在故障时段使用了受影响重置卡的用户将获得补发重置卡和道歉邮件；截图日期为 2026 年 9 月 10 日。"></a>
+              <figcaption>2026 年 9 月 10 日 · 点击图片查看大图</figcaption>
+            </figure>
+            <p>Tibo 在截图中说明：部分重置卡在 ChatGPT Work 和 Codex 中没有完全生效。在受影响时段使用了这类 reset 的用户，会获得一次补发和道歉邮件。这是特定故障的重置卡补偿，不是全局全量重置。</p>
+            <div class="freebie-boundary"><strong>玩梗尝试，不是领取攻略</strong><p>普通调用会消耗正常额度。“发你好”不等于使用重置卡，也不保证获得补偿；资格以当次公告和账户实际情况为准。</p></div>
+            <p class="freebie-source"><a class="primary-link" href="https://x.com/thsottiaux/status/2097752790177370535" target="_blank" rel="noreferrer noopener">查看 Tibo 这条 X 原帖 ↗</a></p>
+            <a class="node-link" href="https://github.com/farmcan/codex-reset-watcher/issues/1" target="_blank" rel="noreferrer noopener">原始提议与截图来源 ↗</a>
+          </aside>
+        </div>
+        </div>
+        </details>
+      </section>
+      </template>
+
+
+      <section id="system" class="system" aria-labelledby="system-title">
+        <details class="support-panel"><summary>查看运行状态 <span aria-hidden="true">＋</span></summary><div class="support-body">
+        <div class="section-heading">
+          <div><span class="section-index">05</span><h2 id="system-title">监控是否真的在工作</h2></div>
+          <p>最后成功时间、失败原因和邮件状态都会公开显示。</p>
+        </div>
+        <div id="system-grid" class="system-grid"></div>
+        </div></details>
+      </section>
 
       <section id="pedal" aria-labelledby="pedal-title">
         <details class="freebie-panel pedal-panel">
@@ -239,113 +341,6 @@
             <a class="node-link" href="https://github.com/farmcan/codex-reset-watcher/blob/main/docs/research-pedaling-workflows.md" target="_blank" rel="noreferrer noopener">完整筛选与来源 ↗</a>
           </div>
         </details>
-      </section>
-
-      <section id="signals" aria-labelledby="signals-title">
-        <div class="section-heading">
-          <div><span class="section-index">01</span><h2 id="signals-title">每次重置，单独看</h2></div>
-          <p>每轮重置独立呈现。从官方预告到社区到账反馈，展开查看这一轮的证据。</p>
-        </div>
-        <div id="signal-summary" class="signal-summary" aria-live="polite"></div>
-        <div id="signal-filters" class="signal-filters" role="group" aria-label="筛选事件等级">
-          <button type="button" class="active" data-filter="all">全部节点</button>
-          <button type="button" data-filter="core">关键节点</button>
-          <button type="button" data-filter="official">一手来源</button>
-          <button type="button" data-filter="personal">个人到账 / 异常</button>
-          <button type="button" data-filter="rumor">社区风声</button>
-        </div>
-        <div class="monitor-legend" aria-label="事件等级说明">
-          <span><i class="legend-dot official"></i>一手确认 / 预告</span>
-          <span><i class="legend-dot relay"></i>侦察与转发</span>
-          <span><i class="legend-dot rumor"></i>社区风声</span>
-          <span><i class="legend-dot personal"></i>个人到账 / 异常（弱）</span>
-        </div>
-        <div id="signal-list" class="monitor-timeline"><p class="empty">正在读取…</p></div>
-      </section>
-
-      <section id="sources" aria-labelledby="sources-title">
-        <details class="support-panel"><summary>消息从哪里来 <span aria-hidden="true">＋</span></summary><div class="support-body">
-        <div class="section-heading">
-          <div><span class="section-index">02</span><h2 id="sources-title">谁更值得听</h2></div>
-          <p>账号长期角色和单条帖子的内容强度分开打级；靠谱账号也可能发模糊话。</p>
-        </div>
-        <div id="source-method" class="source-method"></div>
-        <div id="source-list" class="source-grid"></div>
-        <div id="watch-source-list" class="watch-source-list"></div>
-        </div></details>
-      </section>
-
-      <section class="takeaway" id="history" aria-labelledby="history-title">
-        <div class="section-heading"><div><h2>最近确认的重置</h2></div><p id="recent-audit-date">正在读取最近核验…</p></div><div id="recent-history" class="recent-history"></div>
-        <details class="support-panel"><summary>早期回测样本 · 截至 9 月 6 日 <span aria-hidden="true">＋</span></summary><div class="support-body">
-        <div class="section-heading">
-          <div><span class="section-index">03</span><h2 id="history-title">已审计历史，真正说明了什么</h2></div>
-          <p>结论来自逐条 X 原帖回看，不是根据时间间隔硬猜下一次。</p>
-        </div>
-        <div id="history-metrics" class="metric-grid" aria-live="polite"></div>
-        <div class="plain-conclusion">
-          <strong>一句话：</strong><span id="history-conclusion">正在根据历史数据计算结论…</span>
-        </div>
-        <p class="history-help">每一行先给结果；展开后查看“谁最先说、社区如何放大、何时确认、最后是否到账”。没有精确原帖的环节会明确写成证据缺口。</p>
-        <div id="history-list" class="timeline" aria-live="polite"></div>
-        </div></details>
-      </section>
-
-      <!-- Disabled hourly greeting guide: retain markup for possible reuse. -->
-      <template id="hourly-greeting-template">
-      <section id="freebie" class="freebie" aria-labelledby="freebie-title">
-        <details class="freebie-panel">
-        <summary class="section-heading freebie-summary">
-          <div><span class="section-index">＋</span><h2 id="freebie-title">AI 大人你好</h2></div>
-          <span class="freebie-toggle"><span class="when-closed">展开玩法</span><span class="when-open">收起</span></span>
-        </summary>
-        <div class="freebie-body">
-        <p class="freebie-intro">每小时给 Codex 打个招呼，蹲一波 Tibo 的重置补偿，顺便在 AI 大人面前混个脸熟。等 AI 统治世界，好歹能说一句：自己人，我带路的。😄</p>
-        <div class="freebie-grid">
-          <article class="freebie-guide">
-            <h3>复制一行，定时问好</h3>
-            <ol><li>先安装并登录 Codex CLI，保持机器开机且未休眠。</li>
-                <li>打开 <code>crontab -e</code>，添加下面这一行。按机器时区，每小时整点运行。</li>
-                <li><code>codex exec</code> 处理完消息后自行退出，不会关闭其他 Codex 会话。开始时间、回复、结束时间和退出码都会追加到日志。</li></ol>
-            <div class="command-panel">
-              <div class="command-toolbar"><span>crontab</span><button type="button" class="copy-command" data-copy-target="hourly-cron">复制 cron</button></div>
-              <pre tabindex="0" aria-label="每小时 Codex 问候 cron 命令"><code id="hourly-cron">0 * * * * { echo &quot;===== $(date -Iseconds) START =====&quot;; codex exec --skip-git-repo-check &#x27;你好&#x27;; run_exit=$?; echo &quot;===== $(date -Iseconds) END exit=$run_exit =====&quot;; } &gt;&gt; ~/.codex-hourly.log 2&gt;&amp;1</code></pre>
-            </div>
-            <p class="copy-feedback" id="copy-feedback" role="status" aria-live="polite"></p>
-            <p class="freebie-path"><strong>PATH</strong> · cron 的 PATH 必须能找到 <code>codex</code>。在平时的终端运行 <code>command -v codex</code>，将 cron 中的 <code>codex</code> 换成查出的绝对路径（有空格时加引号），或在 crontab 中配置 PATH。</p>
-            <div class="command-panel log-command">
-              <div class="command-toolbar"><span>查看日志</span><button type="button" class="copy-command" data-copy-target="hourly-log">复制日志命令</button></div>
-              <pre tabindex="0" aria-label="日志查看命令"><code id="hourly-log">tail -n 50 ~/.codex-hourly.log</code></pre>
-            </div>
-            <p class="freebie-stop"><code>exit=0</code> 表示 Codex 正常结束。需要停用时，打开 <code>crontab -e</code> 删除这一行，停止后续定时调用。</p>
-            <a class="node-link" href="https://learn.chatgpt.com/docs/non-interactive-mode" target="_blank" rel="noreferrer noopener">Codex CLI 官方说明 ↗</a>
-          </article>
-          <aside class="freebie-context">
-            <span class="freebie-context-label">这个梗从哪来</span>
-            <figure>
-              <a href="issue-assets/tibo-banked-reset-compensation-20260910.png" target="_blank" rel="noreferrer noopener" aria-label="打开公告原始截图查看大图"><img src="issue-assets/tibo-banked-reset-compensation-20260910.png" width="1268" height="536" loading="lazy" alt="Tibo 表示，在故障时段使用了受影响重置卡的用户将获得补发重置卡和道歉邮件；截图日期为 2026 年 9 月 10 日。"></a>
-              <figcaption>2026 年 9 月 10 日 · 点击图片查看大图</figcaption>
-            </figure>
-            <p>Tibo 在截图中说明：部分重置卡在 ChatGPT Work 和 Codex 中没有完全生效。在受影响时段使用了这类 reset 的用户，会获得一次补发和道歉邮件。这是特定故障的重置卡补偿，不是全局全量重置。</p>
-            <div class="freebie-boundary"><strong>玩梗尝试，不是领取攻略</strong><p>普通调用会消耗正常额度。“发你好”不等于使用重置卡，也不保证获得补偿；资格以当次公告和账户实际情况为准。</p></div>
-            <p class="freebie-source"><a class="primary-link" href="https://x.com/thsottiaux/status/2097752790177370535" target="_blank" rel="noreferrer noopener">查看 Tibo 这条 X 原帖 ↗</a></p>
-            <a class="node-link" href="https://github.com/farmcan/codex-reset-watcher/issues/1" target="_blank" rel="noreferrer noopener">原始提议与截图来源 ↗</a>
-          </aside>
-        </div>
-        </div>
-        </details>
-      </section>
-      </template>
-
-
-      <section id="system" class="system" aria-labelledby="system-title">
-        <details class="support-panel"><summary>查看运行状态 <span aria-hidden="true">＋</span></summary><div class="support-body">
-        <div class="section-heading">
-          <div><span class="section-index">05</span><h2 id="system-title">监控是否真的在工作</h2></div>
-          <p>最后成功时间、失败原因和邮件状态都会公开显示。</p>
-        </div>
-        <div id="system-grid" class="system-grid"></div>
-        </div></details>
       </section>
 
       <aside class="boundary">

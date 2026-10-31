@@ -283,33 +283,6 @@ def notify_dingtalk(state):
         save(STATE, state)
 
 
-def publish_observations(state):
-    config_path = STATE.parent / 'observation-ingest.json'
-    if not config_path.exists():
-        return  # Publication remains disabled until the scoped endpoint is configured.
-    config = json.loads(config_path.read_text())
-    for event in state['outbox']:
-        if event['kind'] not in ('quota_recovered', 'weekly_refill', 'reset_card_granted') or event.get('public_observation') == 'accepted':
-            continue
-        start, end = event.get('observed_between', [event['observed_at'], event['observed_at']])
-        stamp = lambda t: dt.datetime.fromtimestamp(t, dt.timezone.utc).isoformat()
-        round_state = state.get('signals', {}).get(event.get('related_signal'), {})
-        posts = round_state.get('post_ids', [])
-        row = {'id': 'probe-' + hashlib.sha256(event['id'].encode()).hexdigest()[:24],
-               'kind': event['kind'], 'source': 'account_probe', 'assurance': 'direct',
-               'interval_start': stamp(start), 'interval_end': stamp(end), 'observed_at': stamp(event['observed_at']),
-               'signal_post_id': posts[-1] if posts and event['kind'] != 'weekly_refill' else None}
-        request = urllib.request.Request(URL.replace('/api/status', '/api/admin/arrival-observations'),
-            data=json.dumps([row]).encode(), method='POST',
-            headers={'Authorization': 'Bearer ' + config['token'], 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(request, timeout=20) as response:
-            result = json.load(response)
-        if result.get('accepted') != 1:
-            raise ValueError('observation_not_accepted')
-        event['public_observation'] = 'accepted'
-        save(STATE, state)
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--ack', help='Acknowledge one delivered notice; do not acknowledge unknown delivery.')
@@ -375,12 +348,9 @@ def main():
                 errors.append('dingtalk_notification_unavailable')
             state['notification_errors'] = [e for e in errors if e.startswith('dingtalk_')]
             save(STATE, state)
-        try:
-            publish_observations(state)
-            state['publication_errors'] = []
-        except Exception:
-            state['publication_errors'] = ['observation_publication_pending']
-            errors.append('observation_publication_pending')
+        # Account observations remain private; the public site uses public sources.
+        state['publication_policy'] = 'private_only'
+        state['publication_errors'] = []
         save(STATE, state)
         print(json.dumps({'status': 'partial' if errors else 'ok', 'baseline': bool(state.get('previous')),
                           'public_fetch': state.get('public_fetch', {}),

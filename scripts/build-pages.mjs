@@ -20,7 +20,7 @@ await rm(output, { recursive: true, force: true });
 await cp("public", output, { recursive: true });
 await mkdir(snapshotDir, { recursive: true });
 
-const snapshots = ["status", "history", "sources", "events", "arrival-observations"];
+const snapshots = ["status", "history", "sources", "events"];
 await Promise.all(snapshots.map(async (name) => {
   const body = await fetchBody(`/api/${name}`);
   JSON.parse(body);

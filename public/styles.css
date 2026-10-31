@@ -530,3 +530,9 @@ a:focus-visible, summary:focus-visible, button:focus-visible { outline:3px solid
 
 .recent-reset[open] .recent-toggle { font-size:0; }
 .recent-reset[open] .recent-toggle::before { content:'−'; font-size:15px; }
+
+/* Compact source chronology, without unsupported duration bars. */
+.confirmation-list{list-style:none;margin:16px 0;padding:0;border-top:1px solid var(--line,#eadde4)}
+.confirmation-row{display:grid;grid-template-columns:minmax(150px,1fr) minmax(160px,1.3fr) auto;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line,#eadde4);font-size:14px}
+.confirmation-row time{font-variant-numeric:tabular-nums;font-weight:650}.confirmation-row a{white-space:nowrap}
+@media(max-width:600px){.confirmation-row{grid-template-columns:1fr auto;gap:6px 12px;font-size:13px}.confirmation-row time{grid-column:1}.confirmation-row span{grid-column:1}.confirmation-row a{grid-column:2;grid-row:1 / 3}}

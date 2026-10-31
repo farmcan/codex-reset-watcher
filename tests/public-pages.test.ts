@@ -93,7 +93,7 @@ describe('useful token maxxing tasks', () => {
   it('links concrete outputs and reviewed projects in both languages', () => {
     const repositories = ['peteromallet/desloppify', 'TheGreenCedar/codex-autoresearch', 'uditgoenka/autoresearch', 'danielmiessler/Fabric', 'ravsau/token-maxxing-prompts', 'omribz156/oss-supporter', 'Nitjsefnie/burn-usage-skill', 'LuizPiccini/spare-tokens', 'Jia-wei-cui/TokenHunt', 'yzfly/TokenCode', 'Eunho-J/timework-skill'];
     for (const page of [chinese, english]) {
-      const section = page.slice(page.indexOf('<section id="pedal"'), page.indexOf('<section class="system"'));
+      const section = page.slice(page.indexOf('<section id="pedal"'), page.indexOf('<aside class="boundary"'));
       expect(section.match(/class="source-card pedal-card"/g)).toHaveLength(15);
       for (const repository of repositories) expect(section).toContain(`href="https://github.com/${repository}"`);
       expect(section.match(/class="token-task"/g)).toHaveLength(15);
@@ -106,4 +106,19 @@ describe('useful token maxxing tasks', () => {
     expect(chinese).toContain('回归测试');
     expect(english).toContain('A baseline, experiment log');
   });
+});
+
+
+it('prioritizes public evidence and keeps optional token workflows at the bottom',()=>{
+  for(const page of [chinese,english]) {
+    expect(page).not.toContain('id="cycles"');
+    expect(page).not.toContain('vis-timeline.min.css');
+    expect(page).not.toContain('class="pedal-entry"');
+    expect(page.indexOf('<section id="signals"')).toBeLessThan(page.indexOf('<section id="subscribe"'));
+    const pedal=page.indexOf('<section id="pedal"');
+    expect(pedal).toBeGreaterThan(page.indexOf('<section id="system"'));
+    expect(pedal).toBeGreaterThan(page.indexOf('id="history"'));
+  }
+  expect(app).not.toContain('renderCycleTimeline');
+  expect(app).not.toContain('fetchJson("arrival-observations")');
 });

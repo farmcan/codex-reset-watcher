@@ -1,4 +1,4 @@
-const PATHS = new Set(['/api/status', '/api/events', '/api/history', '/api/sources', '/api/arrival-observations', '/healthz', '/feed.xml']);
+const PATHS = new Set(['/api/status', '/api/events', '/api/history', '/api/sources', '/healthz', '/feed.xml']);
 
 // Cache only public successful reads. Query strings cannot bypass the shared
 // cache and multiply D1 scans. Admin calls and failed health checks never cache.
