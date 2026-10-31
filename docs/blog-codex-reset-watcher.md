@@ -10,7 +10,7 @@
 
 **预告、完成公告、个人到账是三件事。** 原文没给精确执行时刻，就标“未公布”；公开确认也不能证明每个账号同时到账。个人额度以 [Codex Usage](https://chatgpt.com/codex/settings/usage) 为准。
 
-![手机首页：快捷目录与重置动态](https://codex-reset-watcher.weican16hit.workers.dev/showcase/home-mobile.jpg?v=20261031)
+![手机首页：快捷目录与重置动态](https://codex-reset-watcher.weican16hit.workers.dev/showcase/home-mobile.jpg?v=20261031-pink)
 
 ## 有新消息，钉钉提醒
 
@@ -34,7 +34,7 @@
 
 公开信息进入 Cloudflare Worker，规则与 AI 核验原文及回复关系；D1 保存证据、通知队列与回执，再供网页、RSS 和钉钉使用。通知去重，异常和未知状态明确保留。
 
-![当前已部署架构，点击查看大图](https://codex-reset-watcher.weican16hit.workers.dev/showcase/architecture.jpg?v=20261031)
+![当前已部署架构，点击查看大图](https://codex-reset-watcher.weican16hit.workers.dev/showcase/architecture.jpg?v=20261031-pink)
 
 手机点图查看大图；[交互架构图](https://codex-reset-watcher.weican16hit.workers.dev/showcase/architecture)可在图框内左右滑动。
 
