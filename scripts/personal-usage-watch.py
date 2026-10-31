@@ -3,6 +3,7 @@
 import argparse
 import datetime as dt
 import hashlib
+import http.client
 import json
 import os
 from pathlib import Path
@@ -10,6 +11,7 @@ import selectors
 import shutil
 import subprocess
 import time
+import urllib.error
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -117,6 +119,30 @@ def coverage_gap(previous, current):
         return []
     return [{'kind': 'monitor_gap', 'observed_between': [previous['at'], current['at']],
              'evidence': 'probe_snapshots', 'cause': 'unknown'}]
+
+
+def read_public_status(diagnostic):
+    # Same read-only URL, unchanged TLS verification. Authentication and throttle
+    # rejections are never retried; a transport interruption gets one backoff.
+    for attempt in (1, 2):
+        diagnostic['attempts'] = attempt
+        try:
+            request = urllib.request.Request(URL, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(request, timeout=20) as response:
+                diagnostic['http_status'] = response.status
+                live = json.load(response)['live']
+            if not isinstance(live, dict):
+                raise ValueError('invalid_public_status')
+            diagnostic['source_status'] = live.get('source_status')
+            return live
+        except urllib.error.HTTPError as error:
+            diagnostic['http_status'] = error.code
+            raise
+        except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.IncompleteRead) as error:
+            diagnostic.setdefault('transport_errors', []).append(type(error).__name__)
+            if attempt == 2:
+                raise
+            time.sleep(2)
 
 
 def delayed_checks(state, live, now, recovered):
@@ -302,8 +328,11 @@ def main():
             save(STATE, state)
             return
         events, errors = [], []
+        state['public_fetch'] = {}
         try:
-            current = snapshot(rpc_usage(), now)
+            raw = rpc_usage()
+            now = time.time()  # Sampling interval ends after the account read returns.
+            current = snapshot(raw, now)
             previous = state.get('previous')
             events = compare(previous, current)
             events += coverage_gap(previous, current)
@@ -311,12 +340,11 @@ def main():
                 state['signals'] = {}  # No cross-account delayed checks.
                 state['started_at'] = now
             state['previous'] = current
-            request = urllib.request.Request(URL, headers={'User-Agent': 'Mozilla/5.0'})
             try:
-                with urllib.request.urlopen(request, timeout=20) as response:
-                    live = json.load(response)['live']
+                live = read_public_status(state['public_fetch'])
                 events += delayed_checks(state, live, now, [e for e in events if e['kind'] in ('quota_recovered', 'reset_card_granted')])
-            except Exception:
+            except Exception as error:
+                state['public_fetch']['error_class'] = type(error).__name__
                 errors.append('public_signal_check_failed')
         except Exception:
             errors.append('personal_usage_unavailable')
@@ -324,7 +352,10 @@ def main():
                 errors.append('public_signal_check_failed')
         for error in errors:
             if error not in state.get('errors', []):
-                events.append({'kind': 'monitor_error', 'code': error})
+                event = {'kind': 'monitor_error', 'code': error}
+                if error == 'public_signal_check_failed':
+                    event['diagnostic'] = state['public_fetch'].copy()
+                events.append(event)
         for error in state.get('errors', []):
             if error not in errors:
                 events.append({'kind': 'monitor_recovered', 'code': error})
@@ -352,6 +383,7 @@ def main():
             errors.append('observation_publication_pending')
         save(STATE, state)
         print(json.dumps({'status': 'partial' if errors else 'ok', 'baseline': bool(state.get('previous')),
+                          'public_fetch': state.get('public_fetch', {}),
                           'new_events': [{'id': e['id'], 'kind': e['kind'],
                                           'delivery_status': e.get('delivery', {}).get('status'),
                                           'public_observation': e.get('public_observation')} for e in events],

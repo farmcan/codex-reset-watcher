@@ -27,6 +27,8 @@ def publish():
              '个人额度与公开信号复查完成；私有证据已保存，未向公开站点写入账号用量',
              'new_fulltexts': None, 'settled': None, 'posts': None,
              'sources_ok': None, 'sources_failed': None}
+    if state.get('public_fetch', {}).get('attempts', 1) > 1:
+        event['result'] += '；公开接口只读传输重试后' + ('仍有缺口' if 'public_signal_check_failed' in state.get('errors', []) else '读取成功')
     if event['id'] not in {e['id'] for e in history}:
         history.append(event)
     pending.write_text(json.dumps(history, ensure_ascii=False, indent=2) + '\n')

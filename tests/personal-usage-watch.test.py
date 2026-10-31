@@ -1,6 +1,9 @@
 import importlib.util
+import io
+import json
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 spec = importlib.util.spec_from_file_location('watch', Path(__file__).parents[1] / 'scripts/personal-usage-watch.py')
 watch = importlib.util.module_from_spec(spec)
@@ -13,6 +16,32 @@ def sample(at=100, used=80, reset=1000, account='same', cards=1):
 
 
 class PersonalUsageTest(unittest.TestCase):
+    def test_transport_error_gets_one_bounded_read_retry(self):
+        response = io.BytesIO(b'{"live":{"source_status":"healthy","signals":[]}}')
+        response.status = 200
+        diagnostic = {}
+        with patch.object(watch.urllib.request, 'urlopen', side_effect=[watch.urllib.error.URLError('transport'), response]) as fetch, patch.object(watch.time, 'sleep') as sleep:
+            self.assertEqual(watch.read_public_status(diagnostic)['source_status'], 'healthy')
+            self.assertEqual(fetch.call_count, 2)
+            sleep.assert_called_once_with(2)
+        self.assertEqual(diagnostic['attempts'], 2)
+
+    def test_http_auth_rejection_is_not_retried_or_logged_verbatim(self):
+        diagnostic = {}
+        error = watch.urllib.error.HTTPError(watch.URL, 401, 'private-error-detail', None, None)
+        with patch.object(watch.urllib.request, 'urlopen', side_effect=error) as fetch, patch.object(watch.time, 'sleep') as sleep:
+            with self.assertRaises(watch.urllib.error.HTTPError):
+                watch.read_public_status(diagnostic)
+            self.assertEqual(fetch.call_count, 1)
+            sleep.assert_not_called()
+        self.assertNotIn('private-error-detail', json.dumps(diagnostic))
+
+    def test_exhausted_transport_retries_remain_unknown(self):
+        with patch.object(watch.urllib.request, 'urlopen', side_effect=watch.urllib.error.URLError('transport')) as fetch, patch.object(watch.time, 'sleep'):
+            with self.assertRaises(watch.urllib.error.URLError):
+                watch.read_public_status({})
+            self.assertEqual(fetch.call_count, 2)
+
     def test_long_probe_gap_keeps_the_unobserved_interval_unknown(self):
         events = watch.coverage_gap(sample(), sample(at=6000))
         self.assertEqual(events[0]['kind'], 'monitor_gap')
