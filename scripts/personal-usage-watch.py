@@ -352,6 +352,9 @@ def main():
             errors.append('observation_publication_pending')
         save(STATE, state)
         print(json.dumps({'status': 'partial' if errors else 'ok', 'baseline': bool(state.get('previous')),
+                          'new_events': [{'id': e['id'], 'kind': e['kind'],
+                                          'delivery_status': e.get('delivery', {}).get('status'),
+                                          'public_observation': e.get('public_observation')} for e in events],
                           'pending': [e for e in state['outbox'] if not e.get('acknowledged_at')],
                           'errors': errors}, ensure_ascii=False))
 
