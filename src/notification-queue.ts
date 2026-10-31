@@ -3,6 +3,7 @@ import { SEVERITY_RANK } from './config';
 import { dingtalkConfigured, dingTalkDestination, queueDingTalkDelivery } from './dingtalk';
 import { emailConfigured } from './notifications';
 import type { Env, Signal } from './types';
+import { queueWebhookDeliveries } from './webhook-notifications';
 
 // Reconcile after every review pass, including polls without new X results.
 // The persistent ingest flag prevents historical replay. Per-destination NOT
@@ -34,5 +35,5 @@ export async function reconcileNotificationQueue(env: Env, now: string): Promise
       queued++;
     }
   }
-  return queued;
+  return queued + await queueWebhookDeliveries(env, now);
 }

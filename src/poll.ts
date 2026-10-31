@@ -23,6 +23,7 @@ import { processReviews } from "./model-review";
 import { queueDingTalkDelivery, processDingTalkDeliveries } from "./dingtalk";
 import { reconcileNotificationQueue } from "./notification-queue";
 import { withResetContext } from './reset-context';
+import { initializeWebhookChannels, processWebhookDeliveries } from './webhook-notifications';
 
 export async function runPoll(env: Env, now = new Date()): Promise<PollSummary> {
   const startedAt = now.toISOString();
@@ -56,6 +57,7 @@ async function runPollWithLock(env: Env, startedAt: string): Promise<PollSummary
   let fetchedCount = 0;
   let insertedCount = 0;
   let relevantCount = 0;
+  await initializeWebhookChannels(env, startedAt);
 
   if (!env.X_BEARER_TOKEN) {
     for (const state of states) {
@@ -112,8 +114,10 @@ async function runPollWithLock(env: Env, startedAt: string): Promise<PollSummary
   const sourceFailures = errors.length;
   const deliveries = await processPendingDeliveries(env, new Date().toISOString());
   const dingTalk = await processDingTalkDeliveries(env, new Date().toISOString());
+  const webhooks = await processWebhookDeliveries(env, new Date().toISOString());
   if (deliveries.failed) errors.push(`Email deliveries failed: ${deliveries.failed}`);
   if (dingTalk.failed) errors.push(`DingTalk deliveries failed: ${dingTalk.failed}`);
+  if (webhooks.failed) errors.push(`Webhook deliveries failed: ${webhooks.failed}`);
   const finishedAt = new Date().toISOString();
   const succeeded = states.length - sourceFailures;
   const status: PollSummary["status"] = errors.length > 0
@@ -133,7 +137,7 @@ async function runPollWithLock(env: Env, startedAt: string): Promise<PollSummary
     fetchedCount,
     insertedCount,
     relevantCount,
-    notifiedCount: deliveries.sent + dingTalk.sent,
+    notifiedCount: deliveries.sent + dingTalk.sent + webhooks.sent,
     errors
   };
   await finishPollRun(env.DB, runId, summary);

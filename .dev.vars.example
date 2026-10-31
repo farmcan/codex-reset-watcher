@@ -13,3 +13,13 @@ ALERT_EMAIL_TO=you@example.com
 DINGTALK_APP_KEY=
 DINGTALK_APP_SECRET=
 DINGTALK_GROUP_ID=
+
+# Optional cloud webhook notifications. Production and isolated test groups differ.
+FEISHU_WEBHOOK_URL=
+FEISHU_WEBHOOK_SECRET=
+FEISHU_TEST_WEBHOOK_URL=
+FEISHU_TEST_WEBHOOK_SECRET=
+WECOM_WEBHOOK_URL=
+WECOM_TEST_WEBHOOK_URL=
+# Temporary, test-route-only token. Remove after cloud verification.
+WEBHOOK_TEST_TOKEN=

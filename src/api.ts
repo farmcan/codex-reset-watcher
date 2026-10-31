@@ -15,6 +15,7 @@ import { fetchXPostsByIds } from './x-source';
 import { insertPost, insertSignal } from './db';
 import { classifyPost } from './classifier';
 import { withResetContext } from './reset-context';
+import { webhookHealth, testWebhook, processWebhookDeliveries, WEBHOOK_CHANNELS, type WebhookChannel } from './webhook-notifications';
 
 const JSON_HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
@@ -42,7 +43,9 @@ async function healthSnapshot(env: Env): Promise<Record<string, unknown>> {
   const dingHealth = await dingTalkHealth(env);
   const personal=env.DINGTALK_MODE==='personal_ding';
   const session=personal?await dwsSessionHealth(env):undefined;
-  const overall = sourceStatus === "healthy" && (dingHealth.status === 'degraded'||session?.status==='degraded') ? 'degraded' : sourceStatus;
+  const webhooks = await webhookHealth(env);
+  const webhookDegraded = Object.values(webhooks).some(value => ['degraded','invalid_configuration'].includes((value as { status: string }).status));
+  const overall = sourceStatus === "healthy" && (dingHealth.status === 'degraded'||session?.status==='degraded'||webhookDegraded) ? 'degraded' : sourceStatus;
   return {
     overall,
     generated_at: new Date().toISOString(),
@@ -68,6 +71,7 @@ async function healthSnapshot(env: Env): Promise<Record<string, unknown>> {
       minimum_severity: env.EMAIL_MIN_SEVERITY,
       recipient_configured: Boolean(env.ALERT_EMAIL_TO)
     },
+    webhook_channels: webhooks,
     dingtalk: {
       configured: dingtalkConfigured(env), channel: personal?'personal_app_ding':"robot_group_message", true_ding: personal, mentions_all_requested: true, mention_delivery_verified: !personal,
       mention_verification_basis: personal?"cloud_business_receipt":"recipient_confirmed_2026-10-22",
@@ -175,6 +179,15 @@ export async function handleApi(request: Request, env: Env): Promise<Response | 
     const result = await testDingTalk(env, key);
     return json(result, result.status === "sent" ? 200 : 502);
   }
+  if (request.method === 'POST' && url.pathname === '/api/admin/test-webhook') {
+    if (!await authorized(request, env) && !await authorized(request, { ...env, ADMIN_TOKEN: env.WEBHOOK_TEST_TOKEN })) return json({ error: 'unauthorized' }, 401);
+    const channel = url.searchParams.get('channel') as WebhookChannel;
+    if (!WEBHOOK_CHANNELS.includes(channel)) return json({ error: 'channel must be feishu or wecom' }, 400);
+    const key = request.headers.get('Idempotency-Key') ?? '';
+    if (!/^[a-zA-Z0-9_-]{8,100}$/.test(key)) return json({ error: 'Idempotency-Key required (8-100 alphanumeric characters)' }, 400);
+    const result = await testWebhook(env, channel, key);
+    return json(result, result.status === 'sent' ? 200 : 502);
+  }
   if (request.method === "POST" && url.pathname === "/api/admin/refresh-dws") {
     if (!await authorized(request, env) && !await authorized(request, { ...env, ADMIN_TOKEN: env.DINGTALK_TEST_TOKEN })) return json({error:'unauthorized'},401);
     try {await dwsAccessToken(env,true);return json(await dwsSessionHealth(env));}
@@ -187,7 +200,8 @@ export async function handleApi(request: Request, env: Env): Promise<Response | 
     try {
       const queued=await reconcileNotificationQueue(env,new Date().toISOString());
       const delivered=await processDingTalkDeliveries(env);
-      return json({queued,...delivered,dingtalk:await dingTalkHealth(env)});
+      const webhooks=await processWebhookDeliveries(env,new Date().toISOString());
+      return json({queued,...delivered,webhooks,dingtalk:await dingTalkHealth(env),webhook_channels:await webhookHealth(env)});
     } finally {await releasePollLock(env.DB,lock);}
   }
   return null;

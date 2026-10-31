@@ -41,6 +41,13 @@ export interface Env {
   DINGTALK_MODE?: 'personal_ding' | 'group_message';
   DINGTALK_RECIPIENT_IDS?: string;
   DWS_TOKEN_KEY?: string;
+  FEISHU_WEBHOOK_URL?: string;
+  FEISHU_WEBHOOK_SECRET?: string;
+  FEISHU_TEST_WEBHOOK_URL?: string;
+  FEISHU_TEST_WEBHOOK_SECRET?: string;
+  WECOM_WEBHOOK_URL?: string;
+  WECOM_TEST_WEBHOOK_URL?: string;
+  WEBHOOK_TEST_TOKEN?: string;
 }
 
 export interface QuerySpec {
