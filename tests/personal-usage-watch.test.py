@@ -13,6 +13,16 @@ def sample(at=100, used=80, reset=1000, account='same', cards=1):
 
 
 class PersonalUsageTest(unittest.TestCase):
+    def test_long_probe_gap_keeps_the_unobserved_interval_unknown(self):
+        events = watch.coverage_gap(sample(), sample(at=6000))
+        self.assertEqual(events[0]['kind'], 'monitor_gap')
+        self.assertEqual(events[0]['observed_between'], [100, 6000])
+        self.assertEqual(events[0]['cause'], 'unknown')
+
+    def test_normal_cadence_and_account_switch_do_not_create_gap_alerts(self):
+        self.assertEqual(watch.coverage_gap(sample(), sample(at=3700)), [])
+        self.assertEqual(watch.coverage_gap(sample(), sample(at=6000, account='other')), [])
+
     def test_first_snapshot_and_account_change_are_not_resets(self):
         self.assertEqual(watch.compare(None, sample()), [])
         self.assertEqual(watch.compare(sample(), sample(used=0, account='other')), [])

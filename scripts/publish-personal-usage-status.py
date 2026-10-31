@@ -60,16 +60,18 @@ def publish():
                 'next_step': '定时配置、首次自然执行、真实到账与通知分别验收；机器离线时覆盖未知。'})
         incident_ids = {e['id'] for e in data.get('incidents', [])}
         for event in state.get('outbox', []):
-            if event['kind'] not in ('monitor_error', 'monitor_recovered'):
+            if event['kind'] not in ('monitor_error', 'monitor_recovered', 'monitor_gap'):
                 continue
             event_id = JOB + '-' + event['id']
             if event_id in incident_ids:
                 continue
             event_time = dt.datetime.fromtimestamp(event['observed_at'], dt.timezone.utc).isoformat()
             recovered = event['kind'] == 'monitor_recovered'
+            gap = event['kind'] == 'monitor_gap'
+            gap_minutes = round((event['observed_between'][1]-event['observed_between'][0])/60) if gap else None
             data['incidents'].append({'id': event_id, 'job_id': JOB, 'opened_at': event_time, 'updated_at': event_time,
-                'status': 'recorded', 'summary': '个人复查来源读取恢复' if recovered else '个人复查来源读取一度失败',
-                'impact': '该来源本轮读取已成功；不代表额度到账或其他来源恢复。' if recovered else '对应时段到账验证覆盖未知，未把读取失败解释为没有重置。',
+                'status': 'recorded', 'summary': '个人复查执行记录存在间隔' if gap else '个人复查来源读取恢复' if recovered else '个人复查来源读取一度失败',
+                'impact': f'相邻记录间隔约{gap_minutes}分钟，超过计划及宽限；本次个人额度读取已完成，中间覆盖未知，原因未确认。' if gap else '该来源本轮读取已成功；不代表额度到账或其他来源恢复。' if recovered else '对应时段到账验证覆盖未知，未把读取失败解释为没有重置。',
                 'next_step': '保留前后私有执行证据，继续按原频率复查；实际到账需另有采样变化。'})
         route_id = JOB + '-owner-dingtalk-20261031'
         if route_id not in incident_ids:

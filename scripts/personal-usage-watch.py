@@ -110,6 +110,15 @@ def compare(previous, current):
     return events
 
 
+def coverage_gap(previous, current):
+    if not previous or previous['account'] != current['account']:
+        return []
+    if current['at'] - previous['at'] <= 3600:  # 30-minute plan + 30-minute grace.
+        return []
+    return [{'kind': 'monitor_gap', 'observed_between': [previous['at'], current['at']],
+             'evidence': 'probe_snapshots', 'cause': 'unknown'}]
+
+
 def delayed_checks(state, live, now, recovered):
     if live.get('source_status') != 'healthy':
         raise ValueError('public_source_unhealthy')
@@ -206,7 +215,8 @@ def notify_dingtalk(state):
         raise ValueError('dingtalk_owner_identity_mismatch')
     labels = {'quota_recovered': '个人额度恢复观察', 'weekly_refill': '周窗口到期后额度恢复观察',
               'reset_card_granted': '重置卡新增', 'arrival_unconfirmed': '延迟复查：尚未确认到账',
-              'monitor_error': '个人额度监测异常', 'monitor_recovered': '个人额度监测读取恢复'}
+              'monitor_error': '个人额度监测异常', 'monitor_recovered': '个人额度监测读取恢复',
+              'monitor_gap': '额度监测记录存在间隔'}
     for event in state['outbox']:
         if event.get('acknowledged_at') or event.get('delivery'):
             continue  # A previous sending/unknown/failed outcome is never blindly replayed.
@@ -216,6 +226,11 @@ def notify_dingtalk(state):
             zone = dt.timezone(dt.timedelta(hours=8))
             interval = [dt.datetime.fromtimestamp(t, zone).strftime('%m-%d %H:%M') for t in event['observed_between']]
             text += f'采样区间（北京时间）：{interval[0]}—{interval[1]}。已观察到weekly用量下降；具体执行时刻及原因未获服务端证明，可能包括正常周补充或手动用卡，不能据此认定全局自动重置。'
+        elif event['kind'] == 'monitor_gap':
+            zone = dt.timezone(dt.timedelta(hours=8))
+            begin, end = event['observed_between']
+            times = [dt.datetime.fromtimestamp(t, zone).strftime('%m-%d %H:%M') for t in (begin, end)]
+            text += f'北京时间{times[0]}—{times[1]}，相邻记录间隔约{round((end-begin)/60)}分钟，超过30分钟计划及宽限。本次个人额度读取已完成；中间时段覆盖未知，不能解释为没有重置。间隔原因尚未确认，不推断为机器休眠或平台故障。'
         elif event['kind'] == 'arrival_unconfirmed':
             target = '重置卡新增' if event.get('reset_mode') == 'banked_reset' else '额度恢复'
             text += f'距对应公开信号或明确执行时间已约{event["hours_after_signal"]}小时，本机复查尚未观察到{target}。该结果不代表确定未到账；继续保留后续采样。'
@@ -291,6 +306,7 @@ def main():
             current = snapshot(rpc_usage(), now)
             previous = state.get('previous')
             events = compare(previous, current)
+            events += coverage_gap(previous, current)
             if previous and previous['account'] != current['account']:
                 state['signals'] = {}  # No cross-account delayed checks.
                 state['started_at'] = now
