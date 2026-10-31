@@ -50,6 +50,9 @@ export interface Env {
   WEBHOOK_TEST_TOKEN?: string;
   WEIXIN_TEST_BOT_TOKEN?: string;
   WEIXIN_TEST_OWNER_ID?: string;
+  QQ_TEST_APP_ID?: string;
+  QQ_TEST_APP_SECRET?: string;
+  QQ_TEST_OWNER_OPENID?: string;
 }
 
 export interface QuerySpec {
