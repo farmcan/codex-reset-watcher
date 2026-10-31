@@ -10,7 +10,19 @@
 
 **预告、完成公告、个人到账是三件事。** 原文没给精确执行时刻，就标“未公布”；公开确认也不能证明每个账号同时到账。个人额度以 [Codex Usage](https://chatgpt.com/codex/settings/usage) 为准。
 
-![手机首页：快捷目录与重置动态](https://codex-reset-watcher.weican16hit.workers.dev/showcase/home-mobile.jpg?v=20261031-pink)
+![桌面首页：重置动态、提醒与任务入口](https://codex-reset-watcher.weican16hit.workers.dev/showcase/home-desktop.jpg?v=20261031-desktop)
+
+## 判断有没有依据？看历史与原帖
+
+[早期固定审计](https://github.com/farmcan/codex-reset-watcher/blob/main/docs/historical-audit.md)回看截至 9 月 6 日的 12 轮事件：12 轮有一手公告或确认，11 轮有提前线索，其中 8 轮预告清楚。**这是事后样本审计，不是在线预测准确率。**
+
+再看当前账本复核后的 **10 月 28 日（北京时间）**：
+
+- [10:42：今天重置](https://x.com/thsottiaux/status/2115273064481218829) → 预告。
+- [10:43：午夜 PST 前](https://x.com/thsottiaux/status/2115273253711409208) → 补充时间范围。
+- [14:29：And it’s done](https://x.com/thsottiaux/status/2115330127886463244) → 完成确认。
+
+三帖沿真实回复关系串联，可逐条核对；14:29 是公告发布时间，精确执行和个人到账时刻仍未公布。另有[10 月近期确认记录](https://github.com/farmcan/codex-reset-watcher/blob/main/docs/recent-reset-audit.md)，与早期样本分开呈现。
 
 ## 有新消息，钉钉提醒
 
