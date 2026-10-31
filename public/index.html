@@ -6,7 +6,7 @@
     <meta name="description" content="追踪 Codex 重置动态，及时收到提醒，把剩余额度花在值得做的任务上。">
     <title>Codex 重置雷达</title>
     <link rel="icon" href="brand-zh.png" type="image/png">
-    <link rel="stylesheet" href="styles.css?v=20261101-public-events-2">
+    <link rel="stylesheet" href="styles.css?v=20261101-like-front-1">
     <script type="module" src="engagement.js?v=20261025-1"></script>
     <script type="module" src="app.js?v=20261101-public-events-3"></script>
   </head>
@@ -44,6 +44,13 @@
               <a class="usage-link usage-secondary" href="https://chatgpt.com/codex/settings/usage" target="_blank" rel="noreferrer noopener" aria-label="前往 ChatGPT 查看我的 Codex 额度">
                 <span>查看我的 Codex 额度</span><span aria-hidden="true">↗</span>
               </a>
+            </div>
+            <div class="hero-engagement">
+              <div class="site-engagement" aria-label="累计访问与点赞">
+              <button id="like-button" type="button" aria-pressed="false" disabled><span aria-hidden="true">♥</span> <span id="like-label">点赞</span> <strong id="like-count">—</strong></button>
+              <span>累计访问 <strong id="visit-count">—</strong></span>
+            </div>
+            <p id="engagement-note" class="engagement-note" aria-live="polite">上线起累计 · 同一浏览器每天记一次访问，可点赞一次。</p>
             </div>
           </div>
           <figure class="hero-visual">
@@ -347,11 +354,7 @@
     </main>
 
     <footer>
-<div class="site-engagement" aria-label="累计访问与点赞">
-              <span>累计访问 <strong id="visit-count">—</strong></span>
-              <button id="like-button" type="button" aria-pressed="false" disabled><span aria-hidden="true">♥</span> <span id="like-label">点赞</span> <strong id="like-count">—</strong></button>
-            </div>
-            <p id="engagement-note" class="engagement-note" aria-live="polite">上线起累计 · 同一浏览器每天记一次访问，可点赞一次。</p>
+
 
       <p class="site-credit"><a href="https://github.com/farmcan/codex-reset-watcher" target="_blank" rel="noreferrer noopener">farmcan / Codex Reset Watcher</a> · 由 Codex 协助构建 · 更新于 <time datetime="2026-11-01">2026-11-01</time></p>
       <p>开源、非官方，与 OpenAI、X 或任何被追踪账号无隶属关系。项目统一使用网页上的小猫形象。</p>

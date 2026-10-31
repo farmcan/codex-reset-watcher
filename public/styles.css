@@ -424,8 +424,10 @@ footer { flex-wrap: wrap; }
 .support-body { padding-bottom:24px; }
 .support-body > .section-heading { margin-top:16px; }
 section[id] { scroll-margin-top:90px; }
-footer .site-engagement { justify-content:center; margin:0 auto; }
-footer #engagement-note { font-size:11px; }
+.hero-engagement .site-engagement { margin-top:20px; gap:14px; }
+.hero-engagement #like-button { min-height:44px; padding:9px 18px; border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:750; }
+.hero-engagement .site-engagement > span { font-size:12px; }
+.hero-engagement .engagement-note { font-size:11px; }
 .subscribe-link:focus-visible, .support-panel summary:focus-visible { outline:3px solid var(--accent); outline-offset:4px; }
 @media(max-width:760px) {
   .hero { padding-top:30px; }

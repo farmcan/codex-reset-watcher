@@ -6,7 +6,7 @@
     <meta name="description" content="Know when Codex resets, get notified, and turn spare tokens into work worth shipping.">
     <title>Codex Reset Watcher</title>
     <link rel="icon" href="../brand-en.png" type="image/png">
-    <link rel="stylesheet" href="../styles.css?v=20261101-public-events-2">
+    <link rel="stylesheet" href="../styles.css?v=20261101-like-front-1">
     <script type="module" src="../engagement.js?v=20261025-1"></script>
     <script type="module" src="../app.js?v=20261101-public-events-3"></script>
   </head>
@@ -44,6 +44,13 @@
               <a class="usage-link usage-secondary" href="https://chatgpt.com/codex/settings/usage" target="_blank" rel="noreferrer noopener" aria-label="Open ChatGPT to check my Codex usage">
                 <span>Check my Codex usage</span><span aria-hidden="true">↗</span>
               </a>
+            </div>
+            <div class="hero-engagement">
+              <div class="site-engagement" aria-label="Site visits and likes">
+              <button id="like-button" type="button" aria-pressed="false" disabled><span aria-hidden="true">♥</span> <span id="like-label">Like</span> <strong id="like-count">—</strong></button>
+              <span>Visits <strong id="visit-count">—</strong></span>
+            </div>
+            <p id="engagement-note" class="engagement-note" aria-live="polite">Since launch · one visit per browser per day, one like per browser.</p>
             </div>
           </div>
           <figure class="hero-visual">
@@ -347,11 +354,7 @@
     </main>
 
     <footer>
-<div class="site-engagement" aria-label="Site visits and likes">
-              <span>Visits <strong id="visit-count">—</strong></span>
-              <button id="like-button" type="button" aria-pressed="false" disabled><span aria-hidden="true">♥</span> <span id="like-label">Like</span> <strong id="like-count">—</strong></button>
-            </div>
-            <p id="engagement-note" class="engagement-note" aria-live="polite">Since launch · one visit per browser per day, one like per browser.</p>
+
 
       <p class="site-credit"><a href="https://github.com/farmcan/codex-reset-watcher" target="_blank" rel="noreferrer noopener">farmcan / Codex Reset Watcher</a> · Built with Codex · Updated <time datetime="2026-11-01">2026-11-01</time></p>
       <p>Open source, unofficial, and unaffiliated with OpenAI, X, or any monitored account. The project uses the cat artwork shown on this site.</p>
