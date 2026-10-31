@@ -46,7 +46,7 @@ async function healthSnapshot(env: Env): Promise<Record<string, unknown>> {
   const personal=env.DINGTALK_MODE==='personal_ding';
   const session=personal?await dwsSessionHealth(env):undefined;
   const transports = await webhookHealth(env);
-  const { weixin, ...webhooks } = transports;
+  const { weixin, qq, ...webhooks } = transports;
   const webhookDegraded = Object.values(transports).some(value => ['degraded','invalid_configuration'].includes((value as { status: string }).status));
   const overall = sourceStatus === "healthy" && (dingHealth.status === 'degraded'||session?.status==='degraded'||webhookDegraded) ? 'degraded' : sourceStatus;
   return {
@@ -76,6 +76,7 @@ async function healthSnapshot(env: Env): Promise<Record<string, unknown>> {
     },
     webhook_channels: webhooks,
     weixin,
+    qq,
     dingtalk: {
       configured: dingtalkConfigured(env), channel: personal?'personal_app_ding':"robot_group_message", true_ding: personal, mentions_all_requested: true, mention_delivery_verified: !personal,
       mention_verification_basis: personal?"cloud_business_receipt":"recipient_confirmed_2026-10-22",

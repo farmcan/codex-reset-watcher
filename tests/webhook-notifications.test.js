@@ -5,6 +5,7 @@ import { initializeWebhookChannels, queueWebhookDeliveries, processWebhookDelive
   testWebhook, validateWebhook, webhookHealth, boundedWebhookText } from '../src/webhook-notifications';
 import { handleApi } from '../src/api';
 import { testWeixin } from '../src/weixin-test';
+import { testQQ } from '../src/qq-test';
 
 const databases = [];
 afterEach(() => { vi.unstubAllGlobals(); databases.splice(0).forEach(db => db.close()); });
@@ -32,6 +33,92 @@ function fixture() {
 const accepted = (channel) => new Response(JSON.stringify(channel === 'feishu' ? {code:0} : {errcode:0}));
 
 describe('cloud webhook notifications', () => {
+  it('requires permanent QQ credentials and explicit enablement, skips history, and claims a delivery only once', async () => {
+    const {env,sqlite}=fixture();delete env.FEISHU_WEBHOOK_URL;delete env.WECOM_WEBHOOK_URL;
+    Object.assign(env,{QQ_TEST_APP_ID:'test-app',QQ_TEST_APP_SECRET:'private-test',QQ_TEST_OWNER_OPENID:'test-owner',QQ_NOTIFICATIONS_ENABLED:'true'});
+    expect(await queueWebhookDeliveries(env,now)).toBe(0);
+    Object.assign(env,{QQ_APP_ID:'production-app',QQ_APP_SECRET:'private-production',QQ_OWNER_OPENID:'authorized-owner',QQ_NOTIFICATIONS_ENABLED:'false'});
+    expect(await queueWebhookDeliveries(env,now)).toBe(0);
+    env.QQ_NOTIFICATIONS_ENABLED='true';await initializeWebhookChannels(env,now);
+    expect(await queueWebhookDeliveries(env,now)).toBe(1);
+    const fetch=vi.fn().mockResolvedValueOnce(new Response('{"access_token":"private-access","expires_in":7200}'))
+      .mockResolvedValueOnce(new Response('{"id":"accepted-qq-notice"}'));vi.stubGlobal('fetch',fetch);
+    const results=await Promise.all([processWebhookDeliveries(env,now),processWebhookDeliveries(env,now)]);
+    expect(results.reduce((n,result)=>n+result.sent,0)).toBe(1);expect(fetch).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({appId:'production-app',clientSecret:'private-production'});
+    expect(fetch.mock.calls[1][0]).toBe('https://api.sgroup.qq.com/v2/users/authorized-owner/messages');
+    const payload=JSON.parse(fetch.mock.calls[1][1].body);
+    expect(payload.content).toContain('尚未确认发放');expect(payload).not.toHaveProperty('msg_id');expect(payload).not.toHaveProperty('event_id');
+    expect(sqlite.prepare('SELECT signal_id,channel,status,attempts FROM deliveries').all())
+      .toEqual([{signal_id:'x:new',channel:'qq',status:'sent',attempts:1}]);
+    const health=(await webhookHealth(env)).qq;
+    expect(health).toMatchObject({configured:true,status:'healthy',owner_only:true,gateway_required:false,cloud_verified:true,
+      proactive_quota_known:false,long_term_delivery_verified:false,mentions_all_requested:false});
+    expect(JSON.stringify(health)).not.toMatch(/private|authorized-owner|production-app/);
+  });
+  it('quarantines an ambiguous QQ send without replay or leaking it to a different owner', async () => {
+    const {env,sqlite}=fixture();delete env.FEISHU_WEBHOOK_URL;delete env.WECOM_WEBHOOK_URL;
+    Object.assign(env,{QQ_APP_ID:'production-app',QQ_APP_SECRET:'private-secret',QQ_OWNER_OPENID:'owner-a',QQ_NOTIFICATIONS_ENABLED:'true'});
+    await initializeWebhookChannels(env,now);await queueWebhookDeliveries(env,now);
+    const fetch=vi.fn().mockResolvedValueOnce(new Response('{"access_token":"private-access","expires_in":7200}'))
+      .mockRejectedValueOnce(new Error('private transport details'));vi.stubGlobal('fetch',fetch);
+    expect(await processWebhookDeliveries(env,now)).toEqual({sent:0,failed:1});
+    expect(await processWebhookDeliveries(env,now)).toEqual({sent:0,failed:0});expect(fetch).toHaveBeenCalledTimes(2);
+    expect(sqlite.prepare('SELECT status FROM deliveries').get()).toEqual({status:'unknown'});
+    // A different destination must not consume the previous owner's unknown delivery or replay old history.
+    env.QQ_OWNER_OPENID='owner-b';await initializeWebhookChannels(env,'2026-10-31T06:01:00.000Z');
+    expect(await queueWebhookDeliveries(env,'2026-10-31T06:01:00.000Z')).toBe(0);
+    expect(await processWebhookDeliveries(env,now)).toEqual({sent:0,failed:0});
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+  it('retains sanitized QQ rejection codes without retrying permanent failures', async () => {
+    const {env,sqlite}=fixture();delete env.FEISHU_WEBHOOK_URL;delete env.WECOM_WEBHOOK_URL;
+    Object.assign(env,{QQ_APP_ID:'production-app',QQ_APP_SECRET:'private-secret',QQ_OWNER_OPENID:'owner-a',QQ_NOTIFICATIONS_ENABLED:'true'});
+    await initializeWebhookChannels(env,now);await queueWebhookDeliveries(env,now);
+    const fetch=vi.fn().mockResolvedValueOnce(new Response('{"access_token":"private-access","expires_in":7200}'))
+      .mockResolvedValueOnce(new Response('{"code":304001,"message":"private secret and owner"}',{status:400}));
+    vi.stubGlobal('fetch',fetch);
+    expect(await processWebhookDeliveries(env,'2026-10-31T06:11:00.000Z')).toEqual({sent:0,failed:1});
+    const row=sqlite.prepare('SELECT status,last_error FROM deliveries').get();
+    expect(row.status).toBe('failed');expect(row.last_error).toContain('304001');expect(row.last_error).not.toContain('private');
+    expect(await processWebhookDeliveries(env,'2026-10-31T06:22:00.000Z')).toEqual({sent:0,failed:0});
+  });
+  it('retries only pre-send QQ token transport failures within the bounded queue policy', async () => {
+    for (const failure of ['network',429,503]) {
+      const {env,sqlite}=fixture();delete env.FEISHU_WEBHOOK_URL;delete env.WECOM_WEBHOOK_URL;
+      Object.assign(env,{QQ_APP_ID:'app',QQ_APP_SECRET:'private',QQ_OWNER_OPENID:'owner',QQ_NOTIFICATIONS_ENABLED:'true'});
+      await initializeWebhookChannels(env,now);await queueWebhookDeliveries(env,now);
+      const fetch=vi.fn();
+      if (failure==='network') fetch.mockRejectedValueOnce(new Error('private network detail'));
+      else fetch.mockResolvedValueOnce(new Response('private provider detail',{status:failure}));
+      fetch.mockResolvedValueOnce(new Response('{"access_token":"access","expires_in":7200}'))
+        .mockResolvedValueOnce(new Response('{"id":"one-accepted-message"}'));vi.stubGlobal('fetch',fetch);
+      expect(await processWebhookDeliveries(env,now)).toEqual({sent:0,failed:1});
+      expect(sqlite.prepare('SELECT status,attempts FROM deliveries').get()).toEqual({status:'pending',attempts:1});
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(await processWebhookDeliveries(env,'2026-10-31T06:11:00.000Z')).toEqual({sent:1,failed:0});
+      expect(await processWebhookDeliveries(env,'2026-10-31T06:22:00.000Z')).toEqual({sent:0,failed:0});
+      expect(fetch.mock.calls.filter(([url])=>url.includes('/v2/users/'))).toHaveLength(1);
+    }
+    const {env,sqlite}=fixture();delete env.FEISHU_WEBHOOK_URL;delete env.WECOM_WEBHOOK_URL;
+    Object.assign(env,{QQ_APP_ID:'app',QQ_APP_SECRET:'private',QQ_OWNER_OPENID:'owner',QQ_NOTIFICATIONS_ENABLED:'true'});
+    await initializeWebhookChannels(env,now);await queueWebhookDeliveries(env,now);
+    const fetch=vi.fn().mockImplementation(async()=>new Response('busy',{status:503}));vi.stubGlobal('fetch',fetch);
+    for (const at of [now,'2026-10-31T06:11:00.000Z','2026-10-31T06:22:00.000Z']) await processWebhookDeliveries(env,at);
+    expect(sqlite.prepare('SELECT status,attempts FROM deliveries').get()).toEqual({status:'failed',attempts:3});
+    expect(await processWebhookDeliveries(env,'2026-10-31T06:33:00.000Z')).toEqual({sent:0,failed:0});
+    expect(fetch).toHaveBeenCalledTimes(3);
+  });
+  it('does not reuse a QQ probe from a different app namespace or recipient as production proof', async () => {
+    const {env}=fixture();Object.assign(env,{QQ_TEST_APP_ID:'old-app',QQ_TEST_APP_SECRET:'private',QQ_TEST_OWNER_OPENID:'owner'});
+    vi.stubGlobal('fetch',vi.fn().mockResolvedValueOnce(new Response('{"access_token":"access","expires_in":7200}'))
+      .mockResolvedValueOnce(new Response('{"id":"probe"}')));
+    await testQQ(env,'namespace-probe');
+    Object.assign(env,{QQ_APP_ID:'new-app',QQ_APP_SECRET:'private-production',QQ_OWNER_OPENID:'owner',QQ_NOTIFICATIONS_ENABLED:'true'});
+    expect((await webhookHealth(env)).qq.cloud_probe_accepted_at).toBeNull();
+    env.QQ_APP_ID='old-app';expect((await webhookHealth(env)).qq.cloud_probe_accepted_at).toEqual(expect.any(String));
+    env.QQ_OWNER_OPENID='another-owner';expect((await webhookHealth(env)).qq.cloud_probe_accepted_at).toBeNull();
+  });
   it('does not borrow a previous Weixin owner probe as evidence for a different production owner', async () => {
     const {env}=fixture();Object.assign(env,{WEIXIN_TEST_BOT_TOKEN:'private-test',WEIXIN_TEST_OWNER_ID:'old-owner'});
     vi.stubGlobal('fetch',vi.fn().mockResolvedValue(new Response('{"message_id":"owner-probe"}')));

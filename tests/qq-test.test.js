@@ -2,6 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { testQQ } from '../src/qq-test';
 import { handleApi } from '../src/api';
+import { sendQQNotice } from '../src/qq-client';
 const databases=[];
 afterEach(()=>{vi.unstubAllGlobals();databases.splice(0).forEach(db=>db.close());});
 function fixture(){
@@ -28,7 +29,8 @@ describe('owner-only QQ proactive cloud probe',()=>{
   });
   it('does not submit a message on token failure',async()=>{
     const env=fixture();const fetch=vi.fn().mockRejectedValue(new Error('private detail'));vi.stubGlobal('fetch',fetch);
-    expect(await testQQ(env,'token-fail')).toMatchObject({status:'failed',error:'qq_token_unavailable_no_message_submitted'});
+    expect(await testQQ(env,'token-fail')).toMatchObject({status:'pending',error:'qq_token_temporarily_unavailable_no_message_submitted'});
+    expect(await testQQ(env,'token-fail')).toMatchObject({status:'pending',deduplicated:true});
     expect(fetch).toHaveBeenCalledTimes(1);
   });
   it('quarantines an ambiguous send and never retries it',async()=>{
@@ -40,5 +42,17 @@ describe('owner-only QQ proactive cloud probe',()=>{
   it('does not turn a business error into acceptance even when an ID exists',async()=>{
     const env=fixture();vi.stubGlobal('fetch',vi.fn().mockResolvedValueOnce(token()).mockResolvedValueOnce(new Response('{"id":"not-proof","code":304001,"message":"private detail"}')));
     expect(await testQQ(env,'rejected-send')).toMatchObject({status:'failed',error:'qq_business_rejected'});
+  });
+  it('keeps only safe numeric business errors, including explicit HTTP rejections',async()=>{
+    const fetch=vi.fn().mockResolvedValueOnce(token())
+      .mockResolvedValueOnce(new Response('{"code":304001,"message":"private app and recipient"}',{status:400}))
+      .mockResolvedValueOnce(token()).mockResolvedValueOnce(new Response('{"id":"not-proof","code":"304001"}'))
+      .mockResolvedValueOnce(token()).mockResolvedValueOnce(new Response('{"id":"not-proof","code":1e1000}'));
+    vi.stubGlobal('fetch',fetch);
+    const rejected=await sendQQNotice('app','secret','owner','notice');
+    expect(rejected).toEqual({status:'failed',error:'qq_send_http_400',business_code:304001});
+    expect(JSON.stringify(rejected)).not.toContain('private');
+    expect(await sendQQNotice('app','secret','owner','notice')).toEqual({status:'unknown',error:'invalid_business_response'});
+    expect(await sendQQNotice('app','secret','owner','notice')).toEqual({status:'unknown',error:'invalid_business_response'});
   });
 });

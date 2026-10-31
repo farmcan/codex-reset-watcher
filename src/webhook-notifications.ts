@@ -3,22 +3,28 @@ import { dingTalkContent } from './dingtalk';
 import type { Env } from './types';
 import { WEBHOOK_CHANNELS, WebhookError, validateWebhook, sendWebhookNotice, boundedWebhookText, type WebhookChannel } from './webhook-client';
 import { sendWeixinNotice } from './weixin-client';
+import { sendQQNotice } from './qq-client';
 export { WEBHOOK_CHANNELS, validateWebhook, boundedWebhookText, type WebhookChannel } from './webhook-client';
 
-const DELIVERY_CHANNELS = [...WEBHOOK_CHANNELS, 'weixin'] as const;
+const DELIVERY_CHANNELS = [...WEBHOOK_CHANNELS, 'weixin', 'qq'] as const;
 type DeliveryChannel = typeof DELIVERY_CHANNELS[number];
 function transportConfigured(env: Env, channel: DeliveryChannel): boolean {
-  return channel === 'weixin' ? Boolean(env.WEIXIN_NOTIFICATIONS_ENABLED === 'true' && env.WEIXIN_BOT_TOKEN && env.WEIXIN_OWNER_ID)
-    : Boolean(webhookConfig(env, channel));
+  if (channel === 'weixin') return Boolean(env.WEIXIN_NOTIFICATIONS_ENABLED === 'true' && env.WEIXIN_BOT_TOKEN && env.WEIXIN_OWNER_ID);
+  if (channel === 'qq') return Boolean(env.QQ_NOTIFICATIONS_ENABLED === 'true' && env.QQ_APP_ID && env.QQ_APP_SECRET && env.QQ_OWNER_OPENID);
+  return Boolean(webhookConfig(env, channel));
 }
 async function transportDestination(env: Env, channel: DeliveryChannel): Promise<string> {
-  return channel === 'weixin' ? shortHash(`weixin-owner:${env.WEIXIN_OWNER_ID}`) : webhookDestination(env, channel);
+  if (channel === 'weixin') return shortHash(`weixin-owner:${env.WEIXIN_OWNER_ID}`);
+  if (channel === 'qq') return shortHash(`qq-owner:${env.QQ_APP_ID}:${env.QQ_OWNER_OPENID}`);
+  return webhookDestination(env, channel);
 }
 async function sendTransport(env: Env, channel: DeliveryChannel, text: string): Promise<string> {
-  if (channel !== 'weixin') return sendWebhook(env, channel, text);
-  const result = await sendWeixinNotice(env.WEIXIN_BOT_TOKEN!, env.WEIXIN_OWNER_ID!, boundedWebhookText(text));
-  if (result.status !== 'sent') throw new WebhookError(`weixin ${result.error ?? 'outcome_unknown'}${typeof result.business_code === 'number' ? ` (${result.business_code})` : ''}`,
-    result.status === 'failed' ? 'failed' : 'unknown');
+  if (channel !== 'weixin' && channel !== 'qq') return sendWebhook(env, channel, text);
+  const result = channel === 'weixin'
+    ? await sendWeixinNotice(env.WEIXIN_BOT_TOKEN!, env.WEIXIN_OWNER_ID!, boundedWebhookText(text))
+    : await sendQQNotice(env.QQ_APP_ID!, env.QQ_APP_SECRET!, env.QQ_OWNER_OPENID!, boundedWebhookText(text));
+  if (result.status !== 'sent') throw new WebhookError(`${channel} ${result.error ?? 'outcome_unknown'}${typeof result.business_code === 'number' ? ` (${result.business_code})` : ''}`,
+    result.status === 'pending' ? 'pending' : result.status === 'failed' ? 'failed' : 'unknown');
   return JSON.stringify({ ...result, runtime: 'cloudflare_worker', owner_only: true });
 }
 
@@ -122,9 +128,10 @@ export async function webhookHealth(env: Env): Promise<Record<string, unknown>> 
   const health: Record<string, unknown> = {};
   for (const channel of DELIVERY_CHANNELS) {
     const configured = transportConfigured(env, channel);
-    const test = channel === 'weixin' ? null : webhookConfig(env, channel, true);
+    const personal = channel === 'weixin' || channel === 'qq';
+    const test = !personal ? webhookConfig(env, channel, true) : null;
     let proof: { updated_at: string } | null = null;
-    if (test && channel !== 'weixin') {
+    if (test && !personal) {
       try {
         const testHash = await shortHash(validateWebhook(channel, test.url));
         proof = await env.DB.prepare('SELECT updated_at FROM app_state WHERE key=?')
@@ -138,8 +145,18 @@ export async function webhookHealth(env: Env): Promise<Record<string, unknown>> 
         WHERE key LIKE ? AND json_extract(CASE WHEN json_valid(value) THEN value ELSE '{}' END,'$.status')='sent'`)
         .bind(`weixin-cloud-test:${ownerHash}:%`).first<{ updated_at: string }>();
     }
+    if (channel === 'qq') {
+      const appId = configured ? env.QQ_APP_ID : env.QQ_TEST_APP_ID ?? env.QQ_APP_ID;
+      const owner = configured ? env.QQ_OWNER_OPENID : env.QQ_TEST_OWNER_OPENID ?? env.QQ_OWNER_OPENID;
+      if (appId && owner) {
+        const namespace = await shortHash(`${appId}:${owner}`);
+        proof = await env.DB.prepare(`SELECT MAX(updated_at) AS updated_at FROM app_state
+          WHERE key LIKE ? AND json_extract(CASE WHEN json_valid(value) THEN value ELSE '{}' END,'$.status')='sent'`)
+          .bind(`qq-cloud-test:${namespace}:%`).first<{ updated_at: string }>();
+      }
+    }
     if (!configured) { health[channel] = { configured: false, status: 'disabled', cloud_verified: false,
-      ...(channel === 'weixin' ? { cloud_probe_accepted_at: proof?.updated_at ?? null } : { test_group_verified_at: proof?.updated_at ?? null }) }; continue; }
+      ...(personal ? { cloud_probe_accepted_at: proof?.updated_at ?? null } : { test_group_verified_at: proof?.updated_at ?? null }) }; continue; }
     let hash: string;
     try { hash = await transportDestination(env, channel); }
     catch { health[channel] = { configured: true, status: 'invalid_configuration', cloud_verified: false }; continue; }
@@ -153,8 +170,11 @@ export async function webhookHealth(env: Env): Promise<Record<string, unknown>> 
       cloud_verified: Boolean(counts?.last_sent_at),
       ...(channel === 'weixin' ? { cloud_probe_accepted_at: proof?.updated_at ?? null, owner_only: true,
         inbound_polling: false, automatic_token_refresh: false, credential_lifetime_known: false, long_term_delivery_verified: false }
+        : channel === 'qq' ? { cloud_probe_accepted_at: proof?.updated_at ?? null, owner_only: true,
+          proactive: true, gateway_required: false, token_acquisition: 'per_send',
+          proactive_quota_known: false, long_term_delivery_verified: false }
         : { test_group_verified_at: proof?.updated_at ?? null }),
-      mentions_all_requested: channel !== 'weixin', mention_delivery_verified: false, true_ding: false };
+      mentions_all_requested: !personal, mention_delivery_verified: false, true_ding: false };
   }
   return health;
 }

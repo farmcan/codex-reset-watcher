@@ -56,6 +56,10 @@ export interface Env {
   QQ_TEST_APP_ID?: string;
   QQ_TEST_APP_SECRET?: string;
   QQ_TEST_OWNER_OPENID?: string;
+  QQ_APP_ID?: string;
+  QQ_APP_SECRET?: string;
+  QQ_OWNER_OPENID?: string;
+  QQ_NOTIFICATIONS_ENABLED?: string;
 }
 
 export interface QuerySpec {

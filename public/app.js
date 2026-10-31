@@ -935,14 +935,17 @@ function renderSystem(status) {
   const channels = [
     [ui('飞书通知', 'Feishu alerts'), status.live.webhook_channels?.feishu],
     [ui('企业微信通知', 'WeCom alerts'), status.live.webhook_channels?.wecom],
-    [ui('微信私信', 'WeChat owner alerts'), status.live.weixin]
+    [ui('微信私信', 'WeChat owner alerts'), status.live.weixin],
+    [ui('QQ 私信', 'QQ owner alerts'), status.live.qq]
   ];
   for (const [label, channel] of channels) {
     if (!channel?.configured) continue;
     cards.push([label, channel.status === 'degraded' ? ui('通知异常', 'Delivery needs attention') : ui('已启用', 'Enabled'),
       ui(`失败 ${Number(channel.failed || 0)} · 结果未知 ${Number(channel.unknown || 0)} · 排队 ${Number(channel.pending || 0)}`,
         `${Number(channel.failed || 0)} failed · ${Number(channel.unknown || 0)} unknown · ${Number(channel.pending || 0)} pending`)
-      + (channel.owner_only ? ui('。仅本人私信；会话失效需重新绑定。', '. Owner only; rebind if the session expires.') : ui('。群内新动态提醒。', '. New updates in the configured group.'))]);
+      + (channel.owner_only ? (channel.credential_lifetime_known === false
+        ? ui('。仅本人私信；会话失效需重新绑定。', '. Owner only; rebind if the session expires.')
+        : ui('。仅本人私信。', '. Owner only.')) : ui('。群内新动态提醒。', '. New updates in the configured group.'))]);
   }
   cards.forEach(([label, value, note]) => {
     const card = el("article", "system-card");
