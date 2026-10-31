@@ -759,7 +759,7 @@ function renderSignalRows() {
     const lead = official.find(s => s.event_type === "explicit_reset") || official.find(s => s.event_type === "scheduled_reset") || official.find(s => s.event_type === "rate_limit_change");
     const title = lead ? signalTitle(lead) : group.kind === "unknown" ? ui("尚未归属的消息", "Unassigned updates") : ui("重置相关反馈", "Reset reports");
     const heading = el("div");
-    heading.append(el("span", "event-eyebrow", `${formatTime(new Date(group.at).toISOString(), true)} · ${group.kind === "banked_reset" ? ui("重置卡", "Banked reset") : group.kind === "hard_reset" ? ui("全量重置", "Hard reset") : ui("待核验", "Unverified")}`), el("h3", "", title));
+    heading.append(el("span", "event-eyebrow", `${formatTime(new Date(group.at).toISOString(), true)} · ${group.kind === "banked_reset" ? ui("重置卡", "Banked reset") : group.kind === "hard_reset" ? ui("全量重置", "Hard reset") : lead && ["scheduled_reset", "explicit_reset"].includes(lead.event_type) ? ui("重置形式未注明", "Reset type unspecified") : ui("额度动态", "Quota update")}`), el("h3", "", title));
     const observations = group.signals.filter(s => s.event_type === "community_observation").length;
     heading.append(el("p", "", `${lead ? eventLabel(lead) : ui("暂无一手确认", "No first-party confirmation")} · ${group.signals.length} ${ui("条证据", "evidence nodes")}${observations ? ` · ${observations} ${ui("条社区反馈", "community reports")}` : ""}`));
     summary.append(heading, el("span", "event-toggle", ui("展开 / 收起", "Expand / collapse")));
@@ -993,13 +993,15 @@ function renderResetTiming(status) {
   for (const signal of [announcement, confirmed].filter(Boolean)) {
     const card = el("article", "reset-time-card");
     card.append(el("strong", "", signal.event_type === "explicit_reset" ? ui("最近一次重置确认", "Latest reset confirmation") : ui("下一轮预告", "Next announced reset")),
-      el("p", "reset-time-value", resetTimeCopy(signal)),
-      el("p", "", `${signal.event_type === "explicit_reset" ? ui("确认公告", "Confirmation post") : ui("预告发布", "Announcement posted")}：${formatTime(signal.created_at, true)}`));
+      el("p", "reset-time-value", formatTime(signal.created_at, true)),
+      el("p", "", signal.event_type === "explicit_reset" ? ui("官方完成公告发布时间", "Completion announcement published") : ui("官方预告发布时间", "Announcement published")));
+    const timing = signal.reset_timing || {};
+    if (timing.reset_at || timing.scheduled_for) card.append(el("p", "reset-time-note", resetTimeCopy(signal)));
     card.append(link(ui("查看一手原文 ↗", "Read first-party source ↗"), signal.url));
     container.append(card);
   }
   if (!container.childNodes.length) container.append(el("p", "", ui("暂无一手重置确认或预告。", "No first-party reset confirmation or announcement recorded.")));
-  container.append(el("p", "reset-time-note", ui("确认后会再次提醒。精确执行时刻以原文为准，个人到账请查看自己的额度页。", "A confirmed reset triggers another alert. Exact rollout time comes from the source; check your own account for delivery.")));
+  container.append(el("p", "reset-time-note", ui("以上为公告发布时间；原文明确给出执行时间时另列。个人到账由本人账号单独核对。", "Times above are announcement timestamps. Explicit rollout times are listed separately; personal delivery is checked in your own account.")));
   const query = document.querySelector("#reset-query-status");
   query.replaceChildren(el("span", "", ui(`查询：X API · 每 ${Math.round((status.live.expected_poll_seconds || 1200)/60)} 分钟 · `, `Source: X API · every ${Math.round((status.live.expected_poll_seconds || 1200)/60)} minutes · `)),
     link(ui("Tibo 原帖", "Tibo on X"), "https://x.com/thsottiaux"),
