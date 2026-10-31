@@ -48,6 +48,8 @@ export interface Env {
   WECOM_WEBHOOK_URL?: string;
   WECOM_TEST_WEBHOOK_URL?: string;
   WEBHOOK_TEST_TOKEN?: string;
+  WEIXIN_TEST_BOT_TOKEN?: string;
+  WEIXIN_TEST_OWNER_ID?: string;
 }
 
 export interface QuerySpec {

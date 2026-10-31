@@ -23,3 +23,7 @@ WECOM_WEBHOOK_URL=
 WECOM_TEST_WEBHOOK_URL=
 # Temporary, test-route-only token. Remove after cloud verification.
 WEBHOOK_TEST_TOKEN=
+
+# Owner-only Weixin cloud probe. Configure only after explicit cloud-session approval.
+WEIXIN_TEST_BOT_TOKEN=
+WEIXIN_TEST_OWNER_ID=

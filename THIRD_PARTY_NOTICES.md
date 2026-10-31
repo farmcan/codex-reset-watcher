@@ -1,13 +1,13 @@
 # Third-party notices and design references
 
-This repository is an original TypeScript/Cloudflare implementation. It does not vendor source code from the projects below.
+This repository is a TypeScript/Cloudflare implementation. The isolated lossless-ID JSON parser in `src/vendor/weixin-json.ts` is reused from Tencent/openclaw-weixin, commit `874637a0dbc24050f72d1385add4fc6170a2d726` (MIT). Its full copyright and license notice is retained at `src/vendor/LICENSE.weixin`. The conceptual references below are not vendored.
 
 Conceptual and product references:
 
 - [`yuenovaw/tibo-codex-reset-watcher`](https://github.com/yuenovaw/tibo-codex-reset-watcher), reviewed at commit `82b25d`; MIT-licensed at the reviewed revision.
 - [`whmc76/codex-reset-radar`](https://github.com/whmc76/codex-reset-radar), MIT-licensed at the reviewed revision.
 - [`prometheus/alertmanager`](https://github.com/prometheus/alertmanager), Apache-2.0.
-- [`caronc/apprise`](https://github.com/caronc/apprise), MIT.
+- [`caronc/apprise`](https://github.com/caronc/apprise), BSD-2-Clause.
 - [`dgtlmoon/changedetection.io`](https://github.com/dgtlmoon/changedetection.io), Apache-2.0.
 - [`healthchecks/healthchecks`](https://github.com/healthchecks/healthchecks), BSD-3-Clause.
 - [`DIYgod/RSSHub`](https://github.com/DIYgod/RSSHub), AGPL-3.0. No RSSHub source code is included.
