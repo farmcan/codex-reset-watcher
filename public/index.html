@@ -85,9 +85,9 @@
       <section id="cycles" class="cycle-section" aria-labelledby="cycles-title">
         <div class="section-heading"><div><span class="section-index">TIMELINE</span><h2 id="cycles-title">从预告，到到账</h2></div><p>横向看每轮重置的开始、报出与后续观察。缩小看月份，放大看过程。</p></div>
         <div class="cycle-toolbar" role="group" aria-label="时间轴缩放与展开">
-          <button type="button" data-cycle-span="7">近一周</button><button type="button" data-cycle-span="30">近一月</button><button type="button" data-cycle-span="120">月度总览</button>
-          <button type="button" id="cycle-zoom-in" class="cycle-zoom" aria-label="放大时间轴">＋</button><button type="button" id="cycle-zoom-out" class="cycle-zoom" aria-label="缩小时间轴">−</button>
-          <button type="button" id="cycle-expand" aria-pressed="false">展开过程节点</button><span id="cycle-view-label" class="cycle-view-label">拖动平移 · Ctrl + 滚轮缩放</span>
+          <button type="button" disabled data-cycle-span="7">近一周</button><button type="button" disabled data-cycle-span="30">近一月</button><button type="button" disabled data-cycle-span="120">月度总览</button>
+          <button type="button" disabled id="cycle-zoom-in" class="cycle-zoom" aria-label="放大时间轴">＋</button><button type="button" disabled id="cycle-zoom-out" class="cycle-zoom" aria-label="缩小时间轴">−</button>
+          <button type="button" disabled id="cycle-expand" aria-pressed="false">展开过程节点</button><span id="cycle-view-label" class="cycle-view-label">拖动平移 · Ctrl + 滚轮缩放</span>
         </div>
         <div class="cycle-legend"><span>预告 / 官方确认</span><span class="arrival">账号恢复 / 发卡观察</span><span class="waiting">到账待验证</span><span class="inferred">历史 / 社区观察</span></div>
         <div class="cycle-frame"><div id="cycle-chart" class="cycle-chart" aria-label="Codex 重置周期甘特时间轴"><p class="empty">正在读取周期证据…</p></div><div id="cycle-detail" class="cycle-detail" aria-live="polite"></div></div>

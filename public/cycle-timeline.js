@@ -5,7 +5,7 @@ const format=value=>new Intl.DateTimeFormat(EN?'en-GB':'zh-CN',{timeZone:'Asia/S
 const element=(tag,text,cls)=>{const e=document.createElement(tag);e.textContent=text;if(cls)e.className=cls;return e;};
 const stageName={announcement:tr('公开预告','Announcement'),confirmation:tr('官方完成确认','Official confirmation'),discovered:tr('监测收到','Detected'),notified:tr('通知已报出','Notification sent'),evidence:tr('来源证据','Evidence')};
 const kindName=k=>({hard_reset:tr('全量重置','Hard reset'),banked_reset:tr('重置卡','Banked reset'),manual_reset_used:tr('手动使用卡','Manual redemption'),weekly_refill:tr('正常周补充','Weekly refill'),reset_card_granted:tr('卡发放观察','Card grant'),quota_recovered:tr('恢复观察','Recovery observation')})[k]||tr('类型待核','Type unverified');
-let timeline,cycles=[],range,expanded=false,loaded=false,paintTimer,selected;
+let timeline,cycles=[],range,expanded=false,loaded=false,paintTimer,selected,paintedMode;
 let detail=document.getElementById('cycle-detail');
 
 async function library(){
@@ -30,6 +30,7 @@ function describe(c){
 function paint(){
   if(!timeline||!range)return;
   const start=+range.start,end=+range.end,monthly=end-start>45*86400000;
+  if(paintedMode!==monthly){timeline.setOptions({height:monthly?'190px':'520px'});paintedMode=monthly;}
   document.getElementById('cycle-view-label').textContent=monthly?tr('月汇总 · 点击月份展开','Monthly · select a month to expand'):tr('每轮一行 · 点击查看证据','One row per cycle · select for evidence');
   const visible=cycles.filter(c=>c.start<=end&&c.end>=start);
   const items=[],groups=[];
@@ -80,6 +81,7 @@ export async function renderCycleTimeline(status,history,observationData){
       document.getElementById('cycle-zoom-out').onclick=()=>timeline.zoomOut(.5);
       document.getElementById('cycle-expand').onclick=event=>{expanded=!expanded;event.currentTarget.setAttribute('aria-pressed',String(expanded));event.currentTarget.textContent=expanded?tr('收起过程节点','Collapse stages'):tr('展开过程节点','Expand stages');paint();};
       loaded=true;
+      document.querySelectorAll('.cycle-toolbar button').forEach(button=>{button.disabled=false;});
     }
     paint();monthlyTable();
     const chosen=cycles.find(c=>c.id===selected)||cycles.at(-1);if(chosen)describe(chosen);
