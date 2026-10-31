@@ -55,13 +55,14 @@ def publish():
                    'scope': '本机读取weekly窗口；额度恢复与重置卡分开；新增一手重置消息后1/3小时复查。本人钉钉私聊通知，不公开个人用量。',
                    'next_step': '验收首次自然调度；真实额度变化发生后再验收到账提醒。', 'url': '/tasks/', 'account_ids': []}
             data['jobs'].append(job)
-        job['scope'] = '本机读取weekly窗口；额度恢复与重置卡分开；新增一手重置消息后1/3小时复查。本人钉钉私聊通知，不公开个人用量。'
+        job['scope'] = '本机只读复查weekly窗口与可用重置卡；新增一手消息后延迟复查。个人观察仅留本机与本人钉钉私聊，状态页仅留脱敏执行记录。'
+        job['next_step'] = '继续私有采样；真实变化发生后分别核对本机记录与本人私聊回执。历史公共观察不补发；离线或来源失败保持覆盖未知。'
         job['monitor'] = {'state': 'enabled', 'heartbeat_at': stamp,
                           'next_expected_at': (at + dt.timedelta(minutes=30)).isoformat(), 'grace_seconds': 1800}
         if partial:
             job['stage'] = '本轮读取部分失败，个人到账或来源变化未知；私有断点保留'
         else:
-            job['stage'] = '额度只读、本人钉钉与可缩放周期图已接线；自然到账闭环待验'
+            job['stage'] = '私有只读复查与本人钉钉已接线；真实到账闭环待验'
         ids = {e['id'] for e in data['history']}
         data['history'].extend(e for e in history if e['id'] not in ids)
         started = f'{JOB}-started-20261031'
@@ -73,6 +74,13 @@ def publish():
                 'impact': '此前只有一次人工核对；新增前后采样与延迟复查，私人数据只在本机。公开X监测与原通知渠道保持原运行方式。',
                 'next_step': '定时配置、首次自然执行、真实到账与通知分别验收；机器离线时覆盖未知。'})
         incident_ids = {e['id'] for e in data.get('incidents', [])}
+        policy_id = JOB + '-private-only-20261101'
+        if policy_id not in incident_ids:
+            data.setdefault('incidents', []).append({'id': policy_id, 'job_id': JOB,
+                'opened_at': stamp, 'updated_at': stamp, 'status': 'recorded',
+                'summary': '个人额度观察改为仅本机保存与本人私聊',
+                'impact': '按用户修正停用个人观察公共上传；旧上传及待上传字段只保留历史，不补发个人记录。状态页仅记录脱敏心跳、覆盖未知、异常与恢复。',
+                'next_step': '继续私有采样与本人通知，不恢复公共主页周期图；读取到的恢复仅记样本区间，不虚构执行时刻。'})
         for event in state.get('outbox', []):
             if event['kind'] not in ('monitor_error', 'monitor_recovered', 'monitor_gap'):
                 continue
