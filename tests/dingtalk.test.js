@@ -194,7 +194,7 @@ describe("durable cloud DingTalk delivery", () => {
     const payload=JSON.parse(fetch.mock.calls[1][1].body);
     expect(payload.openConversationId).toBe('fixture-group');
     expect(payload.isAtAll).toBe(true);
-    expect(JSON.parse(payload.msgParam).content).toContain('原文 · @tibo');
+    expect(JSON.parse(payload.msgParam).content).toContain('原文节选 · @tibo');
     expect(JSON.parse(payload.msgParam).content).not.toContain('scheduled_reset');
   });
   it("sends a queued natural alert after review, without replaying review-only history", async () => {
@@ -258,12 +258,13 @@ describe("durable cloud DingTalk delivery", () => {
   });
   it('describes a banked reset announcement as pending, with only a bare source link at the end',()=>{
     const source='https://x.com/thsottiaux/status/2116405414921384099';
-    const content=dingTalkContent({event_type:'scheduled_reset',reset_mode:'banked_reset',source_tier:'A1',author:'thsottiaux',text:'Next two days will be resets… banked…',url:source,effective_time:null,created_at:'2026-10-31T05:42:26.000Z'});
+    const content=dingTalkContent({event_type:'scheduled_reset',reset_mode:'banked_reset',source_tier:'A1',author:'thsottiaux',text:'Next two days will be resets… banked… https://t.co/example',url:source,effective_time:null,created_at:'2026-10-31T05:42:26.000Z'});
     expect(content).toContain('可储存重置的预告，尚未确认发放');
     expect(content).not.toContain('手动使用');
     expect(content).not.toContain('我们的网站');
     expect(content.trim().split('\n\n').at(-1)).toBe(source);
     expect(content).not.toContain('codex-reset-watcher.weican16hit.workers.dev');
+    expect(content.match(/https?:\/\/\S+/g)).toEqual([source]);
   });
   it('never sends a test to the production group, for either notification mode',async()=>{
     for(const mode of ['personal_ding','group_message']){

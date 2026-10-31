@@ -133,9 +133,12 @@ export function dingTalkContent(row: Omit<Row, "id" | "attempts">, personalDing 
     : '原文涉及可储存重置，尚不能确认发放状态；以原帖及账户显示为准。'
     : timing.phase === 'confirmed' ? '可以去看看你的 Codex 额度是否到账了。'
     : timing.phase === 'scheduled' ? '有计划好的任务，可以提前安排起来。' : '有新线索，点开原文看看。';
-  const original = row.text.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim();
+  // Keep one canonical source link, even when the quoted post contains t.co links.
+  // The stored source text remains unchanged; this only shortens the notice excerpt.
+  const original = row.text.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+    .replace(/https?:\/\/\S+/gi,'').trim();
   const quote = (original.length > 1000 ? original.slice(0,997) + '…' : original).split('\n').map(line=>`> ${line}`).join('\n');
-  return `${title}\n\n时间：${format(row.created_at)}${timing.phase === 'confirmed' ? ' · 确认公告' : ' · 原帖发布'}${time ? '\n'+time : ''}\n\n原文 · @${row.author}：\n${quote}\n\n${action}\n\n${row.url}`;
+  return `${title}\n\n时间：${format(row.created_at)}${timing.phase === 'confirmed' ? ' · 确认公告' : ' · 原帖发布'}${time ? '\n'+time : ''}\n\n原文节选 · @${row.author}：\n${quote}\n\n${action}\n\n${row.url}`;
 }
 
 export async function processDingTalkDeliveries(env: Env, now = new Date().toISOString()): Promise<{ sent: number; failed: number }> {
