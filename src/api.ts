@@ -18,6 +18,7 @@ import { withResetContext } from './reset-context';
 import { webhookHealth, testWebhook, processWebhookDeliveries, WEBHOOK_CHANNELS, type WebhookChannel } from './webhook-notifications';
 import { testWeixin } from './weixin-test';
 import { testQQ } from './qq-test';
+import { readObservations, writeObservations } from './arrival-observations';
 
 const JSON_HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
@@ -116,6 +117,12 @@ export async function handleApi(request: Request, env: Env): Promise<Response | 
   }
   if (request.method === "GET" && url.pathname === "/api/events") {
     return json((await dashboardData(env.DB)).signals);
+  }
+  if(request.method==='GET' && url.pathname==='/api/arrival-observations') return json(await readObservations(env));
+  if(request.method==='POST' && url.pathname==='/api/admin/arrival-observations') {
+    if(!await authorized(request,{...env,ADMIN_TOKEN:env.PERSONAL_OBSERVATION_TOKEN})) return json({error:'unauthorized'},401);
+    try {return json(await writeObservations(env,await request.json()));}
+    catch {return json({error:'invalid_observation_batch'},400);}
   }
   if (request.method === "GET" && url.pathname === "/api/history") return json({...historical,recent_audit:recentAudit});
   if (request.method === "GET" && url.pathname === "/api/sources") return json(scorecard);

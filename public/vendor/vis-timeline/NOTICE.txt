@@ -1,0 +1,4 @@
+vis-timeline 8.5.6
+Source: https://github.com/visjs/vis-timeline
+License: MIT (selected from Apache-2.0 OR MIT). See LICENSE.MIT.txt and notices embedded in the standalone bundle.
+Reproduce: npm ci && node scripts/sync-timeline-vendor.mjs

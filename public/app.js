@@ -1,3 +1,5 @@
+import { renderCycleTimeline } from './cycle-timeline.js';
+let cachedObservations = {observations:[],unavailable:true};
 const TZ = "Asia/Shanghai";
 const ENGLISH = document.documentElement.lang.toLowerCase().startsWith("en");
 const PAGES_SNAPSHOT = location.hostname.endsWith("github.io") || new URLSearchParams(location.search).has("snapshot");
@@ -1008,6 +1010,7 @@ function renderResetTiming(status) {
 }
 
 function renderLive(status) {
+  renderCycleTimeline(status,cachedHistory,cachedObservations);
   renderResetTiming(status);
   renderHealth(status);
   renderCurrent(status);
@@ -1045,12 +1048,14 @@ async function load() {
   try {
     document.querySelector("#status-api-link").href = endpoint("status");
     document.querySelector("#history-api-link").href = endpoint("history");
-    const [status, history, sources] = await Promise.all([
+    const [status, history, sources, observations] = await Promise.all([
       fetchJson("status"),
       fetchJson("history"),
-      fetchJson("sources")
+      fetchJson("sources"),
+      fetchJson("arrival-observations").catch(()=>({...cachedObservations,unavailable:true}))
     ]);
     cachedHistory = history;
+    cachedObservations = observations;
     renderLive(status);
     renderHistory(history);
     renderSources(sources);
@@ -1066,7 +1071,9 @@ async function refreshLive() {
   if (refreshInFlight || !cachedHistory) return;
   refreshInFlight = true;
   try {
-    renderLive(await fetchJson("status"));
+    const [status,observations]=await Promise.all([fetchJson("status"),fetchJson("arrival-observations").catch(()=>({...cachedObservations,unavailable:true}))]);
+    cachedObservations=observations;
+    renderLive(status);
     lastLiveRefreshAt = Date.now();
   } catch (error) {
     showLoadFailure(false, error);

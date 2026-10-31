@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="description" content="追踪 Codex 重置动态，及时收到提醒，把剩余额度花在值得做的任务上。">
     <title>Codex 重置雷达</title>
+    <link rel="stylesheet" href="vendor/vis-timeline/vis-timeline.min.css">
+    <link rel="stylesheet" href="cycle-timeline.css?v=20261031-1">
     <link rel="icon" href="brand-zh.png" type="image/png">
     <link rel="stylesheet" href="styles.css?v=20261030-mobile-2">
     <script type="module" src="engagement.js?v=20261025-1"></script>
-    <script type="module" src="app.js?v=20261031-channels-2"></script>
+    <script type="module" src="app.js?v=20261031-cycles-1"></script>
   </head>
   <body>
     <header class="site-header">
@@ -18,7 +20,7 @@
       </a>
       <div class="header-actions">
         <nav aria-label="页面导航">
-          <a href="#signals">最新信号</a>
+          <a href="#cycles">周期时间轴</a><a href="#signals">最新信号</a>
           <a href="#subscribe">接收提醒</a>
           <a href="#pedal">怎么蹬</a>
         </nav>
@@ -78,6 +80,19 @@
         <div class="section-heading"><div><h2 id="reset-times-title">到底什么时候重置？</h2></div><p>北京时间 · 预告、执行、确认分开看</p></div>
         <div id="reset-time-summary" class="reset-time-summary" aria-live="polite">正在读取重置时间…</div>
         <details class="query-details"><summary>查看来源与接入说明</summary><p id="reset-query-status" class="reset-query-status">正在检查查询通道…</p></details>
+      </section>
+
+      <section id="cycles" class="cycle-section" aria-labelledby="cycles-title">
+        <div class="section-heading"><div><span class="section-index">TIMELINE</span><h2 id="cycles-title">从预告，到到账</h2></div><p>横向看每轮重置的开始、报出与后续观察。缩小看月份，放大看过程。</p></div>
+        <div class="cycle-toolbar" role="group" aria-label="时间轴缩放与展开">
+          <button type="button" data-cycle-span="7">近一周</button><button type="button" data-cycle-span="30">近一月</button><button type="button" data-cycle-span="120">月度总览</button>
+          <button type="button" id="cycle-zoom-in" class="cycle-zoom" aria-label="放大时间轴">＋</button><button type="button" id="cycle-zoom-out" class="cycle-zoom" aria-label="缩小时间轴">−</button>
+          <button type="button" id="cycle-expand" aria-pressed="false">展开过程节点</button><span id="cycle-view-label" class="cycle-view-label">拖动平移 · Ctrl + 滚轮缩放</span>
+        </div>
+        <div class="cycle-legend"><span>预告 / 官方确认</span><span class="arrival">账号恢复 / 发卡观察</span><span class="waiting">到账待验证</span><span class="inferred">历史 / 社区观察</span></div>
+        <div class="cycle-frame"><div id="cycle-chart" class="cycle-chart" aria-label="Codex 重置周期甘特时间轴"><p class="empty">正在读取周期证据…</p></div><div id="cycle-detail" class="cycle-detail" aria-live="polite"></div></div>
+        <p id="cycle-window-summary" class="cycle-window-summary"></p><p id="cycle-data-note" class="cycle-note"></p>
+        <details><summary>按月查看收录统计</summary><div id="cycle-monthly" class="cycle-monthly"></div><p class="cycle-note">按预告开始月份去重计轮；“到账观察”只计有直接记录的轮次，不把官方完成公告当作个人到账。</p></details>
       </section>
 
       <section id="subscribe" class="subscribe-section" aria-labelledby="subscribe-title">

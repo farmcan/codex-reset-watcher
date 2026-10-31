@@ -18,6 +18,7 @@ export type EvidenceBasis =
   | "unknown";
 
 export interface Env {
+  PERSONAL_OBSERVATION_TOKEN?: string;
   DB: D1Database;
   ASSETS: Fetcher;
   ENVIRONMENT: string;

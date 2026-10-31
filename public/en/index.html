@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="description" content="Know when Codex resets, get notified, and turn spare tokens into work worth shipping.">
     <title>Codex Reset Watcher</title>
+    <link rel="stylesheet" href="../vendor/vis-timeline/vis-timeline.min.css">
+    <link rel="stylesheet" href="../cycle-timeline.css?v=20261031-1">
     <link rel="icon" href="../brand-en.png" type="image/png">
     <link rel="stylesheet" href="../styles.css?v=20261030-mobile-2">
     <script type="module" src="../engagement.js?v=20261025-1"></script>
-    <script type="module" src="../app.js?v=20261031-channels-2"></script>
+    <script type="module" src="../app.js?v=20261031-cycles-1"></script>
   </head>
   <body>
     <header class="site-header">
@@ -78,6 +80,14 @@
         <div class="section-heading"><div><h2 id="reset-times-title">When did it actually reset?</h2></div><p>Beijing time · Announcement and rollout are separate</p></div>
         <div id="reset-time-summary" class="reset-time-summary" aria-live="polite">Loading reset timing…</div>
         <details class="query-details"><summary>Sources & integrations</summary><p id="reset-query-status" class="reset-query-status">Checking source connection…</p></details>
+      </section>
+
+      <section id="cycles" class="cycle-section" aria-labelledby="cycles-title">
+        <div class="section-heading"><div><span class="section-index">TIMELINE</span><h2 id="cycles-title">From announcement to arrival</h2></div><p>Follow each cycle across time. Zoom out for months; zoom in for evidence.</p></div>
+        <div class="cycle-toolbar" role="group" aria-label="Timeline controls"><button type="button" data-cycle-span="7">Week</button><button type="button" data-cycle-span="30">Month</button><button type="button" data-cycle-span="120">Monthly overview</button><button type="button" id="cycle-zoom-in" class="cycle-zoom" aria-label="Zoom in">＋</button><button type="button" id="cycle-zoom-out" class="cycle-zoom" aria-label="Zoom out">−</button><button type="button" id="cycle-expand" aria-pressed="false">Expand stages</button><span id="cycle-view-label" class="cycle-view-label">Drag to pan · Ctrl + wheel to zoom</span></div>
+        <div class="cycle-legend"><span>Announcement / confirmation</span><span class="arrival">Account / card observation</span><span class="waiting">Arrival unverified</span><span class="inferred">Historical / community</span></div>
+        <div class="cycle-frame"><div id="cycle-chart" class="cycle-chart" aria-label="Codex reset cycle timeline"><p class="empty">Loading cycle evidence…</p></div><div id="cycle-detail" class="cycle-detail" aria-live="polite"></div></div>
+        <p id="cycle-window-summary" class="cycle-window-summary"></p><p id="cycle-data-note" class="cycle-note"></p><details><summary>Monthly recorded counts</summary><div id="cycle-monthly" class="cycle-monthly"></div><p class="cycle-note">Deduplicated by announcement month. Official confirmation is never counted as personal arrival.</p></details>
       </section>
 
       <section id="subscribe" class="subscribe-section" aria-labelledby="subscribe-title">

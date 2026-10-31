@@ -9,7 +9,7 @@ afterEach(() => databases.splice(0).forEach((sqlite) => sqlite.close()));
 function fixture() {
   const sqlite = new DatabaseSync(":memory:");
   databases.push(sqlite);
-  for (const name of ["0001_initial.sql", "0002_model_reviews.sql"]) {
+  for (const name of ["0001_initial.sql", "0002_model_reviews.sql", "0004_notification_eligibility.sql"]) {
     sqlite.exec(readFileSync(new URL(`../migrations/${name}`, import.meta.url), "utf8"));
   }
   const prepare = (sql, params = []) => ({

@@ -244,7 +244,8 @@ export async function dashboardData(db: D1Database): Promise<Record<string, unkn
   const batchResults = await db.batch([
     db.prepare("SELECT name, lane, poll_seconds, primed_at, last_attempt_at, last_success_at, last_error, consecutive_failures, next_poll_at FROM source_state ORDER BY CASE lane WHEN 'official' THEN 1 WHEN 'scout' THEN 2 WHEN 'rumor' THEN 3 ELSE 4 END"),
     db.prepare(`
-      SELECT s.*, p.author, p.text, p.url, p.source_tier, p.lane, p.referenced_post_ids,
+      SELECT s.*, p.author, p.text, p.url, p.source_tier, p.lane, p.referenced_post_ids, p.first_seen_at, p.notification_eligible,
+        (SELECT MIN(d.sent_at) FROM deliveries d WHERE d.signal_id=s.signal_id AND d.status='sent') AS notified_at,
         json_extract(p.raw_json, '$.reset_context') AS reset_context,
         json_extract(r.result_json, '$.title_zh') AS title_zh,
         json_extract(r.result_json, '$.title_en') AS title_en,
