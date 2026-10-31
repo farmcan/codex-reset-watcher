@@ -15,6 +15,18 @@ JOB = 'codex-personal-usage-watch'
 ENDPOINT = 'repos/farmcan/seed/contents/content/briefs/watch-activity/status.json'
 
 
+def read_status(current):
+    """Contents API omits inline content above 1 MiB; read that immutable blob."""
+    source = current
+    if current.get('encoding') == 'none':
+        endpoint = ENDPOINT.split('/contents/', 1)[0] + '/git/blobs/' + current['sha']
+        source = json.loads(subprocess.run(['gh', 'api', endpoint], check=True,
+                                          capture_output=True, text=True).stdout)
+    if source.get('encoding') != 'base64' or not source.get('content'):
+        raise ValueError('status_content_unavailable_pending_retained')
+    return json.loads(base64.b64decode(source['content']))
+
+
 def publish():
     state = json.loads((PRIVATE / 'state.json').read_text())
     at = dt.datetime.fromtimestamp(state['checked_at'], dt.timezone.utc)
@@ -35,7 +47,7 @@ def publish():
     from seed_status_pkg.site.watch_activity import validate
     for attempt in range(3):
         current = json.loads(subprocess.run(['gh', 'api', ENDPOINT], check=True, capture_output=True, text=True).stdout)
-        data = json.loads(base64.b64decode(current['content']))
+        data = read_status(current)
         job = next((j for j in data['jobs'] if j['id'] == JOB), None)
         if job is None:
             job = {'id': JOB, 'title': 'Codex 个人额度到账复查', 'schedule': '本机 Codex heartbeat 每30分钟；依赖Mac在线与已登录会话',
