@@ -1,4 +1,3 @@
-import { publicConfirmations } from './confirmed-history.js?v=20261101-1';
 const TZ = "Asia/Shanghai";
 const ENGLISH = document.documentElement.lang.toLowerCase().startsWith("en");
 const PAGES_SNAPSHOT = location.hostname.endsWith("github.io") || new URLSearchParams(location.search).has("snapshot");
@@ -503,7 +502,7 @@ function renderRecentHistory(audit) {
   const box=document.querySelector("#recent-history");
   box.replaceChildren();
   document.querySelector("#recent-audit-date").textContent=audit ? ui(`最近核验 ${formatTime(audit.reviewed_at,true)} · 北京时间`, `Reviewed ${formatTime(audit.reviewed_at,true)} · Beijing time`) : ui("最近核验记录待同步", "Recent review pending sync");
-  for (const event of audit?.events || []) {
+  for (const event of (audit?.events || []).filter(e => Number.isFinite(Date.parse(e.confirmed_at)) && /^https:\/\/x\.com\/[^/]+\/status\/\d+$/.test(e.confirmation_url || ""))) {
     const card=el("details","recent-reset");
     const summary=el("summary");
     summary.append(el("strong","",formatTime(event.confirmed_at,true)),el("span","",ui("重置已确认","Reset confirmed")),el("span","recent-toggle", "+"));
@@ -1008,24 +1007,7 @@ function renderResetTiming(status) {
     link(ui("连接说明", "Connection notes"), "https://github.com/farmcan/codex-reset-watcher/blob/main/docs/research-reset-task-triggers.md"));
 }
 
-function renderPublicConfirmations(status) {
-  const container = document.querySelector('#recent-confirmation-list');
-  container.replaceChildren();
-  for (const row of publicConfirmations(cachedHistory, status.live.signals || []).slice(0, 12)) {
-    const item = el('li', 'confirmation-row');
-    const time = el('time', '', formatTime(row.at, true));
-    time.dateTime = row.at;
-    const label = row.kind === 'banked_reset' ? ui('重置卡发放确认', 'Reset-card grant confirmation')
-      : row.kind === 'hard_reset' ? ui('重置完成确认', 'Reset completion')
-      : ui('重置完成 · 形式未注明', 'Reset completed · type unspecified');
-    item.append(time, el('span', '', label), link(ui('官方原帖 ↗', 'Original source ↗'), row.url));
-    container.append(item);
-  }
-  if (!container.childNodes.length) container.append(el('li', 'empty', ui('暂无可列出的一手完成公告。', 'No sourced completion announcements recorded.')));
-}
-
 function renderLive(status) {
-  renderPublicConfirmations(status);
   renderResetTiming(status);
   renderHealth(status);
   renderCurrent(status);
