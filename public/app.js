@@ -1,4 +1,4 @@
-import { renderCycleTimeline } from './cycle-timeline.js';
+import { renderCycleTimeline } from './cycle-timeline.js?v=20261031-2';
 let cachedObservations = {observations:[],unavailable:true};
 const TZ = "Asia/Shanghai";
 const ENGLISH = document.documentElement.lang.toLowerCase().startsWith("en");

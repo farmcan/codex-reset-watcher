@@ -1,4 +1,4 @@
-import {buildCycles,monthSummary,monthBounds} from './cycle-model.js';
+import {buildCycles,monthSummary,monthBounds} from './cycle-model.js?v=20261031-2';
 const EN=document.documentElement.lang==='en';
 const tr=(zh,en)=>EN?en:zh;
 const format=value=>new Intl.DateTimeFormat(EN?'en-GB':'zh-CN',{timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(value));
@@ -30,7 +30,7 @@ function describe(c){
 function paint(){
   if(!timeline||!range)return;
   const start=+range.start,end=+range.end,monthly=end-start>45*86400000;
-  if(paintedMode!==monthly){timeline.setOptions({height:monthly?'190px':'520px'});paintedMode=monthly;}
+  if(paintedMode!==monthly){timeline.setOptions({height:monthly?'190px':'520px',stack:!monthly});paintedMode=monthly;}
   document.getElementById('cycle-view-label').textContent=monthly?tr('月汇总 · 点击月份展开','Monthly · select a month to expand'):tr('每轮一行 · 点击查看证据','One row per cycle · select for evidence');
   const visible=cycles.filter(c=>c.start<=end&&c.end>=start);
   const items=[],groups=[];
@@ -38,7 +38,8 @@ function paint(){
     groups.push({id:'months',content:tr('月度概览','Monthly overview')});
     for(const m of monthSummary(cycles)){
       const [start,end]=monthBounds(m.month),a=new Date(start),b=new Date(end);
-      const content=element('span',`${m.month} · ${m.rounds} ${tr('轮','cycles')} · ${m.updates} ${tr('条更新','updates')} · ${m.arrivals} ${tr('到账观察','verified arrivals')}`);
+      const content=element('span',`${m.month} · ${m.rounds}${tr('轮',' cycles')} / ${m.updates}${tr('更新',' updates')}`);
+      content.title=`${m.confirmed} ${tr('官方确认','confirmed')} · ${m.arrivals} ${tr('经验证到账观察','verified arrivals')}`;
       items.push({id:'month:'+m.month,group:'months',start:a,end:b,type:'range',content,className:'cycle-month'});
     }
   } else for(const c of visible){
