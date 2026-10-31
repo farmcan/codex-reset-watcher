@@ -27,6 +27,10 @@ WEBHOOK_TEST_TOKEN=
 # Owner-only Weixin cloud probe. Configure only after explicit cloud-session approval.
 WEIXIN_TEST_BOT_TOKEN=
 WEIXIN_TEST_OWNER_ID=
+WEIXIN_BOT_TOKEN=
+WEIXIN_OWNER_ID=
+# Enable only after the authorized owner cloud probe succeeds.
+WEIXIN_NOTIFICATIONS_ENABLED=false
 
 # Official QQ Bot owner probe. OpenID must come from this app's authenticated C2C event.
 QQ_TEST_APP_ID=

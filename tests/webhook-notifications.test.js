@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { initializeWebhookChannels, queueWebhookDeliveries, processWebhookDeliveries, sendWebhook,
   testWebhook, validateWebhook, webhookHealth, boundedWebhookText } from '../src/webhook-notifications';
 import { handleApi } from '../src/api';
+import { testWeixin } from '../src/weixin-test';
 
 const databases = [];
 afterEach(() => { vi.unstubAllGlobals(); databases.splice(0).forEach(db => db.close()); });
@@ -31,6 +32,37 @@ function fixture() {
 const accepted = (channel) => new Response(JSON.stringify(channel === 'feishu' ? {code:0} : {errcode:0}));
 
 describe('cloud webhook notifications', () => {
+  it('does not borrow a previous Weixin owner probe as evidence for a different production owner', async () => {
+    const {env}=fixture();Object.assign(env,{WEIXIN_TEST_BOT_TOKEN:'private-test',WEIXIN_TEST_OWNER_ID:'old-owner'});
+    vi.stubGlobal('fetch',vi.fn().mockResolvedValue(new Response('{"message_id":"owner-probe"}')));
+    await testWeixin(env,'owner-probe-key');
+    Object.assign(env,{WEIXIN_BOT_TOKEN:'private-production',WEIXIN_OWNER_ID:'new-owner',WEIXIN_NOTIFICATIONS_ENABLED:'true'});
+    expect((await webhookHealth(env)).weixin.cloud_probe_accepted_at).toBeNull();
+  });
+  it('requires explicit Weixin enablement and queues only new signals for the authorized owner', async () => {
+    const {env,sqlite}=fixture();delete env.FEISHU_WEBHOOK_URL;delete env.WECOM_WEBHOOK_URL;
+    env.WEIXIN_BOT_TOKEN='private-owner-token';env.WEIXIN_OWNER_ID='authorized-owner';
+    expect(await queueWebhookDeliveries(env,now)).toBe(0);
+    env.WEIXIN_NOTIFICATIONS_ENABLED='true';await initializeWebhookChannels(env,now);
+    expect(await queueWebhookDeliveries(env,now)).toBe(1);
+    const fetch=vi.fn().mockResolvedValue(new Response('{"message_id":18446744073709551615}'));vi.stubGlobal('fetch',fetch);
+    expect(await processWebhookDeliveries(env,now)).toEqual({sent:1,failed:0});
+    expect(await processWebhookDeliveries(env,now)).toEqual({sent:0,failed:0});
+    expect(fetch).toHaveBeenCalledTimes(1);
+    const body=JSON.parse(fetch.mock.calls[0][1].body);expect(body.msg.to_user_id).toBe('authorized-owner');
+    expect(body.msg.item_list[0].text_item.text).toContain('尚未确认发放');
+    expect(sqlite.prepare('SELECT signal_id,channel,status FROM deliveries').all()).toMatchObject([{signal_id:'x:new',channel:'weixin',status:'sent'}]);
+  });
+  it('retains Weixin credential rejection and ambiguous outcomes without replay', async () => {
+    const {env,sqlite}=fixture();delete env.FEISHU_WEBHOOK_URL;delete env.WECOM_WEBHOOK_URL;
+    Object.assign(env,{WEIXIN_BOT_TOKEN:'private-owner-token',WEIXIN_OWNER_ID:'authorized-owner',WEIXIN_NOTIFICATIONS_ENABLED:'true'});
+    await initializeWebhookChannels(env,now);await queueWebhookDeliveries(env,now);
+    const fetch=vi.fn().mockResolvedValue(new Response('{"ret":-14,"errmsg":"private detail"}'));vi.stubGlobal('fetch',fetch);
+    expect(await processWebhookDeliveries(env,now)).toEqual({sent:0,failed:1});
+    expect((await webhookHealth(env)).weixin).toMatchObject({configured:true,status:'degraded',failed:1,automatic_token_refresh:false,owner_only:true});
+    expect(sqlite.prepare('SELECT last_error FROM deliveries').get().last_error).toContain('-14');
+    expect(await processWebhookDeliveries(env,now)).toEqual({sent:0,failed:0});expect(fetch).toHaveBeenCalledTimes(1);
+  });
   it('requires authorization and a supported channel before touching test destinations', async () => {
     const {env}=fixture();env.WEBHOOK_TEST_TOKEN='fixture-test-token';
     const fetch=vi.fn();vi.stubGlobal('fetch',fetch);

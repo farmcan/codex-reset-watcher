@@ -1,8 +1,26 @@
 import { shortHash } from './db';
 import { dingTalkContent } from './dingtalk';
 import type { Env } from './types';
-import { WEBHOOK_CHANNELS, WebhookError, validateWebhook, sendWebhookNotice, type WebhookChannel } from './webhook-client';
+import { WEBHOOK_CHANNELS, WebhookError, validateWebhook, sendWebhookNotice, boundedWebhookText, type WebhookChannel } from './webhook-client';
+import { sendWeixinNotice } from './weixin-client';
 export { WEBHOOK_CHANNELS, validateWebhook, boundedWebhookText, type WebhookChannel } from './webhook-client';
+
+const DELIVERY_CHANNELS = [...WEBHOOK_CHANNELS, 'weixin'] as const;
+type DeliveryChannel = typeof DELIVERY_CHANNELS[number];
+function transportConfigured(env: Env, channel: DeliveryChannel): boolean {
+  return channel === 'weixin' ? Boolean(env.WEIXIN_NOTIFICATIONS_ENABLED === 'true' && env.WEIXIN_BOT_TOKEN && env.WEIXIN_OWNER_ID)
+    : Boolean(webhookConfig(env, channel));
+}
+async function transportDestination(env: Env, channel: DeliveryChannel): Promise<string> {
+  return channel === 'weixin' ? shortHash(`weixin-owner:${env.WEIXIN_OWNER_ID}`) : webhookDestination(env, channel);
+}
+async function sendTransport(env: Env, channel: DeliveryChannel, text: string): Promise<string> {
+  if (channel !== 'weixin') return sendWebhook(env, channel, text);
+  const result = await sendWeixinNotice(env.WEIXIN_BOT_TOKEN!, env.WEIXIN_OWNER_ID!, boundedWebhookText(text));
+  if (result.status !== 'sent') throw new WebhookError(`weixin ${result.error ?? 'outcome_unknown'}${typeof result.business_code === 'number' ? ` (${result.business_code})` : ''}`,
+    result.status === 'failed' ? 'failed' : 'unknown');
+  return JSON.stringify({ ...result, runtime: 'cloudflare_worker', owner_only: true });
+}
 
 export function webhookConfig(env: Env, channel: WebhookChannel, test = false): { url: string; secret?: string } | null {
   const url = channel === 'feishu'
@@ -16,14 +34,14 @@ export async function webhookDestination(env: Env, channel: WebhookChannel): Pro
   return shortHash(validateWebhook(channel, webhookConfig(env, channel)!.url));
 }
 
-function activationKey(channel: WebhookChannel, hash: string): string { return `webhook-activation:${channel}:${hash}`; }
+function activationKey(channel: DeliveryChannel, hash: string): string { return `webhook-activation:${channel}:${hash}`; }
 
 // Activate before ingesting a poll. New destinations never replay the old ledger.
 export async function initializeWebhookChannels(env: Env, now: string): Promise<void> {
-  for (const channel of WEBHOOK_CHANNELS) {
-    if (!webhookConfig(env, channel)) continue;
+  for (const channel of DELIVERY_CHANNELS) {
+    if (!transportConfigured(env, channel)) continue;
     try {
-      const hash = await webhookDestination(env, channel);
+      const hash = await transportDestination(env, channel);
       await env.DB.prepare('INSERT OR IGNORE INTO app_state(key,value,updated_at) VALUES (?,?,?)')
         .bind(activationKey(channel, hash), now, now).run();
     } catch (error) { if (!(error instanceof WebhookError)) throw error; }
@@ -33,10 +51,10 @@ export async function initializeWebhookChannels(env: Env, now: string): Promise<
 export async function queueWebhookDeliveries(env: Env, now: string): Promise<number> {
   let count = 0;
   await initializeWebhookChannels(env, now);
-  for (const channel of WEBHOOK_CHANNELS) {
-    if (!webhookConfig(env, channel)) continue;
+  for (const channel of DELIVERY_CHANNELS) {
+    if (!transportConfigured(env, channel)) continue;
     let hash: string;
-    try { hash = await webhookDestination(env, channel); } catch { continue; }
+    try { hash = await transportDestination(env, channel); } catch { continue; }
     const active = await env.DB.prepare('SELECT value FROM app_state WHERE key=?')
       .bind(activationKey(channel, hash)).first<{ value: string }>();
     const result = await env.DB.prepare(`INSERT OR IGNORE INTO deliveries
@@ -65,10 +83,10 @@ interface NoticeRow {
 }
 export async function processWebhookDeliveries(env: Env, now: string): Promise<{ sent: number; failed: number }> {
   const summary = { sent: 0, failed: 0 };
-  for (const channel of WEBHOOK_CHANNELS) {
-    if (!webhookConfig(env, channel)) continue;
+  for (const channel of DELIVERY_CHANNELS) {
+    if (!transportConfigured(env, channel)) continue;
     let hash: string;
-    try { hash = await webhookDestination(env, channel); } catch { summary.failed++; continue; }
+    try { hash = await transportDestination(env, channel); } catch { summary.failed++; continue; }
     await env.DB.prepare(`UPDATE deliveries SET status='unknown',last_error='Interrupted send; do not replay'
       WHERE channel=? AND status='sending' AND next_attempt_at<?`)
       .bind(channel, new Date(Date.parse(now) - 5 * 60_000).toISOString()).run();
@@ -83,7 +101,7 @@ export async function processWebhookDeliveries(env: Env, now: string): Promise<{
         WHERE id=? AND status='pending'`).bind(now, row.id).run();
       if (!claim.meta.changes) continue;
       let receipt: string;
-      try { receipt = await sendWebhook(env, channel, dingTalkContent(row)); }
+      try { receipt = await sendTransport(env, channel, dingTalkContent(row)); }
       catch (error) {
         const state = error instanceof WebhookError ? error.state : 'unknown';
         await env.DB.prepare('UPDATE deliveries SET status=?,next_attempt_at=?,last_error=? WHERE id=?')
@@ -102,21 +120,28 @@ export async function processWebhookDeliveries(env: Env, now: string): Promise<{
 
 export async function webhookHealth(env: Env): Promise<Record<string, unknown>> {
   const health: Record<string, unknown> = {};
-  for (const channel of WEBHOOK_CHANNELS) {
-    const configured = Boolean(webhookConfig(env, channel));
-    const test = webhookConfig(env, channel, true);
+  for (const channel of DELIVERY_CHANNELS) {
+    const configured = transportConfigured(env, channel);
+    const test = channel === 'weixin' ? null : webhookConfig(env, channel, true);
     let proof: { updated_at: string } | null = null;
-    if (test) {
+    if (test && channel !== 'weixin') {
       try {
         const testHash = await shortHash(validateWebhook(channel, test.url));
         proof = await env.DB.prepare('SELECT updated_at FROM app_state WHERE key=?')
           .bind(`webhook-test-success:${channel}:${testHash}`).first<{ updated_at: string }>();
       } catch (error) { if (!(error instanceof WebhookError)) throw error; }
     }
+    const probeOwner = channel === 'weixin' ? configured ? env.WEIXIN_OWNER_ID : env.WEIXIN_TEST_OWNER_ID ?? env.WEIXIN_OWNER_ID : undefined;
+    if (probeOwner) {
+      const ownerHash = await shortHash(probeOwner);
+      proof = await env.DB.prepare(`SELECT MAX(updated_at) AS updated_at FROM app_state
+        WHERE key LIKE ? AND json_extract(CASE WHEN json_valid(value) THEN value ELSE '{}' END,'$.status')='sent'`)
+        .bind(`weixin-cloud-test:${ownerHash}:%`).first<{ updated_at: string }>();
+    }
     if (!configured) { health[channel] = { configured: false, status: 'disabled', cloud_verified: false,
-      test_group_verified_at: proof?.updated_at ?? null }; continue; }
+      ...(channel === 'weixin' ? { cloud_probe_accepted_at: proof?.updated_at ?? null } : { test_group_verified_at: proof?.updated_at ?? null }) }; continue; }
     let hash: string;
-    try { hash = await webhookDestination(env, channel); }
+    try { hash = await transportDestination(env, channel); }
     catch { health[channel] = { configured: true, status: 'invalid_configuration', cloud_verified: false }; continue; }
     const counts = await env.DB.prepare(`SELECT COALESCE(SUM(status='failed'),0) AS failed,
       COALESCE(SUM(status='unknown'),0) AS unknown,COALESCE(SUM(status='pending'),0) AS pending,
@@ -125,8 +150,11 @@ export async function webhookHealth(env: Env): Promise<Record<string, unknown>> 
       .bind(channel, hash).first<Record<string, unknown>>();
     const stale = typeof counts?.oldest_pending_at === 'string' && Date.now() - Date.parse(counts.oldest_pending_at) > 20 * 60_000;
     health[channel] = { configured, ...counts, status: Number(counts?.failed) || Number(counts?.unknown) || stale ? 'degraded' : 'healthy',
-      cloud_verified: Boolean(counts?.last_sent_at), test_group_verified_at: proof?.updated_at ?? null,
-      mentions_all_requested: true, mention_delivery_verified: false, true_ding: false };
+      cloud_verified: Boolean(counts?.last_sent_at),
+      ...(channel === 'weixin' ? { cloud_probe_accepted_at: proof?.updated_at ?? null, owner_only: true,
+        inbound_polling: false, automatic_token_refresh: false, credential_lifetime_known: false, long_term_delivery_verified: false }
+        : { test_group_verified_at: proof?.updated_at ?? null }),
+      mentions_all_requested: channel !== 'weixin', mention_delivery_verified: false, true_ding: false };
   }
   return health;
 }
