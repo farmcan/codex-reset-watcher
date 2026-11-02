@@ -323,16 +323,17 @@ def main():
             errors.append('personal_usage_unavailable')
             if 'public_signal_check_failed' in state.get('errors', []):
                 errors.append('public_signal_check_failed')
+        previous_source_errors = [e for e in state.get('errors', []) if not e.startswith('dingtalk_')]
         for error in errors:
-            if error not in state.get('errors', []):
+            if error not in previous_source_errors:
                 event = {'kind': 'monitor_error', 'code': error}
                 if error == 'public_signal_check_failed':
                     event['diagnostic'] = state['public_fetch'].copy()
                 events.append(event)
-        for error in state.get('errors', []):
+        for error in previous_source_errors:
             if error not in errors:
                 events.append({'kind': 'monitor_recovered', 'code': error})
-        state['errors'] = errors
+        state['errors'] = errors.copy()  # Notification failures must not become source recoveries.
         for index, event in enumerate(events):
             event.update(id=f'{int(now * 1000)}-{index}', observed_at=now)
             state['outbox'].append(event)

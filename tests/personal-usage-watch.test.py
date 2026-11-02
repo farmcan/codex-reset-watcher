@@ -1,6 +1,8 @@
 import importlib.util
 import io
 import json
+import tempfile
+from contextlib import redirect_stdout
 from pathlib import Path
 import unittest
 from unittest.mock import patch
@@ -16,6 +18,25 @@ def sample(at=100, used=80, reset=1000, account='same', cards=1):
 
 
 class PersonalUsageTest(unittest.TestCase):
+    def test_unknown_delivery_never_becomes_a_source_recovery(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state_path = Path(directory) / 'state.json'
+            state_path.write_text(json.dumps({'started_at': 100, 'previous': sample(),
+                'errors': ['dingtalk_delivery_requires_reconciliation'],
+                'outbox': [{'id': 'unknown', 'kind': 'reset_card_granted',
+                            'delivery': {'status': 'unknown'}}]}))
+            with patch.object(watch, 'STATE', state_path), patch('sys.argv', ['watch', '--notify-dingtalk']), \
+                 patch.object(watch, 'rpc_usage', return_value={}), patch.object(watch, 'snapshot', return_value=sample(at=200)), \
+                 patch.object(watch, 'read_public_status', return_value={}), patch.object(watch, 'delayed_checks', return_value=[]), \
+                 patch.object(watch, 'notify_dingtalk'), redirect_stdout(io.StringIO()):
+                watch.main()
+                watch.main()
+            state = json.loads(state_path.read_text())
+            self.assertEqual(state['errors'], [])
+            self.assertEqual(state['notification_errors'], ['dingtalk_delivery_requires_reconciliation'])
+            self.assertEqual([e['id'] for e in state['outbox']], ['unknown'])
+            self.assertEqual(state['outbox'][0]['delivery']['status'], 'unknown')
+
     def test_transport_error_gets_one_bounded_read_retry(self):
         response = io.BytesIO(b'{"live":{"source_status":"healthy","signals":[]}}')
         response.status = 200

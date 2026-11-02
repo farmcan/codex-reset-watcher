@@ -84,6 +84,8 @@ def publish():
         for event in state.get('outbox', []):
             if event['kind'] not in ('monitor_error', 'monitor_recovered', 'monitor_gap'):
                 continue
+            if event['kind'] != 'monitor_gap' and event.get('code', '').startswith('dingtalk_'):
+                continue  # Delivery reconciliation is not evidence that a source recovered.
             event_id = JOB + '-' + event['id']
             if event_id in incident_ids:
                 continue
