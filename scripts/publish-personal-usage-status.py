@@ -27,16 +27,28 @@ def read_status(current):
     return json.loads(base64.b64decode(source['content']))
 
 
+def execution_status(state):
+    if state.get('errors'):
+        return ('个人额度只读复查部分失败，变化未知；保留私有断点',
+                '本轮读取部分失败，个人到账或来源变化未知；私有断点保留')
+    if state.get('notification_errors'):
+        return ('个人额度与公开信号只读复查完成；本人私聊投递待核对，未知消息未重发',
+                '读取已完成；本人通知投递待核对，未知消息未重发')
+    if state.get('publication_errors'):
+        return ('只读复查已完成；状态发布待恢复，私有断点保留', '读取已完成；状态发布待恢复')
+    return ('个人额度与公开信号复查完成；私有证据已保存，未向公开站点写入账号用量',
+            '私有只读复查与本人钉钉已接线；真实到账闭环待验')
+
+
 def publish():
     state = json.loads((PRIVATE / 'state.json').read_text())
     at = dt.datetime.fromtimestamp(state['checked_at'], dt.timezone.utc)
     stamp = at.isoformat()
-    partial = bool(state.get('errors') or state.get('notification_errors') or state.get('publication_errors'))
+    result_text, stage_text = execution_status(state)
     pending = PRIVATE / 'status.pending-publication.json'
     history = json.loads(pending.read_text()) if pending.exists() else []
     event = {'id': f'{JOB}-{int(state["checked_at"] * 1000)}', 'job_id': JOB,
-             'finished_at': stamp, 'result': '个人额度只读复查部分失败，变化未知；保留私有断点' if partial else
-             '个人额度与公开信号复查完成；私有证据已保存，未向公开站点写入账号用量',
+             'finished_at': stamp, 'result': result_text,
              'new_fulltexts': None, 'settled': None, 'posts': None,
              'sources_ok': None, 'sources_failed': None}
     if state.get('public_fetch', {}).get('attempts', 1) > 1:
@@ -59,10 +71,7 @@ def publish():
         job['next_step'] = '继续私有采样；真实变化发生后分别核对本机记录与本人私聊回执。历史公共观察不补发；离线或来源失败保持覆盖未知。'
         job['monitor'] = {'state': 'enabled', 'heartbeat_at': stamp,
                           'next_expected_at': (at + dt.timedelta(minutes=30)).isoformat(), 'grace_seconds': 1800}
-        if partial:
-            job['stage'] = '本轮读取部分失败，个人到账或来源变化未知；私有断点保留'
-        else:
-            job['stage'] = '私有只读复查与本人钉钉已接线；真实到账闭环待验'
+        job['stage'] = stage_text
         ids = {e['id'] for e in data['history']}
         data['history'].extend(e for e in history if e['id'] not in ids)
         started = f'{JOB}-started-20261031'
