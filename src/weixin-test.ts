@@ -14,7 +14,7 @@ export async function testWeixin(env: Env, key: string): Promise<Record<string, 
     const prior = await env.DB.prepare('SELECT value FROM app_state WHERE key=?').bind(stateKey).first<{ value: string }>();
     return { ...JSON.parse(prior!.value), deduplicated: true };
   }
-  const result = await sendWeixinNotice(env.WEIXIN_TEST_BOT_TOKEN, env.WEIXIN_TEST_OWNER_ID, '【Cloudflare 本人测试 · 非重置公告】\nCodex-Watcher 微信云端通知链路测试。\n\nhttps://codex-reset-watcher.weican16hit.workers.dev/');
+  const result = await sendWeixinNotice(env.WEIXIN_TEST_BOT_TOKEN, env.WEIXIN_TEST_OWNER_ID, '【Cloudflare 本人测试 · 非重置公告】\nCodex-Watcher 微信云端通知链路测试。\n\nhttps://codex-reset-watcher.weican16hit.workers.dev/', env.WEIXIN_TEST_CONTEXT_TOKEN);
   result.runtime = 'cloudflare_worker';
   // A persistence failure must not turn a completed network write into a replay.
   await env.DB.prepare('UPDATE app_state SET value=?,updated_at=? WHERE key=?').bind(JSON.stringify(result), now, stateKey).run();

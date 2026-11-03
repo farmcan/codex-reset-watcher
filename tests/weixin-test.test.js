@@ -29,6 +29,16 @@ describe('owner-only Weixin cloud probe',()=>{
     expect(await testWeixin(env,'unknown-probe')).toMatchObject({status:'unknown',deduplicated:true});
     expect(fetch).toHaveBeenCalledTimes(1);
   });
+  it('isolates test context from production context and never returns either in the receipt',async()=>{
+    const env=fixture();env.WEIXIN_CONTEXT_TOKEN='private-production-context';
+    const fetch=vi.fn().mockImplementation(async()=>new Response('{"ret":0}'));vi.stubGlobal('fetch',fetch);
+    await testWeixin(env,'without-test-context');
+    expect(JSON.parse(fetch.mock.calls[0][1].body).msg).not.toHaveProperty('context_token');
+    env.WEIXIN_TEST_CONTEXT_TOKEN='private-test-context';
+    const result=await testWeixin(env,'with-test-context');
+    expect(JSON.parse(fetch.mock.calls[1][1].body).msg.context_token).toBe('private-test-context');
+    expect(JSON.stringify(result)).not.toMatch(/private-test-context|private-production-context/);
+  });
   it('does not accept message ID over an explicit rejection or malformed business field',async()=>{
     const env=fixture();const fetch=vi.fn().mockResolvedValueOnce(new Response('{"ret":-2,"message_id":"123","errmsg":"private detail"}'))
       .mockResolvedValueOnce(new Response('{"ret":"0","message_id":"123"}'));vi.stubGlobal('fetch',fetch);

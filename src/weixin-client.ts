@@ -2,7 +2,7 @@ import { parseWeixinApiJson } from './vendor/weixin-json';
 
 // Official Tencent 2.4.10 text protocol; caller supplies only its own authorized owner.
 // Does not read messages, store credentials, or assume a context/token lifetime.
-export async function sendWeixinNotice(token: string, ownerId: string, text: string): Promise<Record<string, unknown>> {
+export async function sendWeixinNotice(token: string, ownerId: string, text: string, contextToken?: string): Promise<Record<string, unknown>> {
   let result: Record<string, unknown>;
   try {
     const response = await fetch('https://ilinkai.weixin.qq.com/ilink/bot/sendmessage', {
@@ -12,6 +12,9 @@ export async function sendWeixinNotice(token: string, ownerId: string, text: str
         'X-WECHAT-UIN': btoa(String(crypto.getRandomValues(new Uint32Array(1))[0])) },
       body: JSON.stringify({ msg: { from_user_id: '', to_user_id: ownerId,
         client_id: `watcher-cloud-${crypto.randomUUID()}`, message_type: 2, message_state: 2,
+        // Only an owner-bound inbound context may be supplied by the caller.
+        // A stored context does not imply a known TTL or automatic renewal.
+        ...(contextToken?.trim() ? { context_token: contextToken } : {}),
         item_list: [{ type: 1, text_item: { text } }] },
         base_info: { channel_version: '2.4.10', bot_agent: 'CodexResetWatcher/0.1.0' } })
     });

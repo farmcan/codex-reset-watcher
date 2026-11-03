@@ -51,8 +51,10 @@ export interface Env {
   WEBHOOK_TEST_TOKEN?: string;
   WEIXIN_TEST_BOT_TOKEN?: string;
   WEIXIN_TEST_OWNER_ID?: string;
+  WEIXIN_TEST_CONTEXT_TOKEN?: string;
   WEIXIN_BOT_TOKEN?: string;
   WEIXIN_OWNER_ID?: string;
+  WEIXIN_CONTEXT_TOKEN?: string;
   WEIXIN_NOTIFICATIONS_ENABLED?: string;
   QQ_TEST_APP_ID?: string;
   QQ_TEST_APP_SECRET?: string;

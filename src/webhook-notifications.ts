@@ -21,7 +21,7 @@ async function transportDestination(env: Env, channel: DeliveryChannel): Promise
 async function sendTransport(env: Env, channel: DeliveryChannel, text: string): Promise<string> {
   if (channel !== 'weixin' && channel !== 'qq') return sendWebhook(env, channel, text);
   const result = channel === 'weixin'
-    ? await sendWeixinNotice(env.WEIXIN_BOT_TOKEN!, env.WEIXIN_OWNER_ID!, boundedWebhookText(text))
+    ? await sendWeixinNotice(env.WEIXIN_BOT_TOKEN!, env.WEIXIN_OWNER_ID!, boundedWebhookText(text), env.WEIXIN_CONTEXT_TOKEN)
     : await sendQQNotice(env.QQ_APP_ID!, env.QQ_APP_SECRET!, env.QQ_OWNER_OPENID!, boundedWebhookText(text));
   if (result.status !== 'sent') throw new WebhookError(`${channel} ${result.error ?? 'outcome_unknown'}${typeof result.business_code === 'number' ? ` (${result.business_code})` : ''}`,
     result.status === 'pending' ? 'pending' : result.status === 'failed' ? 'failed' : 'unknown');

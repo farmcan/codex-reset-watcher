@@ -150,6 +150,18 @@ describe('cloud webhook notifications', () => {
     expect(sqlite.prepare('SELECT last_error FROM deliveries').get().last_error).toContain('-14');
     expect(await processWebhookDeliveries(env,now)).toEqual({sent:0,failed:0});expect(fetch).toHaveBeenCalledTimes(1);
   });
+  it('uses the configured owner context for production without exposing it in receipts or health', async () => {
+    const {env,sqlite}=fixture();delete env.FEISHU_WEBHOOK_URL;delete env.WECOM_WEBHOOK_URL;
+    Object.assign(env,{WEIXIN_BOT_TOKEN:'private-owner-token',WEIXIN_OWNER_ID:'authorized-owner',
+      WEIXIN_CONTEXT_TOKEN:'private-owner-context',WEIXIN_TEST_CONTEXT_TOKEN:'other-test-context',WEIXIN_NOTIFICATIONS_ENABLED:'true'});
+    await initializeWebhookChannels(env,now);await queueWebhookDeliveries(env,now);
+    const fetch=vi.fn().mockResolvedValue(new Response('{"ret":0}'));vi.stubGlobal('fetch',fetch);
+    expect(await processWebhookDeliveries(env,now)).toEqual({sent:1,failed:0});
+    expect(JSON.parse(fetch.mock.calls[0][1].body).msg.context_token).toBe('private-owner-context');
+    expect(JSON.stringify(await webhookHealth(env))).not.toContain('private-owner-context');
+    expect(sqlite.prepare('SELECT provider_receipt FROM deliveries').get().provider_receipt).not.toContain('private-owner-context');
+    expect(await processWebhookDeliveries(env,now)).toEqual({sent:0,failed:0});expect(fetch).toHaveBeenCalledTimes(1);
+  });
   it('requires authorization and a supported channel before touching test destinations', async () => {
     const {env}=fixture();env.WEBHOOK_TEST_TOKEN='fixture-test-token';
     const fetch=vi.fn();vi.stubGlobal('fetch',fetch);
