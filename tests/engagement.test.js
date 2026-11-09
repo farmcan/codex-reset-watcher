@@ -8,6 +8,7 @@ afterEach(()=>databases.splice(0).forEach(db=>db.close()));
 function fixture(){
   const sqlite=new DatabaseSync(':memory:');databases.push(sqlite);
   sqlite.exec(readFileSync(new URL('../migrations/0005_site_engagement.sql',import.meta.url),'utf8'));
+  sqlite.exec(readFileSync(new URL('../migrations/0010_engagement_sessions.sql',import.meta.url),'utf8'));
   const prepare=(sql,params=[])=>({sql,params,bind:(...args)=>prepare(sql,args)});
   return {DB:{prepare,batch:async statements=>{
     sqlite.exec('BEGIN');
@@ -24,19 +25,26 @@ const get=()=>new Request('https://watcher.test/api/engagement',{headers:{'X-Vis
 const now=new Date('2026-10-25T15:59:00Z');
 
 describe('persistent engagement',()=>{
-  it('counts a browser once per Shanghai calendar day across repeated requests',async()=>{
+  it('counts sessions after 30 minutes of inactivity and daily browsers separately',async()=>{
     const env=fixture();
-    expect((await (await handleEngagement(post('visit'),env,now)).json()).visits).toBe(1);
-    expect((await (await handleEngagement(post('visit'),env,now)).json()).visits).toBe(1);
-    expect((await (await handleEngagement(post('visit'),env,new Date('2026-10-25T16:00:00Z'))).json()).visits).toBe(2);
-    expect((await (await handleEngagement(post('visit',second),env,now)).json()).visits).toBe(3);
+    expect(await (await handleEngagement(post('visit'),env,now)).json()).toMatchObject({visits:1,daily_visitors:1});
+    expect((await (await handleEngagement(post('visit'),env,new Date(now.getTime()+29*60_000))).json()).visits).toBe(1);
+    expect((await (await handleEngagement(post('visit'),env,new Date(now.getTime()+59*60_000))).json()).visits).toBe(2);
+    expect(await (await handleEngagement(post('visit',second),env,now)).json()).toMatchObject({visits:3,daily_visitors:2});
   });
-  it('persists one like per browser independently of dates and visits',async()=>{
+  it('allows support once per Shanghai day including prior lifetime supporters',async()=>{
     const env=fixture();
-    expect(await (await handleEngagement(post('like'),env,now)).json()).toMatchObject({likes:1,visits:0,liked:true});
-    expect((await (await handleEngagement(post('like'),env,new Date('2026-11-01'))).json()).likes).toBe(1);
-    expect((await (await handleEngagement(post('like',second),env,now)).json()).likes).toBe(2);
-    expect(await (await handleEngagement(get(),env)).json()).toMatchObject({likes:2,visits:0,liked:true});
+    expect(await (await handleEngagement(post('like'),env,now)).json()).toMatchObject({likes:1,liked:true});
+    expect((await (await handleEngagement(post('like'),env,now)).json()).likes).toBe(1);
+    expect(await (await handleEngagement(post('like'),env,new Date('2026-10-25T16:00:00Z'))).json()).toMatchObject({likes:2,liked:true});
+    expect((await (await handleEngagement(post('like',second),env,now)).json()).likes).toBe(3);
+    expect(await (await handleEngagement(get(),env,now)).json()).toMatchObject({likes:3,liked:true});
+  });
+  it('retains old totals and lifetime likes through migration',async()=>{
+    const env=fixture();
+    const old=env.DB.prepare("INSERT INTO site_counter_actions(kind,visitor_id,period) VALUES ('likes',?,'all-time')").bind(id);
+    await env.DB.batch([old]);
+    expect(await (await handleEngagement(post('like'),env,now)).json()).toMatchObject({likes:2,liked:true});
   });
   it('rejects cross-origin requests and malformed visitors without incrementing',async()=>{
     const env=fixture();

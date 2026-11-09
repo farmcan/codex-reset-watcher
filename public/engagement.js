@@ -2,6 +2,7 @@ const english = document.documentElement.lang.startsWith('en');
 const text = (zh, en) => english ? en : zh;
 const visits = document.querySelector('#visit-count');
 const likes = document.querySelector('#like-count');
+const dailyVisitors = document.querySelector('#daily-visitors');
 const button = document.querySelector('#like-button');
 const label = document.querySelector('#like-label');
 const note = document.querySelector('#engagement-note');
@@ -30,7 +31,7 @@ if (fallback) {
     const response = await fetch(`/api/engagement${action ? `/${action}` : ''}`, {
       method: action ? 'POST' : 'GET', cache: 'no-store',
       headers: action ? { 'Content-Type': 'application/json' } : visitor ? { 'X-Visitor-ID': visitor } : {},
-      ...(action ? { body: JSON.stringify({ visitor_id: visitor }) } : {})
+      ...(action ? { body: JSON.stringify({ visitor_id: visitor, event_id: crypto.randomUUID() }) } : {})
     });
     if (!response.ok) throw new Error('engagement_unavailable');
     const data = await response.json();
@@ -38,9 +39,10 @@ if (fallback) {
     const format = new Intl.NumberFormat(english ? 'en' : 'zh-CN');
     visits.textContent = format.format(data.visits);
     likes.textContent = format.format(data.likes);
+    dailyVisitors.textContent = format.format(data.daily_visitors);
     liked = data.liked;
     button.setAttribute('aria-pressed', String(liked));
-    label.textContent = liked ? text('已点赞', 'Liked') : text('点赞', 'Like');
+    label.textContent = liked ? text('今日已支持', 'Supported today') : text('支持', 'Support');
     button.disabled = liked || !visitor;
   }
   button.addEventListener('click', async () => {
@@ -48,10 +50,15 @@ if (fallback) {
     try {
       await request('like');
     } catch {
-      note.textContent = text('点赞暂未确认，请重试。', 'Like not confirmed. Please retry.');
+      note.textContent = text('支持暂未确认，请重试。', 'Support not confirmed. Please retry.');
       button.disabled = liked || !visitor;
     }
   });
+  // Visible pages keep the session alive; returning after a 30-minute gap starts one.
+  if (visitor) {
+    setInterval(() => { if (!document.hidden) request('visit').catch(() => {}); }, 5 * 60 * 1000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) request('visit').catch(() => {}); });
+  }
   request(visitor ? 'visit' : '').catch(() => {
     note.textContent = text('计数暂不可用，请稍后刷新。', 'Counts unavailable. Please refresh later.');
   });

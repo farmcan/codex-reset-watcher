@@ -164,7 +164,7 @@ node scripts/configure-notification-webhook.mjs feishu /absolute/private-product
 
 主页中英文共用 D1 累计数，自 2026-10-25 上线起记录，不回填历史访问。
 `GET /api/engagement` 只读总数；`POST /api/engagement/visit` 和 `/like`
-接受随机浏览器 UUID `visitor_id`。同一浏览器按上海自然日计一次访问，点赞一次；
+接受随机浏览器 UUID `visitor_id`。自 2026-11-09 起，同一浏览器不活跃 30 分钟后重新访问计一次；支持按上海自然日每浏览器一次。旧累计数保留，今日访客按浏览器和上海自然日去重；
 唯一键和 SQLite trigger 原子去重并累加，刷新、重试与部署不清零。
 页面只在浏览器存储可用时登记；仅保存随机标识，不保存 IP、账号或浏览历史。
 这是轻量浏览器计数，不是实名人数统计；清除存储或换浏览器会被视为新浏览器。
@@ -174,7 +174,7 @@ GitHub Pages 备用快照引导到实时站查看与点赞，不写入离线快�
 实现复用自有 MiaoTI 项目 `3603fa3` 的设计思路
 （`functions/api/site-counter.js`、`migrations/0001_counters.sql`），
 沿用已有 D1，无新增外部服务；这里按上海自然日去重，与 MiaoTI 的 24 小时 cookie 口径不同。
-上线前应用 `0005_site_engagement.sql`。
+上线前应用 `0005_site_engagement.sql` 和 `0010_engagement_sessions.sql`。
 
 
 
@@ -193,7 +193,7 @@ npx wrangler secret put DINGTALK_RECIPIENT_IDS
 ## 其他接口
 
 - `GET /api/engagement`：只读累计访问、点赞和当前浏览器点赞状态。
-- `POST /api/engagement/visit`、`POST /api/engagement/like`：浏览器随机ID去重后累计。
+- `POST /api/engagement/visit`、`POST /api/engagement/like`：浏览器随机 ID 按会话或自然日去重后累计。
 - 管理员复核、通知测试和队列对账接口均需授权；测试令牌使用后删除。
 
 ## 重置时间与确认提醒（2026-10-28）
