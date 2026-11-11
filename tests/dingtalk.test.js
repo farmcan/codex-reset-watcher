@@ -2,6 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { reconcileNotificationQueue } from "../src/notification-queue";
+import { processPendingDeliveries } from "../src/notifications";
 import { sealDwsSession, dwsAccessToken, sendGroupPersonalDing } from '../src/dws';
 import { processReviews } from "../src/model-review";
 import { shortHash } from '../src/db';
@@ -77,6 +78,19 @@ describe("durable cloud DingTalk delivery", () => {
     env.DINGTALK_RECIPIENT_IDS='["absent"]';fetch.mockResolvedValueOnce(rpc({hasMore:false,list:[{openDingtalkId:'present'}]}));
     await expect(sendGroupPersonalDing(env,env.DINGTALK_GROUP_ID,'notice','missing')).rejects.toThrow('missing from the group');
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+  it('includes the watcher entry in both email versions while keeping the source',async()=>{
+    const {env,sqlite}=fixture();
+    Object.assign(env,{EMAIL_PROVIDER:'resend',RESEND_API_KEY:'fixture',ALERT_EMAIL_FROM:'from@example.test',ALERT_EMAIL_TO:'to@example.test'});
+    const destination=await shortHash(env.ALERT_EMAIL_TO);
+    sqlite.prepare("INSERT INTO deliveries(signal_id,channel,destination_hash,status,attempts,next_attempt_at,created_at) VALUES ('x:p','email',?,'pending',0,?,?)").run(destination,now,now);
+    const fetch=vi.fn().mockResolvedValue(new Response('{}',{status:200}));vi.stubGlobal('fetch',fetch);
+    expect(await processPendingDeliveries(env,now)).toMatchObject({sent:1,failed:0});
+    const payload=JSON.parse(fetch.mock.calls[0][1].body);
+    for (const part of [payload.text,payload.html]) {
+      expect(part).toContain('https://codex-reset-watcher.weican16hit.workers.dev/');
+      expect(part).toContain('https://x.com/tibo/status/1');
+    }
   });
   it('does not filter new visible weak hints by email severity',async()=>{
     const {env,sqlite}=fixture();env.EMAIL_MIN_SEVERITY='high';
@@ -256,15 +270,15 @@ describe("durable cloud DingTalk delivery", () => {
   it("preserves banked-reset action boundaries", () => {
     expect(dingTalkContent({event_type:'explicit_reset',reset_mode:'banked_reset',source_tier:'A1',author:'tibo',text:'banked',url:'https://x.com/tibo/status/1',effective_time:null})).toContain('不是自动重置');
   });
-  it('describes a banked reset announcement as pending, with only a bare source link at the end',()=>{
+  it('includes the watcher entry and retains the original source link',()=>{
     const source='https://x.com/thsottiaux/status/2116405414921384099';
     const content=dingTalkContent({event_type:'scheduled_reset',reset_mode:'banked_reset',source_tier:'A1',author:'thsottiaux',text:'Next two days will be resets… banked… https://t.co/example',url:source,effective_time:null,created_at:'2026-10-31T05:42:26.000Z'});
     expect(content).toContain('可储存重置的预告，尚未确认发放');
     expect(content).not.toContain('手动使用');
     expect(content).not.toContain('我们的网站');
     expect(content.trim().split('\n\n').at(-1)).toBe(source);
-    expect(content).not.toContain('codex-reset-watcher.weican16hit.workers.dev');
-    expect(content.match(/https?:\/\/\S+/g)).toEqual([source]);
+    expect(content).toContain('查看雷达：https://codex-reset-watcher.weican16hit.workers.dev/');
+    expect(content.match(/https?:\/\/\S+/g)).toEqual(['https://codex-reset-watcher.weican16hit.workers.dev/',source]);
   });
   it('never sends a test to the production group, for either notification mode',async()=>{
     for(const mode of ['personal_ding','group_message']){

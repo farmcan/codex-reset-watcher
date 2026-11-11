@@ -1,5 +1,6 @@
 import { SEVERITY_RANK } from "./config";
 import { shortHash } from "./db";
+import { WATCHER_URL } from "./notification-links";
 import type { Env, Severity } from "./types";
 
 interface DeliveryRow {
@@ -80,7 +81,7 @@ async function sendResend(env: Env, row: DeliveryRow): Promise<void> {
   const sourceText = excerpt(row.text);
   const confidence = `${Math.round(Number(row.confidence) * 100)}%`;
   const effective = row.effective_time ? `\n预计时间（${row.evidence_basis === "first_party" ? "原帖解析" : "近似"}）：${row.effective_time}` : "";
-  const plain = `${title}\n\n${action}\n\n来源：@${row.author} · ${row.source_tier}\n信号：${row.event_type} / ${row.reset_mode} / ${row.severity}\n加权置信：${confidence}${effective}\n\n原文摘录：\n${sourceText}\n\n原帖：${row.url}\n\n本提醒是非官方信息整理，不是投资或额度使用指令。`;
+  const plain = `${title}\n\n${action}\n\n查看雷达：${WATCHER_URL}\n\n来源：@${row.author} · ${row.source_tier}\n信号：${row.event_type} / ${row.reset_mode} / ${row.severity}\n加权置信：${confidence}${effective}\n\n原文摘录：\n${sourceText}\n\n原帖：${row.url}\n\n本提醒是非官方信息整理，不是投资或额度使用指令。`;
   const html = `
     <div style="font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:680px;margin:auto;color:#17201b;line-height:1.65">
       <p style="font-size:12px;letter-spacing:.08em;color:#657269">CODEX RESET WATCHER</p>
@@ -90,7 +91,7 @@ async function sendResend(env: Env, row: DeliveryRow): Promise<void> {
       <strong>信号</strong> ${escapeHtml(row.event_type)} / ${escapeHtml(row.reset_mode)} / ${escapeHtml(row.severity)}<br>
       <strong>加权置信</strong> ${confidence}</p>
       <blockquote style="border-left:3px solid #4f7a61;margin:18px 0;padding:4px 16px;color:#3d4941">${escapeHtml(sourceText)}</blockquote>
-      <p><a href="${escapeHtml(row.url)}" style="color:#176b42">打开 X 原帖 →</a></p>
+      <p><a href="${WATCHER_URL}" style="color:#176b42">查看 Codex Reset Watcher →</a> · <a href="${escapeHtml(row.url)}" style="color:#176b42">打开 X 原帖 →</a></p>
       <p style="font-size:12px;color:#748078">非官方信息整理。社区风声不等于官方排期；实际到账以你的 Codex Usage 为准。</p>
     </div>`;
 

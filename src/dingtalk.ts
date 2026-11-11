@@ -2,6 +2,7 @@ import { shortHash } from "./db";
 import type { Env, Signal } from "./types";
 import { DwsError, sendGroupPersonalDing, selectedDingRecipients } from './dws';
 import { resetTiming } from './reset-time';
+import { WATCHER_URL } from './notification-links';
 
 export function dingtalkConfigured(env: Env): boolean {
   if(env.DINGTALK_MODE==='personal_ding')return Boolean(env.DWS_TOKEN_KEY&&env.DINGTALK_GROUP_ID);
@@ -138,7 +139,7 @@ export function dingTalkContent(row: Omit<Row, "id" | "attempts">, personalDing 
   const original = row.text.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
     .replace(/https?:\/\/\S+/gi,'').trim();
   const quote = (original.length > 1000 ? original.slice(0,997) + '…' : original).split('\n').map(line=>`> ${line}`).join('\n');
-  return `${title}\n\n时间：${format(row.created_at)}${timing.phase === 'confirmed' ? ' · 确认公告' : ' · 原帖发布'}${time ? '\n'+time : ''}\n\n原文节选 · @${row.author}：\n${quote}\n\n${action}\n\n${row.url}`;
+  return `${title}\n\n查看雷达：${WATCHER_URL}\n\n时间：${format(row.created_at)}${timing.phase === 'confirmed' ? ' · 确认公告' : ' · 原帖发布'}${time ? '\n'+time : ''}\n\n原文节选 · @${row.author}：\n${quote}\n\n${action}\n\n${row.url}`;
 }
 
 export async function processDingTalkDeliveries(env: Env, now = new Date().toISOString()): Promise<{ sent: number; failed: number }> {

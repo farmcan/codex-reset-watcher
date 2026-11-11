@@ -206,9 +206,10 @@ describe('cloud webhook notifications', () => {
   });
   it('fits WeCom Chinese and emoji within 2048 UTF-8 bytes and preserves the source URL', () => {
     const url='https://x.com/thsottiaux/status/2116405414921384099';
-    const text=boundedWebhookText('公告\n\n'+ '中🙂'.repeat(1000)+'\n\n'+url);
+    const entry='https://codex-reset-watcher.weican16hit.workers.dev/';
+    const text=boundedWebhookText('公告\n\n查看雷达：'+entry+'\n\n'+ '中🙂'.repeat(1000)+'\n\n'+url);
     expect(new TextEncoder().encode(text).length).toBeLessThanOrEqual(2048);
-    expect(text.endsWith(url)).toBe(true);expect(text).not.toContain('�');
+    expect(text).toContain(entry);expect(text.endsWith(url)).toBe(true);expect(text).not.toContain('�');
   });
   it('persists acceptance separately per channel and never resends a completed delivery', async () => {
     const {env,sqlite}=fixture();await initializeWebhookChannels(env,now);await queueWebhookDeliveries(env,now);
@@ -216,6 +217,7 @@ describe('cloud webhook notifications', () => {
     expect(await processWebhookDeliveries(env,now)).toEqual({sent:2,failed:0});
     expect(await processWebhookDeliveries(env,now)).toEqual({sent:0,failed:0});
     expect(fetch).toHaveBeenCalledTimes(2);
+    for (const call of fetch.mock.calls) { const payload=JSON.parse(call[1].body); expect(JSON.stringify(payload)).toContain('https://codex-reset-watcher.weican16hit.workers.dev/'); }
     expect(sqlite.prepare("SELECT COUNT(*) n FROM deliveries WHERE status='sent'").get()).toMatchObject({n:2});
   });
   it('quarantines network ambiguity, redacts provider errors, and retries only explicit throttles', async () => {
