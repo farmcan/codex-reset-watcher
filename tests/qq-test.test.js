@@ -1,6 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { testQQ } from '../src/qq-test';
+import { testQQ, testQQGroup } from '../src/qq-test';
 import { handleApi } from '../src/api';
 import { sendQQNotice } from '../src/qq-client';
 const databases=[];
@@ -54,5 +54,32 @@ describe('owner-only QQ proactive cloud probe',()=>{
     expect(JSON.stringify(rejected)).not.toContain('private');
     expect(await sendQQNotice('app','secret','owner','notice')).toEqual({status:'unknown',error:'invalid_business_response'});
     expect(await sendQQNotice('app','secret','owner','notice')).toEqual({status:'unknown',error:'invalid_business_response'});
+  });
+});
+
+describe('explicit new-project QQ group commissioning probe',()=>{
+  it('requires configured target and keeps continuous delivery disabled',async()=>{
+    const env=fixture(),fetch=vi.fn();vi.stubGlobal('fetch',fetch);
+    expect(await testQQGroup(env,'missing-group')).toMatchObject({status:'failed',error:'group_test_not_configured'});
+    Object.assign(env,{QQ_APP_ID:'app',QQ_APP_SECRET:'private',QQ_GROUP_OPENID:'group',QQ_GROUP_NOTIFICATIONS_ENABLED:'true'});
+    expect(await testQQGroup(env,'already-live')).toMatchObject({status:'failed',error:'commissioning_test_requires_group_notifications_disabled'});
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it('sends once to only the bound project group with a clear test label and radar URL',async()=>{
+    const env=fixture();Object.assign(env,{QQ_APP_ID:'app',QQ_APP_SECRET:'private',QQ_GROUP_OPENID:'project-group'});
+    const fetch=vi.fn().mockResolvedValueOnce(token()).mockResolvedValueOnce(new Response('{"id":"group-probe"}'));vi.stubGlobal('fetch',fetch);
+    expect(await testQQGroup(env,'project-probe')).toMatchObject({status:'sent',scope:'group',acceptance_only:true});
+    expect(await testQQGroup(env,'project-probe')).toMatchObject({status:'sent',deduplicated:true});
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch.mock.calls[1][0]).toBe('https://api.sgroup.qq.com/v2/groups/project-group/messages');
+    const content=JSON.parse(fetch.mock.calls[1][1].body).content;
+    expect(content).toContain('非重置公告');expect(content).toContain('https://codex-reset-watcher.weican16hit.workers.dev/');
+  });
+  it('retains an ambiguous submission without replaying it',async()=>{
+    const env=fixture();Object.assign(env,{QQ_APP_ID:'app',QQ_APP_SECRET:'private',QQ_GROUP_OPENID:'project-group'});
+    const fetch=vi.fn().mockResolvedValueOnce(token()).mockRejectedValueOnce(new Error('private'));vi.stubGlobal('fetch',fetch);
+    expect(await testQQGroup(env,'unknown-project-probe')).toMatchObject({status:'unknown'});
+    expect(await testQQGroup(env,'unknown-project-probe')).toMatchObject({status:'unknown',deduplicated:true});
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 });

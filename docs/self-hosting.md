@@ -107,10 +107,11 @@ npx wrangler secret put ALERT_EMAIL_TO
 
 | 通道 | 已有验证 | 当前生产范围与待验项 |
 | --- | --- | --- |
-| 钉钉 | Worker 实发 DING、回执与隔离群读回；群内真实 @所有人 | 沿用已配置的指定接收者 DING 与群消息；受好友/同事关系限制，不承诺全员 DING |
+| 钉钉 | Worker 实发 DING、回执与隔离群读回；群内真实 @所有人；已导出正式群邀请并核对预览 | 官网直接提供邀请链接和同源二维码；没有取得公开数字群号，不以内部会话 ID 代替。个人 DING 仍受好友/同事关系限制，不承诺全员 DING |
 | 飞书 | 独立测试群 Worker 实发与读回；正式群可见 2026-11-11 15:10 自然通知；机器人和正式群小猫头像、群描述网站链接已在客户端核验 | 正式群已提供永久分享入口，浏览器显示打开飞书；需要飞书客户端。已开启企业内群搜索，新成员可读公开信号历史；跨组织外部加入尚未验证 |
-| 微信 ClawBot / iLink | Worker 无上下文发送被 API 受理，本人确认收到；已验证路径仅支持个人对话（direct-only） | 按维护者要求暂停，当前未启用；没有微信群入口或已验群投递能力。云端入站、自动刷新、跨天可用性与凭据寿命仍待验 |
-| QQ | 官方主动 C2C 路径的 Worker 测试获回执，创建者本人客户端读回确认；QQ群发送适配已准备 | 现有机器人配置不支持群聊，QQ群尚未启用且无公开入口；待平台群权限与目标群核验。本人 C2C 与群投递分开验收，主动配额与长期送达仍待验；名称/小猫头像保存状态待确认 |
+| 微信 ClawBot / iLink | 本人新入站上下文刷新后，2026-11-11 21:13 云端测试获受理，且本人明确确认收到 | 已按授权恢复本人通知，激活时间为 2026-11-11 21:29:18（北京时间），不补发停用期间旧信号；历史失败保留。官方插件仅 direct，没有普通微信群投递或公开入群入口；自然新增、自动刷新、跨天与凭据寿命仍待验 |
+| QQ | 官方主动 C2C 路径的 Worker 测试获回执、本人客户端读回；项目群已建立，小猫头像、机器人名称及简介已保存；本人群内精确标记通过官方 Gateway 绑定 | 未认证机器人允许管理员本人当群主的群，公开安装机器人另需认证。唯一群云端探针被腾讯明确拒绝（HTTP 400，40034105），无成功回执；持续通知保持关闭，主动消息权限待核验，公开加入未完成；不把机器人添加二维码当成群邀请 |
+| 小红书 | 官方文档存在群聊加入组件；已登录网页端可读取消息，但当前界面没有建群或邀请导出操作 | 手机镜像提示 iPhone 使用中，尚未建群，没有公开群入口；未核验普通群自动发送 API，不宣传自动通知已接通 |
 | 企业微信 | 尚无本项目实发验收 | 用户已明确暂缓；保持未配置，不为完成矩阵另建应用或群 |
 | 邮件 | 有实现和配置说明 | 当前部署未配置，不宣传邮件已在运行 |
 
@@ -125,7 +126,7 @@ node scripts/configure-notification-webhook.mjs feishu /absolute/private-test.js
 node scripts/configure-notification-webhook.mjs feishu /absolute/private-production.json production
 ```
 
-私有 JSON 字段为 `webhook_url`、`signing_secret`。对应 Secrets 为 `FEISHU_TEST_WEBHOOK_URL` / `FEISHU_TEST_WEBHOOK_SECRET` 与 `FEISHU_WEBHOOK_URL` / `FEISHU_WEBHOOK_SECRET`。微信个人对话如需恢复，使用 `WEIXIN_BOT_TOKEN`、`WEIXIN_OWNER_ID` 并显式设置 `WEIXIN_NOTIFICATIONS_ENABLED=true`；当前按要求暂停，不能由已有凭据推断已启用。本人专用测试使用独立的 `WEIXIN_TEST_*` 配置。QQ 本人测试使用 `QQ_TEST_APP_ID`、`QQ_TEST_APP_SECRET`、`QQ_TEST_OWNER_OPENID`；生产使用 `QQ_APP_ID`、`QQ_APP_SECRET`、`QQ_OWNER_OPENID` 并显式设置 `QQ_NOTIFICATIONS_ENABLED=true`。获取 token 前的网络、限流及服务端临时故障按队列最多尝试三次；消息提交后的未知结果不重发。
+私有 JSON 字段为 `webhook_url`、`signing_secret`。对应 Secrets 为 `FEISHU_TEST_WEBHOOK_URL` / `FEISHU_TEST_WEBHOOK_SECRET` 与 `FEISHU_WEBHOOK_URL` / `FEISHU_WEBHOOK_SECRET`。微信个人对话如需恢复，使用 `WEIXIN_BOT_TOKEN`、`WEIXIN_OWNER_ID` 并显式设置 `WEIXIN_NOTIFICATIONS_ENABLED=true`；本人通道已于上述激活时间恢复，不能由测试成功推断群聊能力。本人专用测试使用独立的 `WEIXIN_TEST_*` 配置。QQ 本人测试使用 `QQ_TEST_APP_ID`、`QQ_TEST_APP_SECRET`、`QQ_TEST_OWNER_OPENID`；生产使用 `QQ_APP_ID`、`QQ_APP_SECRET`、`QQ_OWNER_OPENID` 并显式设置 `QQ_NOTIFICATIONS_ENABLED=true`。获取 token 前的网络、限流及服务端临时故障按队列最多尝试三次；消息提交后的未知结果不重发。
 
 新目的地启用时建立激活时间，只接收之后实时新增且有通知资格的网页信号，旧历史不重放。管理员测试需固定 `Idempotency-Key`；发送结果未知会隔离，不自动重发。队列正常或一次测试成功不等于自然信号与长期凭据均已验收；以通道实际回执和状态为准。
 
@@ -212,6 +213,8 @@ X API 仍每20分钟轮询 Tibo，新预告和随后的一手重置确认各自�
 
 公开成功查询通过Cloudflare Cache API按路径共享60秒缓存，忽略无关query，避免重复页面刷新放大数据库扫描；管理员POST和失败健康检查不缓存。浏览器仍每分钟更新，数据生成时间保留。公共读取不再反复写入源配置；Cron初始化/同步源配置。D1限额返回明确503及`coverage=unknown`，前端显示监控与通知中断，不解释为“没有重置”。这项优化减少本项目读取，不保证账号内其他项目不耗尽共享额度。
 
-QQ群使用独立 `qq_group` 投递目标：需配置 `QQ_GROUP_OPENID`，复用 `QQ_APP_ID` / `QQ_APP_SECRET`，并显式设置 `QQ_GROUP_NOTIFICATIONS_ENABLED=true`。当前未认证机器人允许加入管理员自己担任群主的群；已建立仅本人和机器人的项目群，但群绑定与发送未验收，保持关闭；群权限、目标及独立实发验收完成前不要启用。群与本人 C2C 分开激活和去重，新群不回放历史，失败不回退到本人私聊。
+QQ群使用独立 `qq_group` 投递目标：需配置 `QQ_GROUP_OPENID`，复用 `QQ_APP_ID` / `QQ_APP_SECRET`，并显式设置 `QQ_GROUP_NOTIFICATIONS_ENABLED=true`。当前未认证机器人允许加入管理员自己担任群主的群；已建立仅本人和机器人的项目群，群绑定现已核验，主动发送被接口拒绝，保持关闭；群权限、目标及独立实发验收完成前不要启用。群与本人 C2C 分开激活和去重，新群不回放历史，失败不回退到本人私聊。
 
-2026-11-11 续验：QQ 控制台已保存 Codex-Watcher 名称、小猫头像与雷达网址简介；新建项目群与群头像已在客户端核验。平台说明未认证主体仅管理员可用，但可添加至管理员当群主的群；个人认证后才可配置公开机器人服务。未将添加机器人的二维码宣传成群入群二维码。微信已取得本人新上下文并获一次云端测试受理，实际收件及持续通知恢复分别验收。
+2026-11-11 续验：QQ 控制台已保存 Codex-Watcher 名称、小猫头像与雷达网址简介；新建项目群与群头像已在客户端核验。平台说明未认证主体仅管理员可用，但可添加至管理员当群主的群；个人认证后才可配置公开机器人服务。未将添加机器人的二维码宣传成群入群二维码。微信已取得本人新上下文、云端测试获受理并由本人确认收件；本人持续通知已按新的激活时间恢复，未来自然信号另验。
+
+小红书能力参考：[官方群聊组件](https://miniapp.xiaohongshu.com/doc/DC532545)、[群口令转换接口](https://miniapp.xiaohongshu.com/doc/DC217062)。这些只证明已有群加入能力，不证明当前账号建群资格或普通群自动发送能力。

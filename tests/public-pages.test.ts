@@ -100,7 +100,7 @@ describe('useful token maxxing tasks', () => {
       expect(section).toContain('docs/research-pedaling-workflows.md');
       for (const entry of ['https://opire.dev/', 'https://up-for-grabs.net/', 'https://docs.opire.dev/rewards/pricing']) expect(section).toContain(entry);
       expect(section).not.toContain('superset-sh/superset');
-      expect(page).toContain('d4r_yr1im7hv6');
+      expect(page).toContain('join/dingtalk.svg');
     }
     expect(chinese).toContain('Token maxxing：剩余额度做什么');
     expect(chinese).toContain('回归测试');

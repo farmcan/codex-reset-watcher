@@ -17,7 +17,7 @@ import { classifyPost } from './classifier';
 import { withResetContext } from './reset-context';
 import { webhookHealth, testWebhook, processWebhookDeliveries, WEBHOOK_CHANNELS, type WebhookChannel } from './webhook-notifications';
 import { testWeixin } from './weixin-test';
-import { testQQ } from './qq-test';
+import { testQQ, testQQGroup } from './qq-test';
 import { readObservations, writeObservations } from './arrival-observations';
 
 const JSON_HEADERS = {
@@ -214,7 +214,9 @@ export async function handleApi(request: Request, env: Env): Promise<Response | 
     if (!await authorized(request, env) && !await authorized(request, { ...env, ADMIN_TOKEN: env.WEBHOOK_TEST_TOKEN })) return json({ error: 'unauthorized' }, 401);
     const key = request.headers.get('Idempotency-Key') ?? '';
     if (!/^[a-zA-Z0-9_-]{8,100}$/.test(key)) return json({ error: 'Idempotency-Key required (8-100 alphanumeric characters)' }, 400);
-    const result = await testQQ(env,key);
+    const scope = url.searchParams.get('scope') ?? 'owner';
+    if (scope !== 'owner' && scope !== 'group') return json({ error: 'scope must be owner or group' }, 400);
+    const result = scope === 'group' ? await testQQGroup(env,key) : await testQQ(env,key);
     return json(result, result.status === 'sent' ? 200 : 502);
   }
   if (request.method === "POST" && url.pathname === "/api/admin/refresh-dws") {
