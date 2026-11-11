@@ -127,10 +127,33 @@
       </section>
 
       <section id="subscribe" class="subscribe-section" aria-labelledby="subscribe-title">
-        <div class="subscribe-intro"><span class="signal-kicker">Stay in the loop</span><h2 id="subscribe-title">Get the update.<br>Get back to work.</h2><p>Follow reset announcements and confirmations without keeping this page open.</p></div>
-        <div class="subscribe-options"><article><h3>DingTalk alerts</h3><p>Open the invite or scan the code to join directly.</p><a class="feed-link" href="https://qr.dingtalk.com/action/joingroup?code=v1,k1,WKYT6kPIY92OtrKxnc7HXlCwi+MZ6TuKAA7uE4k9g3w=&amp;_dt_no_comment=1&amp;origin=11" target="_blank" rel="noreferrer noopener">Join the DingTalk alert group ↗</a><a href="https://qr.dingtalk.com/action/joingroup?code=v1,k1,WKYT6kPIY92OtrKxnc7HXlCwi+MZ6TuKAA7uE4k9g3w=&amp;_dt_no_comment=1&amp;origin=11" target="_blank" rel="noreferrer noopener"><img src="../join/dingtalk.svg" width="192" height="192" loading="lazy" alt="Scan to join the DingTalk alert group" style="display:block;max-width:100%;margin:14px 0"></a>
-<details class="notification-notes"><summary>About notifications</summary><p>Group mentions share new updates. App DING requires an eligible contact relationship and is currently enabled for designated recipients. Joining the group does not automatically enable personal DING.</p></details>
-        </article><article><h3>Feishu alert group</h3><p>Get the same reset signals, watcher entry, and original source links as DingTalk.</p><a class="feed-link" href="https://applink.feishu.cn/client/chat/chatter/add_by_link?link_token=f33nb646-9c77-4ffb-a6b8-aec383d83876" target="_blank" rel="noreferrer noopener">Join the Feishu alert group ↗</a><a href="https://applink.feishu.cn/client/chat/chatter/add_by_link?link_token=f33nb646-9c77-4ffb-a6b8-aec383d83876" target="_blank" rel="noreferrer noopener"><img src="../join/feishu.svg" width="192" height="192" loading="lazy" alt="Scan to open the Feishu group entry" style="display:block;max-width:100%;margin:14px 0"></a><p class="quiet-note">Requires the Feishu app; joining across organizations is still unverified.</p><p class="quiet-note">QQ group alerts await platform permission. WeChat and Xiaohongshu groups are not open yet.</p></article><article><h3>Your reader, your choice</h3><p>Subscribe using your feed reader. No account needed.</p><a class="feed-link" href="../feed.xml">Subscribe via RSS ↗</a><p class="quiet-note">Notification frequency depends on your reader.</p></article></div>
+        <div class="subscribe-intro"><span class="signal-kicker">Stay in the loop</span><h2 id="subscribe-title">Get the update.<br>Get back to work.</h2><p>Choose your platform.<br>Expand to join or subscribe.</p><span class="subscribe-caption">The same updates, on your terms.</span></div>
+        <div class="subscribe-options" aria-label="Notification platforms">
+          <details class="notification-channel" name="notification-channel" id="join-dingtalk">
+            <summary><span class="channel-mark channel-mark-dingtalk"><img src="../icons/dingding.svg" width="26" height="26" alt=""></span><span class="channel-label"><strong>DingTalk</strong><span>Group alerts</span></span><span class="channel-chevron" aria-hidden="true">⌄</span></summary>
+            <div class="channel-content has-qr"><div class="channel-copy"><h3>DingTalk alerts</h3><p>Scan with DingTalk or open the invitation.</p><a class="channel-action" href="https://qr.dingtalk.com/action/joingroup?code=v1,k1,WKYT6kPIY92OtrKxnc7HXlCwi+MZ6TuKAA7uE4k9g3w=&amp;_dt_no_comment=1&amp;origin=11" target="_blank" rel="noreferrer noopener">Join the DingTalk group<span aria-hidden="true">↗</span></a><p class="channel-note">Group alerts are available. Personal DING is limited to designated recipients.</p></div><a class="channel-qr" href="https://qr.dingtalk.com/action/joingroup?code=v1,k1,WKYT6kPIY92OtrKxnc7HXlCwi+MZ6TuKAA7uE4k9g3w=&amp;_dt_no_comment=1&amp;origin=11" target="_blank" rel="noreferrer noopener"><img src="../join/dingtalk.svg" width="160" height="160" loading="lazy" alt="Scan to join DingTalk alert group"><span>Scan with DingTalk</span></a></div>
+          </details>
+          <details class="notification-channel" name="notification-channel" id="join-feishu">
+            <summary><span class="channel-mark channel-mark-feishu"><img src="../icons/feishu.svg" width="26" height="26" alt=""></span><span class="channel-label"><strong>Feishu</strong><span>Group alerts</span></span><span class="channel-chevron" aria-hidden="true">⌄</span></summary>
+            <div class="channel-content has-qr"><div class="channel-copy"><h3>Feishu alerts</h3><p>Get the same reset signals, watcher entry and original sources.</p><a class="channel-action" href="https://applink.feishu.cn/client/chat/chatter/add_by_link?link_token=f33nb646-9c77-4ffb-a6b8-aec383d83876" target="_blank" rel="noreferrer noopener">Join the Feishu group<span aria-hidden="true">↗</span></a><p class="channel-note">Requires Feishu. Joining across organizations remains unverified.</p></div><a class="channel-qr" href="https://applink.feishu.cn/client/chat/chatter/add_by_link?link_token=f33nb646-9c77-4ffb-a6b8-aec383d83876" target="_blank" rel="noreferrer noopener"><img src="../join/feishu.svg" width="160" height="160" loading="lazy" alt="Scan to join Feishu alert group"><span>Scan with Feishu</span></a></div>
+          </details>
+          <details class="notification-channel" name="notification-channel" id="join-rss">
+            <summary><span class="channel-mark channel-mark-rss"><img src="../icons/rss.svg" width="26" height="26" alt=""></span><span class="channel-label"><strong>RSS</strong><span>Feed reader</span></span><span class="channel-chevron" aria-hidden="true">⌄</span></summary>
+            <div class="channel-content"><div class="channel-copy"><h3>RSS</h3><p>Follow public updates in your feed reader. No account needed.</p><a class="channel-action" href="../feed.xml">Open the RSS feed<span aria-hidden="true">↗</span></a><p class="channel-note">Your reader determines notification frequency.</p></div></div>
+          </details>
+          <details class="notification-channel is-pending" name="notification-channel" id="join-qq">
+            <summary><span class="channel-mark channel-mark-qq"><img src="../icons/qq.svg" width="26" height="26" alt=""></span><span class="channel-label"><strong>QQ</strong><span>Coming soon</span></span><span class="channel-chevron" aria-hidden="true">⌄</span></summary>
+            <div class="channel-content"><div class="channel-copy"><h3>QQ</h3><p>The group is created. Proactive notification permission is being checked.</p><p class="channel-note">A join entry will be available after delivery is verified.</p></div></div>
+          </details>
+          <details class="notification-channel is-pending" name="notification-channel" id="join-wechat">
+            <summary><span class="channel-mark channel-mark-wechat"><img src="../icons/wechat.svg" width="26" height="26" alt=""></span><span class="channel-label"><strong>WeChat</strong><span>Coming soon</span></span><span class="channel-chevron" aria-hidden="true">⌄</span></summary>
+            <div class="channel-content"><div class="channel-copy"><h3>WeChat</h3><p>A public WeChat group is not open yet.</p><p class="channel-note">Only private notifications to the maintainer are verified. Automated posts to ordinary WeChat groups are not supported.</p></div></div>
+          </details>
+          <details class="notification-channel is-pending" name="notification-channel" id="join-xiaohongshu">
+            <summary><span class="channel-mark channel-mark-xiaohongshu"><img src="../icons/xiaohongshu.svg" width="26" height="26" alt=""></span><span class="channel-label"><strong>Xiaohongshu</strong><span>Coming soon</span></span><span class="channel-chevron" aria-hidden="true">⌄</span></summary>
+            <div class="channel-content"><div class="channel-copy"><h3>Xiaohongshu</h3><p>A community group is being prepared. A group code or QR will appear here once created.</p><p class="channel-note">Automated group notifications are not connected.</p></div></div>
+          </details>
+        </div>
       </section>
 
 
@@ -355,7 +378,7 @@
     <footer>
 
 
-      <p class="site-credit"><a href="https://github.com/farmcan/codex-reset-watcher" target="_blank" rel="noreferrer noopener">farmcan / Codex Reset Watcher</a> · Built with Codex · Updated <time datetime="2026-11-11">2026-11-11</time></p>
+      <p class="site-credit"><a href="https://github.com/farmcan/codex-reset-watcher" target="_blank" rel="noreferrer noopener">farmcan / Codex Reset Watcher</a> · Built with Codex · Updated <time datetime="2026-11-12">2026-11-12</time></p>
       <p>Open source, unofficial, and unaffiliated with OpenAI, X, or any monitored account. The project uses the cat artwork shown on this site.</p>
       <div><a href="../showcase/">Project & media</a><a id="status-api-link" href="../snapshots/status.json">JSON API</a><a id="history-api-link" href="../snapshots/history.json">History data</a><a href="../feed.xml">RSS</a></div>
     </footer>
