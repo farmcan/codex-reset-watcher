@@ -442,7 +442,9 @@ footer { flex-wrap: wrap; }
 .channel-qr { display:block; padding:10px; background:white; border:1px solid var(--line); border-radius:12px; text-decoration:none; text-align:center; }
 .channel-qr img { display:block; width:100%; height:auto; }
 .channel-qr span { display:block; margin-top:4px; color:var(--muted); font-size:10px; }
-.channel-qr-official { padding:0; overflow:hidden; background:#101014; }
+.channel-qr-official { position:relative; aspect-ratio:1; padding:0; overflow:hidden; background:#27272b; border-color:#27272b; }
+/* Frame the QR region; keep the user-provided share image unchanged. */
+.channel-qr-official img { position:absolute; width:133.148%; max-width:none; height:auto; left:-16.667%; top:-88.519%; }
 .channel-number code { display:inline-block; margin-left:6px; padding:3px 8px; border-radius:6px; background:var(--accent-soft); color:var(--ink); font-size:14px; user-select:all; }
 .dingtalk-contact code { display:inline-block; overflow-wrap:anywhere; font-size:14px; color:var(--ink); }
 .feed-link { color:var(--accent); font-weight:750; }
