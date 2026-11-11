@@ -297,7 +297,7 @@ function renderHealth(status) {
   const deliveryIssues = ding?.status === "degraded" || ding?.session?.status === "degraded";
   if (capability) capability.textContent = deliveryIssues
     ? ui("提醒暂有异常，最新动态可在这里查看。", "Alerts need attention. Check the latest updates here.")
-    : ui("重置有消息，钉钉 / 飞书提醒。", "Reset news, straight to DingTalk or Feishu.");
+    : ui("重置有消息，钉钉 / 飞书 / QQ 提醒。", "Reset news, straight to DingTalk, Feishu or QQ.");
 
 }
 
