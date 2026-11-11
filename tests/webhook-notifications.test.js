@@ -33,6 +33,20 @@ function fixture() {
 const accepted = (channel) => new Response(JSON.stringify(channel === 'feishu' ? {code:0} : {errcode:0}));
 
 describe('cloud webhook notifications', () => {
+  it('keeps QQ group delivery opt-in and isolated from owner delivery',async()=>{
+    const {env,sqlite}=fixture();delete env.FEISHU_WEBHOOK_URL;delete env.WECOM_WEBHOOK_URL;
+    Object.assign(env,{QQ_APP_ID:'app',QQ_APP_SECRET:'secret',QQ_GROUP_OPENID:'authorized-group'});
+    expect(await queueWebhookDeliveries(env,now)).toBe(0);
+    env.QQ_GROUP_NOTIFICATIONS_ENABLED='true';await initializeWebhookChannels(env,now);
+    expect(await queueWebhookDeliveries(env,now)).toBe(1);
+    const fetch=vi.fn().mockResolvedValueOnce(new Response('{"access_token":"token","expires_in":7200}')).mockResolvedValueOnce(new Response('{"id":"group-receipt"}'));vi.stubGlobal('fetch',fetch);
+    expect(await processWebhookDeliveries(env,now)).toEqual({sent:1,failed:0});
+    expect(await processWebhookDeliveries(env,now)).toEqual({sent:0,failed:0});
+    expect(fetch.mock.calls[1][0]).toBe('https://api.sgroup.qq.com/v2/groups/authorized-group/messages');
+    expect(JSON.parse(fetch.mock.calls[1][1].body).content).toContain('查看雷达：');
+    expect(sqlite.prepare('SELECT channel,status FROM deliveries').all()).toEqual([{channel:'qq_group',status:'sent'}]);
+    expect((await webhookHealth(env)).qq_group).toMatchObject({configured:true,recipient_scope:'group',owner_only:false,mentions_all_requested:false});
+  });
   it('requires permanent QQ credentials and explicit enablement, skips history, and claims a delivery only once', async () => {
     const {env,sqlite}=fixture();delete env.FEISHU_WEBHOOK_URL;delete env.WECOM_WEBHOOK_URL;
     Object.assign(env,{QQ_TEST_APP_ID:'test-app',QQ_TEST_APP_SECRET:'private-test',QQ_TEST_OWNER_OPENID:'test-owner',QQ_NOTIFICATIONS_ENABLED:'true'});

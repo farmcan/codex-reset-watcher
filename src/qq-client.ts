@@ -2,6 +2,16 @@
 // 429a0f1b798f3b0fcef3679e207dbc0469a1df2d. No Gateway or inbound message reads.
 // An accepted send does not establish quota, recipient display, or long-term delivery.
 export async function sendQQNotice(appId: string, appSecret: string, ownerOpenid: string, text: string): Promise<Record<string, unknown>> {
+  return sendQQMessage(appId, appSecret, 'users', ownerOpenid, text);
+}
+
+// The SDK exposes proactive group sends, but each bot's entitlement/quota must
+// still be verified against the actual group; this never falls back to C2C.
+export async function sendQQGroupNotice(appId: string, appSecret: string, groupOpenid: string, text: string): Promise<Record<string, unknown>> {
+  return sendQQMessage(appId, appSecret, 'groups', groupOpenid, text);
+}
+
+async function sendQQMessage(appId: string, appSecret: string, scope: 'users' | 'groups', targetOpenid: string, text: string): Promise<Record<string, unknown>> {
   let token: string | null = null;
   let tokenResponse: Response;
   // Token acquisition cannot deliver a message. No credential or free-text error is retained.
@@ -25,7 +35,7 @@ export async function sendQQNotice(appId: string, appSecret: string, ownerOpenid
   } catch { /* A malformed credential response needs attention; no message was submitted. */ }
   if (!token) return { status: 'failed', error: 'qq_token_unavailable_no_message_submitted' };
   try {
-    const response = await fetch(`https://api.sgroup.qq.com/v2/users/${encodeURIComponent(ownerOpenid)}/messages`, {
+    const response = await fetch(`https://api.sgroup.qq.com/v2/${scope}/${encodeURIComponent(targetOpenid)}/messages`, {
       method: 'POST', redirect: 'manual', signal: AbortSignal.timeout(20_000),
       headers: { 'Content-Type': 'application/json', Authorization: `QQBot ${token}` },
       body: JSON.stringify({ msg_type: 0, content: text })

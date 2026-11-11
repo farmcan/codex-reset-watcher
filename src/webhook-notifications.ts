@@ -3,29 +3,32 @@ import { dingTalkContent } from './dingtalk';
 import type { Env } from './types';
 import { WEBHOOK_CHANNELS, WebhookError, validateWebhook, sendWebhookNotice, boundedWebhookText, type WebhookChannel } from './webhook-client';
 import { sendWeixinNotice } from './weixin-client';
-import { sendQQNotice } from './qq-client';
+import { sendQQNotice, sendQQGroupNotice } from './qq-client';
 export { WEBHOOK_CHANNELS, validateWebhook, boundedWebhookText, type WebhookChannel } from './webhook-client';
 
-const DELIVERY_CHANNELS = [...WEBHOOK_CHANNELS, 'weixin', 'qq'] as const;
+const DELIVERY_CHANNELS = [...WEBHOOK_CHANNELS, 'weixin', 'qq', 'qq_group'] as const;
 type DeliveryChannel = typeof DELIVERY_CHANNELS[number];
 function transportConfigured(env: Env, channel: DeliveryChannel): boolean {
   if (channel === 'weixin') return Boolean(env.WEIXIN_NOTIFICATIONS_ENABLED === 'true' && env.WEIXIN_BOT_TOKEN && env.WEIXIN_OWNER_ID);
+  if (channel === 'qq_group') return Boolean(env.QQ_GROUP_NOTIFICATIONS_ENABLED === 'true' && env.QQ_APP_ID && env.QQ_APP_SECRET && env.QQ_GROUP_OPENID);
   if (channel === 'qq') return Boolean(env.QQ_NOTIFICATIONS_ENABLED === 'true' && env.QQ_APP_ID && env.QQ_APP_SECRET && env.QQ_OWNER_OPENID);
   return Boolean(webhookConfig(env, channel));
 }
 async function transportDestination(env: Env, channel: DeliveryChannel): Promise<string> {
   if (channel === 'weixin') return shortHash(`weixin-owner:${env.WEIXIN_OWNER_ID}`);
+  if (channel === 'qq_group') return shortHash(`qq-group:${env.QQ_APP_ID}:${env.QQ_GROUP_OPENID}`);
   if (channel === 'qq') return shortHash(`qq-owner:${env.QQ_APP_ID}:${env.QQ_OWNER_OPENID}`);
   return webhookDestination(env, channel);
 }
 async function sendTransport(env: Env, channel: DeliveryChannel, text: string): Promise<string> {
-  if (channel !== 'weixin' && channel !== 'qq') return sendWebhook(env, channel, text);
+  if (channel !== 'weixin' && channel !== 'qq' && channel !== 'qq_group') return sendWebhook(env, channel, text);
   const result = channel === 'weixin'
     ? await sendWeixinNotice(env.WEIXIN_BOT_TOKEN!, env.WEIXIN_OWNER_ID!, boundedWebhookText(text), env.WEIXIN_CONTEXT_TOKEN)
+    : channel === 'qq_group' ? await sendQQGroupNotice(env.QQ_APP_ID!, env.QQ_APP_SECRET!, env.QQ_GROUP_OPENID!, boundedWebhookText(text))
     : await sendQQNotice(env.QQ_APP_ID!, env.QQ_APP_SECRET!, env.QQ_OWNER_OPENID!, boundedWebhookText(text));
   if (result.status !== 'sent') throw new WebhookError(`${channel} ${result.error ?? 'outcome_unknown'}${typeof result.business_code === 'number' ? ` (${result.business_code})` : ''}`,
     result.status === 'pending' ? 'pending' : result.status === 'failed' ? 'failed' : 'unknown');
-  return JSON.stringify({ ...result, runtime: 'cloudflare_worker', owner_only: true });
+  return JSON.stringify({ ...result, runtime: 'cloudflare_worker', owner_only: channel !== 'qq_group' });
 }
 
 export function webhookConfig(env: Env, channel: WebhookChannel, test = false): { url: string; secret?: string } | null {
@@ -128,7 +131,7 @@ export async function webhookHealth(env: Env): Promise<Record<string, unknown>> 
   const health: Record<string, unknown> = {};
   for (const channel of DELIVERY_CHANNELS) {
     const configured = transportConfigured(env, channel);
-    const personal = channel === 'weixin' || channel === 'qq';
+    const personal = channel === 'weixin' || channel === 'qq' || channel === 'qq_group';
     const test = !personal ? webhookConfig(env, channel, true) : null;
     let proof: { updated_at: string } | null = null;
     if (test && !personal) {
@@ -170,6 +173,7 @@ export async function webhookHealth(env: Env): Promise<Record<string, unknown>> 
       cloud_verified: Boolean(counts?.last_sent_at),
       ...(channel === 'weixin' ? { cloud_probe_accepted_at: proof?.updated_at ?? null, owner_only: true,
         inbound_polling: false, automatic_token_refresh: false, credential_lifetime_known: false, long_term_delivery_verified: false }
+        : channel === 'qq_group' ? { recipient_scope:'group', owner_only:false, proactive:true, gateway_required:false, proactive_quota_known:false, long_term_delivery_verified:false }
         : channel === 'qq' ? { cloud_probe_accepted_at: proof?.updated_at ?? null, owner_only: true,
           proactive: true, gateway_required: false, token_acquisition: 'per_send',
           proactive_quota_known: false, long_term_delivery_verified: false }

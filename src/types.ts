@@ -63,6 +63,8 @@ export interface Env {
   QQ_APP_SECRET?: string;
   QQ_OWNER_OPENID?: string;
   QQ_NOTIFICATIONS_ENABLED?: string;
+  QQ_GROUP_OPENID?: string;
+  QQ_GROUP_NOTIFICATIONS_ENABLED?: string;
 }
 
 export interface QuerySpec {

@@ -103,16 +103,18 @@ npx wrangler secret put ALERT_EMAIL_TO
 
 ### 通知通道与验收范围
 
-截至 2026-10-31。API 受理、客户端收件、自然新增信号投递是三项独立验收，不能相互替代。这里记录维护者已有配置，不表示任意访客已获得这些账号的通知权限。
+截至 2026-11-11。API 受理、客户端收件、自然新增信号投递是三项独立验收，不能相互替代。这里记录维护者已有配置，不表示任意访客已获得这些账号的通知权限。
 
 | 通道 | 已有验证 | 当前生产范围与待验项 |
 | --- | --- | --- |
 | 钉钉 | Worker 实发 DING、回执与隔离群读回；群内真实 @所有人 | 沿用已配置的指定接收者 DING 与群消息；受好友/同事关系限制，不承诺全员 DING |
-| 飞书 | 独立测试群 Worker 实发与读回；@所有人为平台富提及；签名校验已保存核对 | 独立正式群已配置，仅本人；正式群自然新增信号待验收，不向正式群发 mock |
-| 微信 ClawBot / iLink | Worker 无上下文发送被 API 受理，本人确认收到 | 本人专用持久队列已启用；未收取云端入站、未自动刷新；自然新增信号、跨天可用性与凭据寿命待验 |
-| QQ | 官方主动 C2C 路径的 Worker 测试获回执，创建者本人客户端读回确认 | 本人持久队列已部署并启用，线上健康检查通过；无需 Gateway。自然新增信号、主动配额与长期送达待验；名称/小猫头像仍待设置 |
+| 飞书 | 独立测试群 Worker 实发与读回；正式群可见 2026-11-11 15:10 自然通知；机器人和正式群小猫头像、群描述网站链接已在客户端核验 | 正式群已提供永久分享入口，浏览器显示打开飞书；需要飞书客户端。已开启企业内群搜索，新成员可读公开信号历史；跨组织外部加入尚未验证 |
+| 微信 ClawBot / iLink | Worker 无上下文发送被 API 受理，本人确认收到；已验证路径仅支持个人对话（direct-only） | 按维护者要求暂停，当前未启用；没有微信群入口或已验群投递能力。云端入站、自动刷新、跨天可用性与凭据寿命仍待验 |
+| QQ | 官方主动 C2C 路径的 Worker 测试获回执，创建者本人客户端读回确认；QQ群发送适配已准备 | 现有机器人配置不支持群聊，QQ群尚未启用且无公开入口；待平台群权限与目标群核验。本人 C2C 与群投递分开验收，主动配额与长期送达仍待验；名称/小猫头像保存状态待确认 |
 | 企业微信 | 尚无本项目实发验收 | 用户已明确暂缓；保持未配置，不为完成矩阵另建应用或群 |
 | 邮件 | 有实现和配置说明 | 当前部署未配置，不宣传邮件已在运行 |
+
+飞书群永久分享入口：[加入飞书通知群](https://applink.feishu.cn/client/chat/chatter/add_by_link?link_token=f33nb646-9c77-4ffb-a6b8-aec383d83876)。这是客户端入群入口，不是 Webhook；跨组织加入仍待验证。
 
 飞书与企微共用 `src/webhook-client.ts`、`src/webhook-notifications.ts`；微信复用同一持久投递队列与 `src/weixin-client.ts`。QQ 也复用该队列，使用 `src/qq-client.ts` 与 `src/qq-test.ts`；主动发送契约核对[腾讯官方 SDK 固定版本](https://github.com/tencent-connect/qqbot-nodejs/tree/429a0f1b798f3b0fcef3679e207dbc0469a1df2d)，不沿用旧版被动回复限制。先复用这些适配器，不另起通知包、重复队列或网关。微信实验与协议边界见[专项核验](research-weixin-ilink.md)。
 
@@ -123,7 +125,7 @@ node scripts/configure-notification-webhook.mjs feishu /absolute/private-test.js
 node scripts/configure-notification-webhook.mjs feishu /absolute/private-production.json production
 ```
 
-私有 JSON 字段为 `webhook_url`、`signing_secret`。对应 Secrets 为 `FEISHU_TEST_WEBHOOK_URL` / `FEISHU_TEST_WEBHOOK_SECRET` 与 `FEISHU_WEBHOOK_URL` / `FEISHU_WEBHOOK_SECRET`。微信生产使用 `WEIXIN_BOT_TOKEN`、`WEIXIN_OWNER_ID`，并显式设置 `WEIXIN_NOTIFICATIONS_ENABLED=true`；本人专用测试使用独立的 `WEIXIN_TEST_*` 配置。QQ 本人测试使用 `QQ_TEST_APP_ID`、`QQ_TEST_APP_SECRET`、`QQ_TEST_OWNER_OPENID`；生产使用 `QQ_APP_ID`、`QQ_APP_SECRET`、`QQ_OWNER_OPENID` 并显式设置 `QQ_NOTIFICATIONS_ENABLED=true`。获取 token 前的网络、限流及服务端临时故障按队列最多尝试三次；消息提交后的未知结果不重发。
+私有 JSON 字段为 `webhook_url`、`signing_secret`。对应 Secrets 为 `FEISHU_TEST_WEBHOOK_URL` / `FEISHU_TEST_WEBHOOK_SECRET` 与 `FEISHU_WEBHOOK_URL` / `FEISHU_WEBHOOK_SECRET`。微信个人对话如需恢复，使用 `WEIXIN_BOT_TOKEN`、`WEIXIN_OWNER_ID` 并显式设置 `WEIXIN_NOTIFICATIONS_ENABLED=true`；当前按要求暂停，不能由已有凭据推断已启用。本人专用测试使用独立的 `WEIXIN_TEST_*` 配置。QQ 本人测试使用 `QQ_TEST_APP_ID`、`QQ_TEST_APP_SECRET`、`QQ_TEST_OWNER_OPENID`；生产使用 `QQ_APP_ID`、`QQ_APP_SECRET`、`QQ_OWNER_OPENID` 并显式设置 `QQ_NOTIFICATIONS_ENABLED=true`。获取 token 前的网络、限流及服务端临时故障按队列最多尝试三次；消息提交后的未知结果不重发。
 
 新目的地启用时建立激活时间，只接收之后实时新增且有通知资格的网页信号，旧历史不重放。管理员测试需固定 `Idempotency-Key`；发送结果未知会隔离，不自动重发。队列正常或一次测试成功不等于自然信号与长期凭据均已验收；以通道实际回执和状态为准。
 
@@ -209,3 +211,5 @@ X API 仍每20分钟轮询 Tibo，新预告和随后的一手重置确认各自�
 2026-10-28的Cloudflare实发验收返回D1免费日读取额度耗尽，发送账本读取失败，未取得DING回执；不能把本地测试通过等同云端验收成功。免费额度按UTC日恢复，北京时间次日08:00。可选择等待或由账号持有人升级付费计划，未自动开启费用。
 
 公开成功查询通过Cloudflare Cache API按路径共享60秒缓存，忽略无关query，避免重复页面刷新放大数据库扫描；管理员POST和失败健康检查不缓存。浏览器仍每分钟更新，数据生成时间保留。公共读取不再反复写入源配置；Cron初始化/同步源配置。D1限额返回明确503及`coverage=unknown`，前端显示监控与通知中断，不解释为“没有重置”。这项优化减少本项目读取，不保证账号内其他项目不耗尽共享额度。
+
+QQ群使用独立 `qq_group` 投递目标：需配置 `QQ_GROUP_OPENID`，复用 `QQ_APP_ID` / `QQ_APP_SECRET`，并显式设置 `QQ_GROUP_NOTIFICATIONS_ENABLED=true`。当前机器人未取得群能力，保持关闭；群权限、目标及独立实发验收完成前不要启用。群与本人 C2C 分开激活和去重，新群不回放历史，失败不回退到本人私聊。
