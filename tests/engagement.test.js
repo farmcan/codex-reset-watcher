@@ -47,7 +47,7 @@ describe('persistent engagement',()=>{
     expect((await (await handleEngagement(post('like',id,{},second),env,now)).json()).likes).toBe(2);
     expect((await (await handleEngagement(post('like',second,{},event),env,now)).json()).likes).toBe(3);
   });
-  it('retains old totals and today's support at the cutover',async()=>{
+  it('retains old totals and prior daily support at the cutover',async()=>{
     const env=fixture();
     const old=env.DB.prepare("INSERT INTO site_counter_actions(kind,visitor_id,period) VALUES ('likes',?,'2026-10-25')").bind(id);
     await env.DB.batch([old]);
