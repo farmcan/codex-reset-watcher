@@ -574,3 +574,30 @@ a:focus-visible, summary:focus-visible, button:focus-visible { outline:3px solid
 
 .recent-reset[open] .recent-toggle { font-size:0; }
 .recent-reset[open] .recent-toggle::before { content:'−'; font-size:15px; }
+
+/* A small, repeatable reset-wish ritual. Reuses the existing engagement counter. */
+.woodfish-row { display:flex; align-items:center; gap:14px; margin-top:24px; }
+.woodfish-tap { position:relative; }
+.hero-engagement #like-button { display:flex; align-items:center; gap:12px; min-height:78px; padding:12px 20px 12px 14px; border:1px solid #d9b79c; border-radius:18px; color:#79472c; background:#fff5e8; box-shadow:0 3px 0 #e7cdb3; cursor:pointer; touch-action:manipulation; user-select:none; -webkit-tap-highlight-color:transparent; text-align:left; }
+.hero-engagement #like-button:hover { background:#ffecd5; border-color:#b68055; }
+.hero-engagement #like-button:focus-visible, .woodfish-sound:focus-visible { outline:3px solid var(--accent); outline-offset:4px; }
+.hero-engagement #like-button:disabled { opacity:.6; cursor:wait; }
+.woodfish-icon { width:54px; height:48px; flex:none; overflow:visible; }
+.woodfish-body { fill:#c48149; stroke:#79472c; stroke-width:2.5; }
+.woodfish-grain { fill:none; stroke:#efbd81; stroke-width:2; stroke-linecap:round; }
+.woodfish-slit { fill:none; stroke:#643a26; stroke-width:4; stroke-linecap:round; }
+.woodfish-mallet { fill:none; stroke:#79472c; stroke-width:4; stroke-linecap:round; }
+.woodfish-mallet-head { fill:#e8b579; stroke:#79472c; stroke-width:2; }
+.woodfish-copy { display:grid; gap:4px; }
+#like-label { font-size:17px; font-weight:750; }
+.woodfish-copy small { color:#946a4d; font-size:11px; font-weight:400; }
+.woodfish-sound { padding:8px 2px; border:0; background:none; color:var(--muted); font:inherit; font-size:11px; cursor:pointer; white-space:nowrap; }
+.woodfish-sound[aria-pressed="true"] { color:var(--accent); }
+.woodfish-feedback { min-height:18px; margin:10px 0 0; color:var(--muted); font-size:12px; }
+.hero-engagement .site-engagement { margin-top:12px; gap:8px 16px; }
+.hero-engagement .wish-total { color:var(--ink); }
+.wish-total strong { color:var(--accent); font-size:18px; }
+.wish-float { position:absolute; top:0; left:38%; z-index:1; pointer-events:none; color:var(--accent); font-size:14px; font-weight:750; white-space:nowrap; animation:wish-rise .8s ease-out both; }
+@keyframes wish-rise { from { opacity:1; transform:translateY(0) scale(.9); } to { opacity:0; transform:translateY(-55px) scale(1.08); } }
+@media(max-width:360px) { .woodfish-row { gap:10px; } .hero-engagement #like-button { padding-right:14px; gap:8px; } #like-label { font-size:15px; } }
+@media(prefers-reduced-motion:reduce) { .wish-float { animation:none; } }

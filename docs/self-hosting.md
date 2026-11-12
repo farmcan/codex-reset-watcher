@@ -163,16 +163,16 @@ node scripts/configure-notification-webhook.mjs feishu /absolute/private-product
 受保护的 `POST /api/admin/review?limit=1` 可直接验证线上复核流程（上限 4 条，适配 Free D1 单次查询限制），使用 `ADMIN_TOKEN` 或专用于复核的 `REVIEW_ADMIN_TOKEN`。失败原因区分模型调用与数据库写入，敏感凭据经过脱敏；首页分别显示排队和失败待重试数量。
 
 
-### 访问量与点赞
+### 访问量与木鱼求重置
 
 主页中英文共用 D1 累计数，自 2026-10-25 上线起记录，不回填历史访问。
 `GET /api/engagement` 只读总数；`POST /api/engagement/visit` 和 `/like`
-接受随机浏览器 UUID `visitor_id`。自 2026-11-09 起，同一浏览器不活跃 30 分钟后重新访问计一次；支持按上海自然日每浏览器一次。旧累计数保留，今日访客按浏览器和上海自然日去重；
+接受随机浏览器 UUID `visitor_id`。自 2026-11-09 起，同一浏览器不活跃 30 分钟后重新访问计一次；2026-11-12 起木鱼求重置可连续点击，每次点击独立累计，移除原每日支持一次限制。`/like` 沿用接口，`event_id` 为每次点击生成的 UUID，同一浏览器重试相同事件只计一次；缺省事件 ID 的旧客户端每次请求均视为新动作。复用原动作表与原子 trigger，无需新迁移。旧累计数保留，今日访客按浏览器和上海自然日去重；
 唯一键和 SQLite trigger 原子去重并累加，刷新、重试与部署不清零。
 页面只在浏览器存储可用时登记；仅保存随机标识，不保存 IP、账号或浏览历史。
 这是轻量浏览器计数，不是实名人数统计；清除存储或换浏览器会被视为新浏览器。
 常见爬虫与跨站写入被排除。存储失败显示不可用，不显示伪造的 0。
-GitHub Pages 备用快照引导到实时站查看与点赞，不写入离线快照。
+GitHub Pages 备用快照引导到实时站查看与敲木鱼，不写入离线快照。
 
 实现复用自有 MiaoTI 项目 `3603fa3` 的设计思路
 （`functions/api/site-counter.js`、`migrations/0001_counters.sql`），
@@ -195,8 +195,8 @@ npx wrangler secret put DINGTALK_RECIPIENT_IDS
 
 ## 其他接口
 
-- `GET /api/engagement`：只读累计访问、点赞和当前浏览器点赞状态。
-- `POST /api/engagement/visit`、`POST /api/engagement/like`：浏览器随机 ID 按会话或自然日去重后累计。
+- `GET /api/engagement`：只读累计访问与求重置次数；`liked` 兼容字段表示曾参与，不限制再次点击。
+- `POST /api/engagement/visit`、`POST /api/engagement/like`：访问按浏览器会话去重；求重置按每次点击事件去重后累计。
 - 管理员复核、通知测试和队列对账接口均需授权；测试令牌使用后删除。
 
 ## 重置时间与确认提醒（2026-10-28）

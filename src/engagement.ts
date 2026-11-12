@@ -1,6 +1,6 @@
 import type { Env } from './types';
 
-// Retains the existing counters while adding rolling browser sessions and daily support.
+// Retains historical totals; each reset wish is independent, retries are idempotent.
 const visitorPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const headers = { 'Content-Type':'application/json; charset=utf-8', 'Cache-Control':'no-store' };
 const json = (data:unknown, status=200) => new Response(JSON.stringify(data),{status,headers});
@@ -44,14 +44,15 @@ export async function handleEngagement(request:Request, env:Env, now=new Date())
         .bind(visitor,now.getTime()));
       statements.push(env.DB.prepare('INSERT OR IGNORE INTO site_daily_visitors(visitor_id,day) VALUES (?,?)').bind(visitor,day));
     }
-    if(!read && !bot && kind==='likes') statements.push(env.DB.prepare('INSERT OR IGNORE INTO site_counter_actions(kind,visitor_id,period) VALUES (?,?,?)').bind(kind,visitor,day));
+    if(!read && !bot && kind==='likes') statements.push(env.DB.prepare('INSERT OR IGNORE INTO site_counter_actions(kind,visitor_id,period) VALUES (?,?,?)')
+      .bind(kind,visitor,`tap:${eventId || crypto.randomUUID()}`));
     statements.push(env.DB.prepare('SELECT name,count,started_at FROM site_counters ORDER BY name'));
-    statements.push(env.DB.prepare("SELECT 1 AS liked FROM site_counter_actions WHERE kind='likes' AND visitor_id=? AND period=?").bind(visitor,day));
+    statements.push(env.DB.prepare("SELECT 1 AS liked FROM site_counter_actions WHERE kind='likes' AND visitor_id=? LIMIT 1").bind(visitor));
     statements.push(env.DB.prepare("SELECT COUNT(*) AS daily_visitors FROM site_daily_visitors WHERE day=?").bind(day));
     const results=await env.DB.batch(statements);
     const rows=results[results.length-3]!.results as Array<{name:string;count:number;started_at:string}>;
     return json({visits:rows.find(r=>r.name==='visits')?.count??0,likes:rows.find(r=>r.name==='likes')?.count??0,
       liked:results[results.length-2]!.results.length>0, daily_visitors:(results[results.length-1]!.results[0] as {daily_visitors:number}).daily_visitors, started_at:rows[0]?.started_at??null,
-      visit_dedupe:'browser_30_minute_inactivity',like_dedupe:'browser_per_day_Asia/Shanghai'});
+      visit_dedupe:'browser_30_minute_inactivity',like_dedupe:'visitor_event_id'});
   }catch{return json({error:'engagement_unavailable'},503);}
 }
