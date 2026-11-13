@@ -1,0 +1,431 @@
+{
+  "checked_at": "2026-11-13T12:21:30.692Z",
+  "source_commit": "15de4433b8cc81f9d0ef7b41939c681d09af8814",
+  "worker_version": "8698532d-e1ba-47e9-898c-0a7e9d862657",
+  "urls": {
+    "zh": "https://resetcat.pages.dev/",
+    "en": "https://resetcat.pages.dev/en/",
+    "fallback": "https://farmcan.github.io/codex-reset-watcher/"
+  },
+  "github_main": "https://github.com/farmcan/codex-reset-watcher/tree/main/public/media",
+  "media": {
+    "saved_at": "2026-11-13T12:14:42.705551+00:00",
+    "total_video_bytes": 5702632,
+    "selected": {
+      "zh": "cat-whip-zh-02.mp4",
+      "en": "cat-whip-en.mp4"
+    },
+    "clips": [
+      {
+        "language": "zh",
+        "variant": "01",
+        "file": "cat-whip-zh-01.mp4",
+        "active": false,
+        "bytes": 1439153,
+        "sha256": "34a34bbed687d33eb0b0182f21d265fb0c6c37eac18d4a060da743e8e7a75268",
+        "duration_seconds": 4.041667,
+        "width": 960,
+        "height": 960,
+        "codec": "h264",
+        "source": "User-supplied Seedance clip; downloaded unchanged 2026-11-13"
+      },
+      {
+        "language": "zh",
+        "variant": "02",
+        "file": "cat-whip-zh-02.mp4",
+        "active": true,
+        "bytes": 1320883,
+        "sha256": "3a257b8064fa66313e786b8f1a62c15860ac679aa027a1ccc954ae5fa6115b4e",
+        "duration_seconds": 4.041667,
+        "width": 960,
+        "height": 960,
+        "codec": "h264",
+        "source": "User-supplied Seedance clip; downloaded unchanged 2026-11-13"
+      },
+      {
+        "language": "zh",
+        "variant": "03",
+        "file": "cat-whip-zh-03.mp4",
+        "active": false,
+        "bytes": 1132937,
+        "sha256": "98332c502a568c7d45a84c4f734070b5e5ad6c1296c98aa1c48dae1f44e683ba",
+        "duration_seconds": 4.041667,
+        "width": 960,
+        "height": 960,
+        "codec": "h264",
+        "source": "User-supplied Seedance clip; downloaded unchanged 2026-11-13"
+      },
+      {
+        "language": "en",
+        "variant": "01",
+        "file": "cat-whip-en.mp4",
+        "active": true,
+        "bytes": 1809659,
+        "sha256": "8c4ab903a54f33991739a55fcf7e7f115bbcdf6873982b5e95325902bcac1096",
+        "duration_seconds": 4.041667,
+        "width": 960,
+        "height": 960,
+        "codec": "h264",
+        "source": "User-supplied Seedance clip; downloaded unchanged 2026-11-13"
+      }
+    ],
+    "sound": {
+      "file": "cat-whip.wav",
+      "author": "Joseph SARDIN / BigSoundBank",
+      "source": "https://bigsoundbank.com/fouet-1-s2949.html",
+      "license": "CC0-1.0",
+      "license_url": "https://bigsoundbank.com/licenses.html",
+      "source_mp3_sha256": "9e36799f995f76b3d13e52611f4d6ca6b77b2a5bbf5672ba093e2394e56eb18a",
+      "sha256": "0ec04e2cd338d84dfc93f63b77f25103c999c66c3c6cc8b53f205ded4783319f",
+      "duration_seconds": 0.565,
+      "peak_at_seconds": 0.36995833333333333,
+      "peak_amplitude": 0.850006103515625,
+      "processing": "Existing 0.25s mono excerpt; 180Hz highpass; +4dB treble at 3.2kHz; 1.5x gain; 0.85 limiter; 315ms leading silence to align crack at ~0.37s"
+    }
+  },
+  "checks": {
+    "root_check": "147 tests, typecheck, backtest, deploy dry-run passed",
+    "github_ci": "passed",
+    "github_pages_deployment": "passed",
+    "all_four_original_clips_decode": "passed",
+    "source_resources_across_three_hosts": [
+      {
+        "host": "https://resetcat.pages.dev",
+        "path": "/",
+        "status": 200,
+        "sha256": "c18c097994d280b1e91b055a9c4a23372c0909cf03ca9808cce213f6ab235b49",
+        "attempts": 1
+      },
+      {
+        "host": "https://resetcat.pages.dev",
+        "path": "/engagement.js",
+        "status": 200,
+        "sha256": "679e755964d82903d78315059b0244168d5e0f6a9ce942ed9c4c12cdc5149631",
+        "attempts": 1
+      },
+      {
+        "host": "https://resetcat.pages.dev",
+        "path": "/en/",
+        "status": 200,
+        "sha256": "41dc6f1b5ee3c727ad3e4b6a1df296987d3880ff6fa19593f1d88663ef86329d",
+        "attempts": 1
+      },
+      {
+        "host": "https://resetcat.pages.dev",
+        "path": "/cat-whip.js",
+        "status": 200,
+        "sha256": "33e3729ec19618fb938cbaa21bffdd4876226a2d4e9176a9012835e0cb7306f2",
+        "attempts": 1
+      },
+      {
+        "host": "https://resetcat.pages.dev",
+        "path": "/styles.css",
+        "status": 200,
+        "sha256": "655cdd1ec5994deb2567bf19fd0e23f024f042e49bb132ce4fe9ddf68d33cc80",
+        "attempts": 1
+      },
+      {
+        "host": "https://resetcat.pages.dev",
+        "path": "/media/cat-whip-zh-03.mp4",
+        "status": 200,
+        "sha256": "98332c502a568c7d45a84c4f734070b5e5ad6c1296c98aa1c48dae1f44e683ba",
+        "attempts": 1
+      },
+      {
+        "host": "https://resetcat.pages.dev",
+        "path": "/media/cat-whip-zh-01.mp4",
+        "status": 200,
+        "sha256": "34a34bbed687d33eb0b0182f21d265fb0c6c37eac18d4a060da743e8e7a75268",
+        "attempts": 1
+      },
+      {
+        "host": "https://resetcat.pages.dev",
+        "path": "/media/cat-whip-zh-02.mp4",
+        "status": 200,
+        "sha256": "3a257b8064fa66313e786b8f1a62c15860ac679aa027a1ccc954ae5fa6115b4e",
+        "attempts": 1
+      },
+      {
+        "host": "https://resetcat.pages.dev",
+        "path": "/media/cat-whip.wav",
+        "status": 200,
+        "sha256": "0ec04e2cd338d84dfc93f63b77f25103c999c66c3c6cc8b53f205ded4783319f",
+        "attempts": 1
+      },
+      {
+        "host": "https://resetcat.pages.dev",
+        "path": "/media/manifest.json",
+        "status": 200,
+        "sha256": "92b468b6d8006535b1531eba0f8dadb96ce1dffb2267cdc3305b68d723f438bf",
+        "attempts": 1
+      },
+      {
+        "host": "https://resetcat.pages.dev",
+        "path": "/media/cat-whip-en.mp4",
+        "status": 200,
+        "sha256": "8c4ab903a54f33991739a55fcf7e7f115bbcdf6873982b5e95325902bcac1096",
+        "attempts": 1
+      },
+      {
+        "host": "https://codex-reset-watcher.weican16hit.workers.dev",
+        "path": "/",
+        "status": 200,
+        "sha256": "c18c097994d280b1e91b055a9c4a23372c0909cf03ca9808cce213f6ab235b49",
+        "attempts": 1
+      },
+      {
+        "host": "https://codex-reset-watcher.weican16hit.workers.dev",
+        "path": "/en/",
+        "status": 200,
+        "sha256": "41dc6f1b5ee3c727ad3e4b6a1df296987d3880ff6fa19593f1d88663ef86329d",
+        "attempts": 1
+      },
+      {
+        "host": "https://codex-reset-watcher.weican16hit.workers.dev",
+        "path": "/cat-whip.js",
+        "status": 200,
+        "sha256": "33e3729ec19618fb938cbaa21bffdd4876226a2d4e9176a9012835e0cb7306f2",
+        "attempts": 1
+      },
+      {
+        "host": "https://codex-reset-watcher.weican16hit.workers.dev",
+        "path": "/engagement.js",
+        "status": 200,
+        "sha256": "679e755964d82903d78315059b0244168d5e0f6a9ce942ed9c4c12cdc5149631",
+        "attempts": 1
+      },
+      {
+        "host": "https://codex-reset-watcher.weican16hit.workers.dev",
+        "path": "/styles.css",
+        "status": 200,
+        "sha256": "655cdd1ec5994deb2567bf19fd0e23f024f042e49bb132ce4fe9ddf68d33cc80",
+        "attempts": 1
+      },
+      {
+        "host": "https://codex-reset-watcher.weican16hit.workers.dev",
+        "path": "/media/cat-whip-zh-01.mp4",
+        "status": 200,
+        "sha256": "34a34bbed687d33eb0b0182f21d265fb0c6c37eac18d4a060da743e8e7a75268",
+        "attempts": 1
+      },
+      {
+        "host": "https://codex-reset-watcher.weican16hit.workers.dev",
+        "path": "/media/cat-whip-zh-02.mp4",
+        "status": 200,
+        "sha256": "3a257b8064fa66313e786b8f1a62c15860ac679aa027a1ccc954ae5fa6115b4e",
+        "attempts": 1
+      },
+      {
+        "host": "https://codex-reset-watcher.weican16hit.workers.dev",
+        "path": "/media/cat-whip-zh-03.mp4",
+        "status": 200,
+        "sha256": "98332c502a568c7d45a84c4f734070b5e5ad6c1296c98aa1c48dae1f44e683ba",
+        "attempts": 1
+      },
+      {
+        "host": "https://codex-reset-watcher.weican16hit.workers.dev",
+        "path": "/media/cat-whip.wav",
+        "status": 200,
+        "sha256": "0ec04e2cd338d84dfc93f63b77f25103c999c66c3c6cc8b53f205ded4783319f",
+        "attempts": 1
+      },
+      {
+        "host": "https://codex-reset-watcher.weican16hit.workers.dev",
+        "path": "/media/manifest.json",
+        "status": 200,
+        "sha256": "92b468b6d8006535b1531eba0f8dadb96ce1dffb2267cdc3305b68d723f438bf",
+        "attempts": 1
+      },
+      {
+        "host": "https://codex-reset-watcher.weican16hit.workers.dev",
+        "path": "/media/cat-whip-en.mp4",
+        "status": 200,
+        "sha256": "8c4ab903a54f33991739a55fcf7e7f115bbcdf6873982b5e95325902bcac1096",
+        "attempts": 1
+      },
+      {
+        "host": "https://farmcan.github.io/codex-reset-watcher",
+        "path": "/en/",
+        "status": 200,
+        "sha256": "41dc6f1b5ee3c727ad3e4b6a1df296987d3880ff6fa19593f1d88663ef86329d",
+        "attempts": 1
+      },
+      {
+        "host": "https://farmcan.github.io/codex-reset-watcher",
+        "path": "/",
+        "status": 200,
+        "sha256": "c18c097994d280b1e91b055a9c4a23372c0909cf03ca9808cce213f6ab235b49",
+        "attempts": 1
+      },
+      {
+        "host": "https://farmcan.github.io/codex-reset-watcher",
+        "path": "/engagement.js",
+        "status": 200,
+        "sha256": "679e755964d82903d78315059b0244168d5e0f6a9ce942ed9c4c12cdc5149631",
+        "attempts": 1
+      },
+      {
+        "host": "https://farmcan.github.io/codex-reset-watcher",
+        "path": "/cat-whip.js",
+        "status": 200,
+        "sha256": "33e3729ec19618fb938cbaa21bffdd4876226a2d4e9176a9012835e0cb7306f2",
+        "attempts": 1
+      },
+      {
+        "host": "https://farmcan.github.io/codex-reset-watcher",
+        "path": "/styles.css",
+        "status": 200,
+        "sha256": "655cdd1ec5994deb2567bf19fd0e23f024f042e49bb132ce4fe9ddf68d33cc80",
+        "attempts": 1
+      },
+      {
+        "host": "https://farmcan.github.io/codex-reset-watcher",
+        "path": "/media/cat-whip-zh-03.mp4",
+        "status": 200,
+        "sha256": "98332c502a568c7d45a84c4f734070b5e5ad6c1296c98aa1c48dae1f44e683ba",
+        "attempts": 1
+      },
+      {
+        "host": "https://farmcan.github.io/codex-reset-watcher",
+        "path": "/media/cat-whip-zh-01.mp4",
+        "status": 200,
+        "sha256": "34a34bbed687d33eb0b0182f21d265fb0c6c37eac18d4a060da743e8e7a75268",
+        "attempts": 1
+      },
+      {
+        "host": "https://farmcan.github.io/codex-reset-watcher",
+        "path": "/media/cat-whip-en.mp4",
+        "status": 200,
+        "sha256": "8c4ab903a54f33991739a55fcf7e7f115bbcdf6873982b5e95325902bcac1096",
+        "attempts": 1
+      },
+      {
+        "host": "https://farmcan.github.io/codex-reset-watcher",
+        "path": "/media/cat-whip.wav",
+        "status": 200,
+        "sha256": "0ec04e2cd338d84dfc93f63b77f25103c999c66c3c6cc8b53f205ded4783319f",
+        "attempts": 1
+      },
+      {
+        "host": "https://farmcan.github.io/codex-reset-watcher",
+        "path": "/media/cat-whip-zh-02.mp4",
+        "status": 200,
+        "sha256": "3a257b8064fa66313e786b8f1a62c15860ac679aa027a1ccc954ae5fa6115b4e",
+        "attempts": 1
+      },
+      {
+        "host": "https://farmcan.github.io/codex-reset-watcher",
+        "path": "/media/manifest.json",
+        "status": 200,
+        "sha256": "92b468b6d8006535b1531eba0f8dadb96ce1dffb2267cdc3305b68d723f438bf",
+        "attempts": 1
+      }
+    ]
+  },
+  "browser": {
+    "zh": {
+      "origin": "https://resetcat.pages.dev",
+      "page": "/",
+      "checked_at": "2026-11-13T12:17:24.564Z",
+      "smoke": true,
+      "results": [
+        {
+          "name": "rapid taps + playback + audio + real D1",
+          "taps": 2,
+          "before": 336,
+          "after": 338,
+          "metadata": {
+            "duration": 4.041667,
+            "rate": 5.388889333333334,
+            "muted": true,
+            "inline": true,
+            "loop": false,
+            "controls": false
+          },
+          "fit": {
+            "object_fit": "contain",
+            "source_ratio": 1,
+            "displayed_width": 328,
+            "displayed_height": 328
+          },
+          "playback": {
+            "plays": 1,
+            "seeks": 1,
+            "ends": 1,
+            "audioPlays": 1,
+            "accepted": 2,
+            "started": 18807.799999713898,
+            "duration_ms": 756.2000002861023
+          }
+        }
+      ]
+    },
+    "en": {
+      "origin": "https://resetcat.pages.dev",
+      "page": "/en/",
+      "checked_at": "2026-11-13T12:17:50.140Z",
+      "smoke": true,
+      "results": [
+        {
+          "name": "rapid taps + playback + audio + real D1",
+          "taps": 2,
+          "before": 338,
+          "after": 340,
+          "metadata": {
+            "duration": 4.041667,
+            "rate": 5.388889333333334,
+            "muted": true,
+            "inline": true,
+            "loop": false,
+            "controls": false
+          },
+          "fit": {
+            "object_fit": "contain",
+            "source_ratio": 1,
+            "displayed_width": 348,
+            "displayed_height": 348
+          },
+          "playback": {
+            "plays": 1,
+            "seeks": 1,
+            "ends": 1,
+            "audioPlays": 1,
+            "accepted": 2,
+            "started": 4715.400000095367,
+            "duration_ms": 719.6999998092651
+          }
+        }
+      ]
+    }
+  },
+  "correction": {
+    "cause": "Initial object-fit:fill stretched the square clip into the rectangular Chinese image box.",
+    "repair": "object-fit:contain keeps full frames at source aspect ratio, with thin white side letterboxes for Chinese.",
+    "sound": "Replaced softer full-whip clip with a short, brighter crack, limiter and timing alignment; user listening feedback remains authoritative."
+  },
+  "status_page": {
+    "checked_at": "2026-11-13T12:23:20.873Z",
+    "anonymous": 401,
+    "authenticated": 200,
+    "matched_ids": [
+      "codex-cat-whip-20261113-start",
+      "codex-cat-whip-20261113-user-feedback",
+      "codex-cat-whip-20261113-asset-check-retry",
+      "codex-cat-whip-20261113-live-v2"
+    ],
+    "expected": [
+      "codex-cat-whip-20261113-start",
+      "codex-cat-whip-20261113-user-feedback",
+      "codex-cat-whip-20261113-asset-check-retry",
+      "codex-cat-whip-20261113-live-v2"
+    ],
+    "source_checked_at": "2026-11-13T12:19:40.633755+00:00",
+    "job_stage": "甩鞭求重置已上线：中英文等比视频、原累计保留、清脆短音效；生产已回查",
+    "verified": true,
+    "browser_rendered": true,
+    "commit": "cdc7b89f6b19b7b41872238d1aea1deebf151b11",
+    "deployment_id": "75ea5492-bf80-4b21-89f0-9d9d3a0a212e",
+    "deployment_status": "success",
+    "production_verified": true
+  }
+}
