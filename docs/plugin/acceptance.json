@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "observed_at": "2026-11-13T09:26:15.671850+00:00",
+  "observed_at": "2026-11-13T09:29:27.612165+00:00",
   "cloudflare": {
     "worker": "codex-reset-radar",
     "active_version": "31db882e-f227-4b9f-b21c-2fb34f76a9d5",
@@ -38,7 +38,8 @@
   },
   "installation": {
     "local_marketplace": "codex plugin add reset-radar@reset-radar succeeded; version 0.1.0",
-    "remote_release": "Passed: removed the task-created local marketplace, added farmcan/codex-reset-watcher at codex/reset-status-plugin via Git, and installed reset-radar@reset-radar version 0.1.0."
+    "remote_release": "Passed: removed the task-created local marketplace, added farmcan/codex-reset-watcher at codex/reset-status-plugin via Git, and installed reset-radar@reset-radar version 0.1.0.",
+    "fixed_tag": "Passed: codex plugin marketplace add farmcan/codex-reset-watcher --ref plugin-v0.1.0, then codex plugin add reset-radar@reset-radar; version 0.1.0 installed."
   },
   "not_verified": [
     "Codex native-window UI: computer-use access to com.openai.codex denied",
@@ -51,5 +52,18 @@
     "blocker": "Upload requires verified developer identity on the current organization; personal and business verification both show Start.",
     "domain_verification_and_review": "required after identity verification; not performed"
   },
-  "privacy": "read-only public signal projection; no personal quota, code, conversation or account token access; no new LLM calls"
+  "privacy": "read-only public signal projection; no personal quota, code, conversation or account token access; no new LLM calls",
+  "release": {
+    "url": "https://github.com/farmcan/codex-reset-watcher/releases/tag/plugin-v0.1.0",
+    "git_tag_commit": "cd4667df56b2450436f841aafad5120829e77d72",
+    "zip_sha256": "11d446ace474b63cbf5bdd8dd4176cdb56523d19bbe597f83d2b709f69b8dff9",
+    "download_readback": "Downloaded release ZIP and checksum; hashes matched; archive contains only 6 plugin files/directories."
+  },
+  "seed_status": {
+    "start_commit": "27c3a0519fa47de38725c45e66c5136118a6dc9f",
+    "start_production_deployment": "83ab51c8-751f-4289-b98c-2cff8861cddb",
+    "start_authenticated_browser_readback": "job title observed",
+    "release_event_commit": "43154101aee024ec7faad7327aa0f2a3a5c3d55c",
+    "release_event_production": "pending"
+  }
 }

@@ -9,7 +9,7 @@
 
 ## 在另一台电脑安装
 
-同一 ChatGPT 账号优先使用[个人测试插件]( https://chatgpt.com/plugins/plugin_asdk_app_6af6d57b5bb08191b18f8f4d0b303070/app/open_reset_radar )。已在真实 ChatGPT Web 宿主直接渲染与刷新，不发送聊天消息。该个人入口不等于公共目录发布，也不授予其他账号访问权限。个人插件外壳的默认版本显示为1.0.0；面板及仓库发行版本为0.1.0。
+同一 ChatGPT 账号优先使用[个人测试插件](https://chatgpt.com/plugins/plugin_asdk_app_6af6d57b5bb08191b18f8f4d0b303070/app/open_reset_radar)。已在真实 ChatGPT Web 宿主直接渲染与刷新，不发送聊天消息。该个人入口不等于公共目录发布，也不授予其他账号访问权限。个人插件外壳的默认版本显示为1.0.0；面板及仓库发行版本为0.1.0。
 
 
 需要支持 `codex plugin` 的新版 Codex CLI，以及支持 MCP App 静态入口的图形客户端。
