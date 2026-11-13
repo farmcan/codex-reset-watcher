@@ -163,7 +163,7 @@ node scripts/configure-notification-webhook.mjs feishu /absolute/private-product
 受保护的 `POST /api/admin/review?limit=1` 可直接验证线上复核流程（上限 4 条，适配 Free D1 单次查询限制），使用 `ADMIN_TOKEN` 或专用于复核的 `REVIEW_ADMIN_TOKEN`。失败原因区分模型调用与数据库写入，敏感凭据经过脱敏；首页分别显示排队和失败待重试数量。
 
 
-### 访问量与木鱼求重置
+### 访问量与甩鞭求重置
 
 主页中英文共用 D1 累计数，自 2026-10-25 上线起记录，不回填历史访问。
 `GET /api/engagement` 只读总数；`POST /api/engagement/visit` 和 `/like`
@@ -172,7 +172,21 @@ node scripts/configure-notification-webhook.mjs feishu /absolute/private-product
 页面只在浏览器存储可用时登记；仅保存随机标识，不保存 IP、账号或浏览历史。
 这是轻量浏览器计数，不是实名人数统计；清除存储或换浏览器会被视为新浏览器。
 常见爬虫与跨站写入被排除。存储失败显示不可用，不显示伪造的 0。
-GitHub Pages 备用快照引导到实时站查看与敲木鱼，不写入离线快照。
+2026-11-13 起由猫咪甩鞭替换木鱼入口，累计数不清零，继续使用 `/like` 接口和原 D1 表。
+中文原图默认静止，点击播放项目自托管视频；元数据加载后按 `duration / 0.75` 设置速度。
+每次点击立即显示 +1，并独立写入；播放中点击不 seek、不排队播放，视频失败不影响计数。
+配音采用项目已有 CC0 甩鞭音效，用户点击后播放，可静音。英文图保留原素材与相同计数/音效。
+素材来源与画幅处理见 [media/README](../public/media/README.md)。
+GitHub Pages 备用快照引导到实时站查看与甩鞭，不写入离线快照。
+
+浏览器验收（本地 D1，需已安装 Chrome）：
+
+```bash
+npm run db:migrate:local
+npm run dev -- --local --port 8795
+# 另开终端：100连点真实计数、约0.75秒单轮、恢复原图、触摸、静音、加载失败
+npm run test:cat-whip
+```
 
 实现复用自有 MiaoTI 项目 `3603fa3` 的设计思路
 （`functions/api/site-counter.js`、`migrations/0001_counters.sql`），

@@ -6,9 +6,9 @@
     <meta name="description" content="追踪 Codex 重置动态，及时收到提醒，把剩余额度花在值得做的任务上。">
     <title>Codex 重置雷达</title>
     <link rel="icon" href="brand-zh.png" type="image/png">
-    <link rel="stylesheet" href="styles.css?v=20261112-woodfish-1">
+    <link rel="stylesheet" href="styles.css?v=20261113-cat-whip-1">
     <script type="module" src="invite-expiry.js?v=20261112-1"></script>
-    <script type="module" src="engagement.js?v=20261112-woodfish-1"></script>
+    <script type="module" src="engagement.js?v=20261113-cat-whip-1"></script>
     <script type="module" src="app.js?v=20261101-public-events-3"></script>
   </head>
   <body>
@@ -47,21 +47,23 @@
               </a>
             </div>
             <div class="hero-engagement">
-              <div class="woodfish-row">
-                <div class="woodfish-tap">
-                  <button id="like-button" type="button" aria-label="敲木鱼，求重置，可以连续点击" disabled><svg class="woodfish-icon" viewBox="0 0 64 56" aria-hidden="true"><path class="woodfish-mallet" d="m40 7 14 14"/><circle class="woodfish-mallet-head" cx="39" cy="6" r="5"/><path class="woodfish-body" d="M9 36c0-12 10-21 23-21 14 0 24 9 24 21 0 10-10 15-24 15S9 46 9 36Z"/><path class="woodfish-grain" d="M19 28c6-6 20-6 26 0M17 35c8 4 23 4 31-1M31 17c-5 5-6 11-3 16"/><path class="woodfish-slit" d="m34 37 21-5"/></svg><span class="woodfish-copy"><span id="like-label">敲木鱼 · 求重置</span><small>再敲一下，重置快来</small></span></button>
-                </div>
-                <button id="woodfish-sound" class="woodfish-sound" type="button" aria-pressed="false" aria-label="切换木鱼声音">开声音</button>
+              <div class="whip-row">
+                <button id="like-button" class="whip-action" type="button" aria-label="甩鞭求重置，每次点击都加一" disabled><span id="like-label">甩鞭 · 求重置 +1</span><small>点小猫也可以，次数不限</small></button>
+                <button id="whip-sound" class="whip-sound" type="button" aria-pressed="true" aria-label="切换甩鞭音效">声音开</button>
               </div>
-              <p id="woodfish-feedback" class="woodfish-feedback" role="status">手痒就敲，次数不限</p>
+              <p id="whip-feedback" class="whip-feedback" role="status">点击小猫，甩鞭求重置</p>
               <div class="site-engagement" aria-label="全站求重置与访问统计">
-                <span class="wish-total">全站求重置 <strong id="like-count">—</strong> 次</span><span>累计访问 <strong id="visit-count">—</strong></span><span>今日访客 <strong id="daily-visitors">—</strong></span>
+                <span class="wish-total">全站甩鞭求重置 <strong id="like-count">—</strong> 次</span><span>累计访问 <strong id="visit-count">—</strong></span><span>今日访客 <strong id="daily-visitors">—</strong></span>
               </div>
-              <p id="engagement-note" class="engagement-note" aria-live="polite">每敲一下都算数 · 累计含原有支持</p>
+              <p id="engagement-note" class="engagement-note" aria-live="polite">每点一下都算数 · 保留原有累计</p>
             </div>
           </div>
           <figure class="hero-visual">
-            <img src="brand-zh.png" alt="猫拿着皮鞭说‘我真得好好调教你了’，鞭梢指向 Codex 标志" width="960" height="905" decoding="async" fetchpriority="high">
+            <button id="cat-button" class="cat-tap" type="button" aria-label="点击小猫甩鞭，求重置 +1，可以连续点击" disabled>
+              <img src="brand-zh.png" alt="猫拿着皮鞭说‘我真得好好调教你了’，鞭梢指向 Codex 标志" width="960" height="905" decoding="async" fetchpriority="high">
+              <video class="cat-whip" src="media/cat-whip.mp4" muted playsinline preload="auto" aria-hidden="true" disablepictureinpicture></video>
+            </button>
+            <audio id="whip-audio" src="media/cat-whip.wav" preload="auto"></audio>
           </figure>
         </div>
         <div class="update-status" role="status"><span id="health-dot" class="status-dot pending"></span><span id="health-label">正在读取最新动态…</span><a href="#system">运行状态 ↗</a></div>
