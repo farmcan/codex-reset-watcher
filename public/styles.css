@@ -471,7 +471,6 @@ footer { flex-wrap: wrap; }
 .support-body > .section-heading { margin-top:16px; }
 section[id] { scroll-margin-top:90px; }
 .hero-engagement .site-engagement { margin-top:20px; gap:14px; }
-.hero-engagement #like-button { min-height:44px; padding:9px 18px; border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:750; }
 .hero-engagement .site-engagement > span { font-size:12px; }
 .hero-engagement .engagement-note { font-size:11px; }
 .subscribe-link:focus-visible, .support-panel summary:focus-visible { outline:3px solid var(--accent); outline-offset:4px; }
@@ -584,12 +583,11 @@ a:focus-visible, summary:focus-visible, button:focus-visible { outline:3px solid
 .recent-reset[open] .recent-toggle::before { content:'−'; font-size:15px; }
 
 /* Repeatable cat wishes share the original counter and page rhythm. */
-.whip-row { display:flex; align-items:center; gap:14px; margin-top:24px; }
-.hero-engagement #like-button { display:grid; gap:4px; min-height:78px; padding:12px 20px; border:1px solid var(--accent); border-radius:18px; color:var(--accent); background:var(--accent-soft); cursor:pointer; touch-action:manipulation; user-select:none; -webkit-tap-highlight-color:transparent; text-align:left; font:inherit; }
-.hero-engagement #like-button:hover { border-color:var(--ink); }
+.whip-row { display:flex; align-items:center; gap:12px; margin-top:20px; }
+.hero-engagement #like-button { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:6px 12px; border:1px solid var(--line); border-radius:999px; color:var(--accent); background:transparent; cursor:pointer; touch-action:manipulation; user-select:none; -webkit-tap-highlight-color:transparent; font:inherit; line-height:1.4; }
+.hero-engagement #like-button:hover { border-color:var(--accent); background:var(--accent-soft); }
 .hero-engagement #like-button:disabled { opacity:.6; cursor:default; }
-#like-label { font-size:17px; font-weight:750; }
-.whip-action small { color:var(--muted); font-size:11px; }
+#like-label { font-size:13px; font-weight:600; }
 .whip-sound { padding:8px 2px; border:0; background:none; color:var(--muted); font:inherit; font-size:11px; cursor:pointer; white-space:nowrap; }
 .whip-sound[aria-pressed="true"] { color:var(--accent); }
 .whip-feedback { min-height:18px; margin:10px 0 0; color:var(--muted); font-size:12px; }
@@ -599,5 +597,5 @@ a:focus-visible, summary:focus-visible, button:focus-visible { outline:3px solid
 .wish-float { position:absolute; z-index:1; pointer-events:none; color:var(--accent); font-weight:750; white-space:nowrap; animation:wish-rise .5s ease-out both; }
 .cat-plus { right:10%; top:48%; font-size:clamp(18px,3vw,30px); line-height:1; text-shadow:0 1px 3px white; }
 @keyframes wish-rise { from { opacity:1; transform:translateY(0) scale(.9); } to { opacity:0; transform:translateY(-40px) scale(1.08); } }
-@media(max-width:360px) { .whip-row { gap:10px; } .hero-engagement #like-button { padding-right:14px; } #like-label { font-size:15px; } }
+@media(max-width:360px) { .whip-row { gap:10px; } }
 @media(prefers-reduced-motion:reduce) { .wish-float { animation:none; } .cat-whip { transition:none; } }
