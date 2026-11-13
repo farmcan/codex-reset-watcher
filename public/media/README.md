@@ -16,6 +16,26 @@ videos are H.264, 960×960, 24fps, 4.041667 seconds and have no audio track. Onl
 active locale's video is loaded by the page. Metadata determines playback speed:
 `video.playbackRate = video.duration / 0.75`.
 
+## Submitted generation prompts
+
+The user supplied the complete prompts actually submitted for these four clips
+on 2026-11-13. They are preserved verbatim as UTF-8 text in `prompts/`:
+
+- [Chinese 01 · complete action](prompts/zh-01.txt)
+- [Chinese 02 · crisp action, active](prompts/zh-02.txt)
+- [Chinese 03 · readable at small sizes](prompts/zh-03.txt)
+- [English · based on 02, active](prompts/en.txt)
+
+[Generation metadata](prompts/metadata.json) maps each prompt to its video and
+records the user-reported shared request parameters: `DSD-2.0`, 4 seconds,
+720p, silent, no watermark, and the same reference image as first and last frame.
+These are the submitted parameters; downloaded outputs are actually 960×960.
+Chinese 01's mention of speeding up to 3 seconds is preserved as historical
+prompt text. The current frontend target is 0.75 seconds for both active clips.
+Archiving these prompts does not submit a new generation request.
+
+## Display and sound
+
 The original image remains underneath and owns the logo's layout: Chinese
 960×905, English 960×960. Video uses `object-fit: contain` on a white background.
 The Chinese square clip has thin side letterboxes in the original rectangular

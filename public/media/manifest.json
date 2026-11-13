@@ -17,7 +17,8 @@
       "width": 960,
       "height": 960,
       "codec": "h264",
-      "source": "User-supplied Seedance clip; downloaded unchanged 2026-11-13"
+      "source": "User-supplied Seedance clip; downloaded unchanged 2026-11-13",
+      "prompt_file": "prompts/zh-01.txt"
     },
     {
       "language": "zh",
@@ -30,7 +31,8 @@
       "width": 960,
       "height": 960,
       "codec": "h264",
-      "source": "User-supplied Seedance clip; downloaded unchanged 2026-11-13"
+      "source": "User-supplied Seedance clip; downloaded unchanged 2026-11-13",
+      "prompt_file": "prompts/zh-02.txt"
     },
     {
       "language": "zh",
@@ -43,7 +45,8 @@
       "width": 960,
       "height": 960,
       "codec": "h264",
-      "source": "User-supplied Seedance clip; downloaded unchanged 2026-11-13"
+      "source": "User-supplied Seedance clip; downloaded unchanged 2026-11-13",
+      "prompt_file": "prompts/zh-03.txt"
     },
     {
       "language": "en",
@@ -56,7 +59,8 @@
       "width": 960,
       "height": 960,
       "codec": "h264",
-      "source": "User-supplied Seedance clip; downloaded unchanged 2026-11-13"
+      "source": "User-supplied Seedance clip; downloaded unchanged 2026-11-13",
+      "prompt_file": "prompts/en.txt"
     }
   ],
   "sound": {
@@ -71,5 +75,6 @@
     "peak_at_seconds": 0.36995833333333333,
     "peak_amplitude": 0.850006103515625,
     "processing": "Existing 0.25s mono excerpt; 180Hz highpass; +4dB treble at 3.2kHz; 1.5x gain; 0.85 limiter; 315ms leading silence to align crack at ~0.37s"
-  }
+  },
+  "generation_metadata": "prompts/metadata.json"
 }

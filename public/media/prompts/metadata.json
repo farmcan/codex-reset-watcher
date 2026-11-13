@@ -1,0 +1,52 @@
+{
+  "archived_at": "2026-11-13T12:28:39.246374+00:00",
+  "provenance": "User-provided full prompts stated to be the actual submitted texts; preserved without rewriting.",
+  "shared_submitted_parameters": {
+    "model": "DSD-2.0",
+    "duration_seconds": 4,
+    "resolution": "720p",
+    "audio": false,
+    "watermark": false,
+    "same_reference_image_as_first_and_last_frame": true
+  },
+  "current_frontend_target_seconds": 0.75,
+  "historical_timing_note": "Chinese 01 mentions a 3-second accelerated result in its original submitted text; the deployed frontend now targets 0.75 seconds.",
+  "actual_downloaded_dimensions": {
+    "width": 960,
+    "height": 960
+  },
+  "variants": [
+    {
+      "id": "zh-01",
+      "title": "中文01 · 完整动作版",
+      "prompt_file": "zh-01.txt",
+      "prompt_sha256": "c25a2e30e559824e8ad78d0eb9e18e5a9b9d141a080db7045d003742ab64b76d",
+      "video_file": "../cat-whip-zh-01.mp4",
+      "active": false
+    },
+    {
+      "id": "zh-02",
+      "title": "中文02 · 利落版",
+      "prompt_file": "zh-02.txt",
+      "prompt_sha256": "bcc13aee166e56344a72f254ba7b210dba9c5ce0046bf8b53154d6d34383c49d",
+      "video_file": "../cat-whip-zh-02.mp4",
+      "active": true
+    },
+    {
+      "id": "zh-03",
+      "title": "中文03 · 小尺寸可读版",
+      "prompt_file": "zh-03.txt",
+      "prompt_sha256": "862dd5f66ca58bfb3d42ddd20f21c94f9d9175381f537b95e1b35cbc3311fcdc",
+      "video_file": "../cat-whip-zh-03.mp4",
+      "active": false
+    },
+    {
+      "id": "en",
+      "title": "英文图版 · 基于02调整",
+      "prompt_file": "en.txt",
+      "prompt_sha256": "de06fd72b2b8ba213af539dd9b7ef616addea097d20a7f04321f3ba41e9e8917",
+      "video_file": "../cat-whip-en.mp4",
+      "active": true
+    }
+  ]
+}
