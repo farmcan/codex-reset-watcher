@@ -1,0 +1,81 @@
+{
+  "observed_at": "2026-11-13T11:38:20.440535+00:00",
+  "scope": "Investigate Codex plugin UI and notifications after user rejected 0.1.0 visual design; no runtime, notification permission, hook, or daemon changes.",
+  "existing_ui": {
+    "source": "public/index.html + public/styles.css + public/brand-zh.png",
+    "observed_design": "Existing pink palette (#b52e70), original cat brand, status cards and event timeline.",
+    "decision": "Reuse existing production website for details; do not introduce another visual identity.",
+    "unapproved_preview": "design/logo-motion-preview-20261112 remains a separate, unapproved preview; not published by this research."
+  },
+  "cases": [
+    {
+      "name": "Notify (macOS)",
+      "repo": "https://github.com/cboone/agent-harness-plugins/tree/main/plugins/notify",
+      "commit": "5406e6c6ac46bbfd8cedf278760f607c1a32152a",
+      "license": "MIT",
+      "pushed_at": "2026-11-11T22:54:21Z",
+      "read": [
+        "plugins/notify/README.md",
+        "plugins/notify/hooks/codex.hooks.json",
+        "plugins/notify/scripts/notify"
+      ],
+      "verified_source_behavior": "Stop/UserPromptSubmit/PreToolUse hooks dispatch to alerter; native macOS banner with title/subtitle/body/icon/sound and session dedupe. README states Terminal bundle identity; this is not evidence of a Codex Activity inbox API.",
+      "adopt": "Compact system notification and no separate dashboard.",
+      "do_not_adopt": "Task transcript parsing, permission preview, or impersonating Codex notification ownership; our input is already public Cloudflare events.",
+      "runtime_test": "not installed or executed"
+    },
+    {
+      "name": "Codex Complete Notify",
+      "repo": "https://github.com/tanaer/codex-complete-notify",
+      "commit": "b3f50ba568231bddabe4d6f9417c297d4bd5a039",
+      "license": "MIT",
+      "pushed_at": "2026-07-30T12:25:48Z",
+      "read": [
+        "README.md",
+        "hooks/hooks.json"
+      ],
+      "verified_source_behavior": "SessionStart/UserPromptSubmit/Stop register Python watchdog and sound handlers. README describes local audio and PushPlus delivery.",
+      "adopt": "Small setup and notification preference workflow.",
+      "do_not_adopt": "Private transcript/usage failure monitoring or additional PushPlus credential requirement for this public reset use case.",
+      "runtime_test": "not installed or executed"
+    },
+    {
+      "name": "Bits & Bolts (official MCP Extensions example)",
+      "repo": "https://github.com/openai/mcp-extensions/tree/main/plugins/bits-and-bolts",
+      "commit": "39f91ad0bdf1435aadb879172ab2467d0e97cead",
+      "read": [
+        "plugins/bits-and-bolts/README.md",
+        "plugins/bits-and-bolts/src/server/register.ts",
+        "plugins/bits-and-bolts/src/app/index.html"
+      ],
+      "verified_source_behavior": "Parts library global entrypoint and Parts Tray thread entrypoint; HTML uses host theme variables. A real custom UI surface, not a native notification center extension.",
+      "adopt": "Use host surfaces for optional compact detail viewing; keep our existing site visual identity.",
+      "runtime_test": "not installed in this research"
+    },
+    {
+      "name": "Figma Workbench in public plugin repository",
+      "repo": "https://github.com/openai/plugins/blob/main/plugins/figma/ui/figma-workbench.html",
+      "commit": "d420d13051bffe4543ed39e30fa46b87148e47dd",
+      "verified_source_behavior": "HTML explicitly labels Draft Widget / concept and uses example data.",
+      "decision": "Excluded as evidence of an established, production-verified Codex UI."
+    }
+  ],
+  "official_boundaries": {
+    "notifications": "https://learn.chatgpt.com/docs/notifications",
+    "cli_notify": "https://learn.chatgpt.com/docs/config-file/config-advanced#notifications",
+    "extensions": "https://developers.openai.com/plugins/build/extensions",
+    "events": "https://developers.openai.com/plugins/build/mcp-events",
+    "finding": "Documented built-in alerts concern turn completion, permissions/questions and task activity. notify invokes an external program for agent-turn-complete; it is not an inbound cloud reset event API. No verified public API was found to append arbitrary reset events to Codex own Activity notification center. This is a coverage gap, not proof that no private capability exists."
+  },
+  "recommended_direction": {
+    "primary": "OS notification from a minimal local Cloudflare event reader; click opens existing website. No LLM.",
+    "data": "Keep unified Cloudflare collection; users do not provide X API keys.",
+    "requirements": "A local component must remain active for new external events; hooks alone run only at lifecycle points. SessionStart startup is an option, subject to user hook trust and OS notification permission. Closing the UI must not be confused with keeping a receiver alive.",
+    "optional_ui": "Existing production webpage or compact reused components as detail view, not a new dashboard.",
+    "not_implemented": [
+      "OS toast adapter and its click behavior",
+      "local receiver lifecycle / cross-platform packaging",
+      "Codex native Activity inbox integration"
+    ]
+  }
+}
