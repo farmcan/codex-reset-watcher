@@ -1,13 +1,14 @@
 {
-  "origin": "http://localhost:8795",
-  "checked_at": "2026-11-13T12:08:41.696Z",
+  "origin": "http://localhost:8796",
+  "page": "/",
+  "checked_at": "2026-11-13T12:14:43.976Z",
   "smoke": false,
   "results": [
     {
       "name": "rapid taps + playback + audio + real D1",
       "taps": 100,
-      "before": 218,
-      "after": 318,
+      "before": 0,
+      "after": 100,
       "metadata": {
         "duration": 4.041667,
         "rate": 5.388889333333334,
@@ -16,14 +17,20 @@
         "loop": false,
         "controls": false
       },
+      "fit": {
+        "object_fit": "contain",
+        "source_ratio": 1,
+        "displayed_width": 328,
+        "displayed_height": 328
+      },
       "playback": {
         "plays": 1,
         "seeks": 1,
         "ends": 1,
         "audioPlays": 1,
         "accepted": 100,
-        "started": 1048.8999996185303,
-        "duration_ms": 713.2000002861023
+        "started": 1150.7999997138977,
+        "duration_ms": 724.7000002861023
       }
     },
     {

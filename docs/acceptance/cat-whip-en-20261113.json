@@ -1,0 +1,57 @@
+{
+  "origin": "http://localhost:8796",
+  "page": "/en/",
+  "checked_at": "2026-11-13T12:15:08.514Z",
+  "smoke": false,
+  "results": [
+    {
+      "name": "rapid taps + playback + audio + real D1",
+      "taps": 100,
+      "before": 105,
+      "after": 205,
+      "metadata": {
+        "duration": 4.041667,
+        "rate": 5.388889333333334,
+        "muted": true,
+        "inline": true,
+        "loop": false,
+        "controls": false
+      },
+      "fit": {
+        "object_fit": "contain",
+        "source_ratio": 1,
+        "displayed_width": 348,
+        "displayed_height": 348
+      },
+      "playback": {
+        "plays": 1,
+        "seeks": 1,
+        "ends": 1,
+        "audioPlays": 1,
+        "accepted": 100,
+        "started": 1066.3999996185303,
+        "duration_ms": 689.4000000953674
+      }
+    },
+    {
+      "name": "New round and secondary action use the same counter; mute works",
+      "passed": true
+    },
+    {
+      "name": "Mobile touch 390px",
+      "passed": true
+    },
+    {
+      "name": "Mobile touch 320px",
+      "passed": true
+    },
+    {
+      "name": "Failed video retains original image and real counting",
+      "passed": true
+    },
+    {
+      "name": "Reduced motion retains static image and counting",
+      "passed": true
+    }
+  ]
+}

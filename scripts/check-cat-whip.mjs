@@ -5,12 +5,13 @@ import { chromium } from 'playwright';
 // Run against `npm run dev -- --local --port 8795` after local D1 migrations.
 // The full suite writes only to LOCAL D1; production accepts a two-tap smoke check.
 const origin = process.env.CAT_WHIP_ORIGIN || 'http://localhost:8795';
+const pagePath = process.env.CAT_WHIP_PAGE || '/';
 const smoke = process.env.CAT_WHIP_SMOKE === '1';
 assert.ok(smoke || ['localhost', '127.0.0.1'].includes(new URL(origin).hostname), 'Full suite requires local D1');
 const output = process.env.CAT_WHIP_OUTPUT || '.wrangler/cat-whip-acceptance';
 await mkdir(output, { recursive: true });
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
-const report = { origin, checked_at: new Date().toISOString(), smoke, results: [] };
+const report = { origin, page: pagePath, checked_at: new Date().toISOString(), smoke, results: [] };
 const number = (value) => Number(value.replace(/[^0-9]/g, ''));
 
 async function pageFor(options = {}, videoFailure = false) {
@@ -18,8 +19,8 @@ async function pageFor(options = {}, videoFailure = false) {
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
-  if (videoFailure) await page.route('**/media/cat-whip.mp4', route => route.abort());
-  await page.goto(origin, { waitUntil: 'networkidle' });
+  if (videoFailure) await page.route('**/media/cat-whip*.mp4', route => route.abort());
+  await page.goto(new URL(pagePath, origin).href, { waitUntil: 'networkidle' });
   await page.waitForFunction(() => /^\d/.test(document.querySelector('#like-count').textContent));
   await page.evaluate(() => {
     window.whipTest = { plays: 0, seeks: 0, ends: 0, audioPlays: 0, accepted: 0 };
@@ -46,6 +47,13 @@ try {
   const metadata = await page.locator('video').evaluate(video => ({ duration: video.duration, rate: video.playbackRate, muted: video.muted, inline: video.playsInline, loop: video.loop, controls: video.controls }));
   assert.ok(Math.abs(metadata.duration / metadata.rate - .75) < .001);
   assert.ok(metadata.muted && metadata.inline && !metadata.loop && !metadata.controls);
+  const fit = await page.locator('video').evaluate(video => {
+    const style = getComputedStyle(video);
+    const scale = Math.min(video.clientWidth / video.videoWidth, video.clientHeight / video.videoHeight);
+    return { object_fit: style.objectFit, source_ratio: video.videoWidth / video.videoHeight, displayed_width: video.videoWidth * scale, displayed_height: video.videoHeight * scale };
+  });
+  assert.equal(fit.object_fit, 'contain', 'Video must preserve its original aspect ratio');
+  assert.equal(fit.displayed_width / fit.displayed_height, fit.source_ratio, 'No stretch or crop');
   assert.equal(await page.locator('.is-whipping').count(), 0);
   await page.screenshot({ path: `${output}/desktop-static.png` });
   const burst = smoke ? 2 : 100;
@@ -77,7 +85,7 @@ try {
   const backend = await page.evaluate(async () => (await fetch('/api/engagement')).json());
   assert.equal(backend.likes, before + burst, 'Real backend persisted every tap');
   assert.deepEqual(await page.locator('.hero-visual').boundingBox(), box, 'No logo layout shift');
-  report.results.push({ name: 'rapid taps + playback + audio + real D1', taps: burst, before, after: backend.likes, metadata, playback });
+  report.results.push({ name: 'rapid taps + playback + audio + real D1', taps: burst, before, after: backend.likes, metadata, fit, playback });
 
   if (!smoke) {
     await page.locator('#whip-sound').click();

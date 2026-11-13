@@ -56,13 +56,13 @@ section { padding: 84px 0; border-bottom: 1px solid var(--line); }
 .hero-copy-panel { min-width: 0; }
 .hero-visual { overflow: hidden; width: 100%; margin: 0; border: 1px solid var(--line); border-radius: 24px; background: white; box-shadow: var(--shadow); transform: rotate(1deg); }
 .hero-visual img { display: block; width: 100%; height: auto; }
-/* The original 960x905 image owns layout. Fit the COMPLETE square clip into
-   that same box, gently adjusting its aspect rather than cropping text/icons. */
+/* The original image owns layout. Letterbox the COMPLETE square clip without
+   stretching it or cropping the caption/pink icon. English is already square. */
 .cat-tap { position:relative; display:block; width:100%; padding:0; border:0; background:white; color:inherit; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent; user-select:none; }
 .cat-tap img { pointer-events:none; }
 .cat-tap:focus-visible { outline:3px solid var(--accent); outline-offset:-4px; }
 .cat-tap:disabled { cursor:default; }
-.cat-whip { position:absolute; inset:0; width:100%; height:100%; object-fit:fill; opacity:0; pointer-events:none; transition:opacity 50ms linear; }
+.cat-whip { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:white; opacity:0; pointer-events:none; transition:opacity 50ms linear; }
 .cat-tap.is-whipping .cat-whip { opacity:1; }
 .eyebrow { display: inline-flex; align-items: center; gap: 9px; color: var(--muted); font-size: 13px; font-weight: 700; letter-spacing: .04em; }
 .status-dot { width: 9px; height: 9px; border-radius: 999px; background: #aab3ad; box-shadow: 0 0 0 5px rgba(170,179,173,.15); }
