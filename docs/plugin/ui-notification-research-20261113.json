@@ -46,9 +46,10 @@
       "read": [
         "plugins/bits-and-bolts/README.md",
         "plugins/bits-and-bolts/src/server/register.ts",
-        "plugins/bits-and-bolts/src/app/index.html"
+        "plugins/bits-and-bolts/src/app/index.html",
+        "plugins/bits-and-bolts/src/app/controller.ts"
       ],
-      "verified_source_behavior": "Parts library global entrypoint and Parts Tray thread entrypoint; HTML uses host theme variables. A real custom UI surface, not a native notification center extension.",
+      "verified_source_behavior": "Parts library global entrypoint and Parts Tray thread entrypoint; HTML uses host theme variables. A real custom UI surface, not a native notification center extension. Controller applies host-provided CSS variables, fonts and theme; this is the relevant native-feeling UI mechanism omitted in our first prototype.",
       "adopt": "Use host surfaces for optional compact detail viewing; keep our existing site visual identity.",
       "runtime_test": "not installed in this research"
     },
@@ -58,6 +59,20 @@
       "commit": "d420d13051bffe4543ed39e30fa46b87148e47dd",
       "verified_source_behavior": "HTML explicitly labels Draft Widget / concept and uses example data.",
       "decision": "Excluded as evidence of an established, production-verified Codex UI."
+    },
+    {
+      "name": "CodexBar local provider plugins (independent app, not a Codex plugin)",
+      "repo": "https://github.com/steipete/CodexBar/blob/main/docs/plugins.md",
+      "commit": "7447bc77c2497323d9c41e40164ce705533493c8",
+      "license": "MIT",
+      "pushed_at": "2026-11-08T03:49:00Z",
+      "read": [
+        "docs/plugins.md",
+        "docs/plugin-prototype.md"
+      ],
+      "verified_source_behavior": "Native menu cards for local JS/TS providers; fixed-origin HTTP and optional auth; a details-only snapshot is allowed. Plugins cannot spawn subprocesses or call arbitrary native APIs. Existing opt-in usage_updated hooks run after successful app refreshes. Native quota_reset detection requires real cadence and quota evidence, so an external public announcement must not be encoded as measured quota.",
+      "adopt": "Optional existing native status UI, with public Cloudflare data and a link to the original website.",
+      "limits": "Not installed or executed; custom external-event notification handling and packaging remain unverified. Another app would be required."
     }
   ],
   "official_boundaries": {

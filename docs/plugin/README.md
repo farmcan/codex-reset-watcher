@@ -59,3 +59,7 @@ npx wrangler deploy --config apps/reset-radar/wrangler.jsonc
 ## 验收记录
 
 实际结果、生产版本、浏览器截图及宿主能力缺口见 `acceptance.json`；任务开始与结束经 Seed 既有 `/tasks/` 审查事件链留痕。历史快照不代表实时监控健康。
+
+## 2026-11-13 用户反馈后的方向修正
+
+用户否定0.1.0新视觉。该版只保留接入与打包验证价值，不作为已获用户认可的UI。后续详情复用现有生产网页；优先验证系统通知，不能将系统横幅冒称Codex内部通知。社区源码、官方入口能力、CodexBar备选及未实测边界见[调研证据](ui-notification-research-20261113.json)。本轮没有启用新接收器、Hook或发送通知。
