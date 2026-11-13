@@ -1,0 +1,22 @@
+{
+  "name": "reset-radar-panel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "../../node_modules/.bin/tsc --noEmit",
+    "test": "../../node_modules/.bin/vitest run",
+    "dev": "npm run build && ../../node_modules/.bin/wrangler dev",
+    "deploy": "npm run build && ../../node_modules/.bin/wrangler deploy"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/ext-apps": "1.2.2",
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  },
+  "license": "MIT"
+}

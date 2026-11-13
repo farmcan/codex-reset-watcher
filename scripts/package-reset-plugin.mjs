@@ -1,0 +1,13 @@
+import {execFileSync} from 'node:child_process';
+import {mkdirSync,readFileSync,rmSync,writeFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import {createHash} from 'node:crypto';
+const root=resolve(import.meta.dirname,'..');
+const pkg=JSON.parse(readFileSync(resolve(root,'plugins/reset-radar/plugin.json'),'utf8'));
+const out=resolve(root,'dist');mkdirSync(out,{recursive:true});
+const target=resolve(out,`reset-radar-plugin-${pkg.version}.zip`);
+rmSync(target,{force:true});
+execFileSync('zip',['-q','-r',target,'plugin.json','mcp.json','README.md','LICENSE','assets'],{cwd:resolve(root,'plugins/reset-radar')});
+const hash=createHash('sha256').update(readFileSync(target)).digest('hex');
+writeFileSync(target+'.sha256',hash+'  '+target.split('/').at(-1)+'\n');
+console.log(target+'\nsha256 '+hash);

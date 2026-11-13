@@ -1,0 +1,24 @@
+{
+  "$schema":"https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name":"reset-radar",
+  "version":"0.1.0",
+  "description":"A Cloudflare-backed Codex reset status panel. No API key, AI chat, or automatic task execution.",
+  "author":{"name":"farmcan","url":"https://github.com/farmcan"},
+  "homepage":"https://codex-reset-radar.weican16hit.workers.dev/",
+  "repository":"https://github.com/farmcan/codex-reset-watcher",
+  "license":"MIT",
+  "keywords":["codex","reset","status","notifications"],
+  "extensions":{"com.openai":{"interface":{
+    "displayName":"小猫重置雷达",
+    "shortDescription":"查看 Codex 公开重置信号与云端监控状态",
+    "longDescription":"直接打开小猫状态面板，查看官方预告、确认与 Banked reset 动态。所有信息来自同一份 Cloudflare 服务，无需 API Key，不发起模型对话。面板内可刷新、标记已读和开启提示音；离开面板后的提醒沿用网站通知渠道。",
+    "developerName":"farmcan",
+    "category":"Productivity",
+    "capabilities":["Read"],
+    "websiteURL":"https://codex-reset-radar.weican16hit.workers.dev/",
+    "privacyPolicyURL":"https://codex-reset-radar.weican16hit.workers.dev/privacy.html",
+    "brandColor":"#58745f",
+    "composerIcon":"./assets/icon.svg",
+    "logo":"./assets/icon.svg"
+  }}}
+}

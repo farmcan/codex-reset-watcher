@@ -68,6 +68,12 @@
 [10 月新增核验](docs/recent-reset-audit.md)已补入 6 次完成确认，精确执行时刻未公布；它是核验子集，不代表全月清单。
 [早期 12 轮历史审计](docs/historical-audit.md)用于回看证据，不能当作未来预测准确率。[信源判断方法](docs/credibility-methodology.md) · [怎么蹬的筛选依据](docs/research-pedaling-workflows.md)
 
+## Codex 状态面板插件
+
+新增无 LLM 问答的只读面板：复用 Cloudflare 公开信号、浅色/深色外观、最近动态、已读标记与通知入口。
+
+[在线体验](https://codex-reset-radar.weican16hit.workers.dev/) · [安装与通知说明](https://codex-reset-radar.weican16hit.workers.dev/install) · [版本与验收边界](docs/plugin/README.md)
+
 ## 本地运行与自托管
 
 ```sh

@@ -1,0 +1,55 @@
+{
+  "version": "0.1.0",
+  "observed_at": "2026-11-13T09:24:58.771938+00:00",
+  "cloudflare": {
+    "worker": "codex-reset-radar",
+    "active_version": "31db882e-f227-4b9f-b21c-2fb34f76a9d5",
+    "url": "https://codex-reset-radar.weican16hit.workers.dev",
+    "api_projection_bytes_observed": 4398,
+    "service_binding": "codex-reset-watcher",
+    "new_schedulers": 0
+  },
+  "tests": {
+    "root_check": "passed: 154 tests, typecheck, backtest, original-worker dry-run",
+    "panel_tests": "7 passed; included in root 154",
+    "panel_typecheck": "passed",
+    "production_dependency_audit": "0 vulnerabilities after upgrading zod to 4.6.7",
+    "real_mcp": "initialize, tools/list, tools/call, resources/read passed via official SDK; app-only visibility and global/thread entrypoints confirmed",
+    "private_routes": "new worker does not expose upstream admin or personal-observation endpoints"
+  },
+  "browser": {
+    "standalone_live_status": "passed",
+    "hosted_personal_plugin": "created and connected; actual ChatGPT Web MCP App rendered and refresh completed without sending a chat message",
+    "personal_plugin_url": "https://chatgpt.com/plugins/plugin_asdk_app_6af6d57b5bb08191b18f8f4d0b303070/app/open_reset_radar",
+    "theme_and_read_marker": "passed",
+    "responsive_actual_css_widths": [
+      1356,
+      354,
+      291
+    ],
+    "responsive_note": "390/320 viewport overrides are CSS 354/291 under this browser zoom; scrollWidth equals innerWidth. Device metrics restored.",
+    "offline": "simulated client network loss showed coverage unknown; mark-read did not restore healthy status; network restored and refresh recovered",
+    "screenshots": [
+      "screenshots/plugin-hosted.jpg",
+      "screenshots/panel-mobile.jpg",
+      "screenshots/panel-compact.jpg",
+      "screenshots/offline.jpg"
+    ]
+  },
+  "installation": {
+    "local_marketplace": "codex plugin add reset-radar@reset-radar succeeded; version 0.1.0",
+    "remote_release": "pending tagged release install verification"
+  },
+  "not_verified": [
+    "Codex native-window UI: computer-use access to com.openai.codex denied",
+    "physical second computer",
+    "natural new-event notifications and long-term operation",
+    "OS background notifications: not implemented"
+  ],
+  "official_directory": {
+    "status": "not_submitted",
+    "blocker": "Upload requires verified developer identity on the current organization; personal and business verification both show Start.",
+    "domain_verification_and_review": "required after identity verification; not performed"
+  },
+  "privacy": "read-only public signal projection; no personal quota, code, conversation or account token access; no new LLM calls"
+}

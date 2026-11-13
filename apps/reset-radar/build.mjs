@@ -1,0 +1,13 @@
+import {build} from 'esbuild';
+import {Script} from 'node:vm';
+import {mkdir,readFile,writeFile,copyFile,rm} from 'node:fs/promises';
+await rm('dist',{recursive:true,force:true});
+await mkdir('dist',{recursive:true});
+const [js] = (await build({entryPoints:['ui/panel.js'],bundle:true,write:false,format:'iife',minify:true,target:'es2022'})).outputFiles;
+new Script(js.text);
+const css = await readFile('ui/panel.css','utf8');
+const html = (await readFile('ui/index.html','utf8')).replace('/* PANEL_CSS */',()=>css).replace('/* PANEL_JS */',()=>js.text.replace(/<\/script/gi,match=>'<'+String.fromCharCode(92)+match.slice(1)));
+new Script(html.split('<script>')[1].split('</script>')[0]);
+await writeFile('dist/index.html',html);
+for (const name of ['icon.svg','install.html','privacy.html','third-party.txt']) await copyFile('ui/'+name,'dist/'+name);
+console.log('Built self-contained panel',Buffer.byteLength(html),'bytes');
