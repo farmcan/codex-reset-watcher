@@ -41,7 +41,7 @@ if (fallback) {
   soundButton.hidden = true;
   note.replaceChildren(Object.assign(document.createElement('a'), {
     href: `https://resetcat.pages.dev/${english ? 'en/' : ''}`,
-    textContent: text('去实时站甩鞭，求重置 ↗', 'Make a reset wish on the live site ↗')
+    textContent: text('去实时站求重置 ↗', 'Make a reset wish on the live site ↗')
   }));
 } else {
   let visitor;
@@ -81,7 +81,7 @@ if (fallback) {
     displayedWishes++;
     wishes.textContent = format.format(displayedWishes);
     catFeedback();
-    feedback.textContent = text(`本页已甩鞭 ${format.format(taps)} 次`, `${format.format(taps)} cracks this visit`);
+    feedback.textContent = text(`本页已求重置 ${format.format(taps)} 次`, `${format.format(taps)} wishes this visit`);
     const eventId = crypto.randomUUID();
     try {
       await initialTotals;
@@ -89,7 +89,7 @@ if (fallback) {
       await request('like', eventId).catch(() => request('like', eventId));
       note.textContent = defaultNote;
     } catch {
-      note.textContent = text('这次甩鞭暂未确认，稍后再试。', 'This tap is not confirmed. Try again later.');
+      note.textContent = text('这次点击暂未确认，稍后再试。', 'This tap is not confirmed. Try again later.');
     }
   }
   button.addEventListener('click', wish);

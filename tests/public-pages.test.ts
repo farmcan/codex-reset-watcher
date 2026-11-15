@@ -9,7 +9,7 @@ describe("public bilingual dashboard", () => {
     expect(chinese).toContain("找到重置机会，<br>站起来猛蹬。");
     expect(chinese).not.toContain("找到 Reset 机会");
     expect(chinese).toContain('href="en/"');
-    expect(english).toContain("Catch the Reset window.<br>Crack the whip.");
+    expect(english).toContain("Catch the Reset window.<br>Keep building.");
     expect(english).toContain('href="../" lang="zh-CN"');
     for (const page of [chinese, english]) {
       expect(page).toContain('class="github-star"');
