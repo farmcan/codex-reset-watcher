@@ -49,11 +49,23 @@ try {
   assert.ok(metadata.muted && metadata.inline && !metadata.loop && !metadata.controls);
   const fit = await page.locator('video').evaluate(video => {
     const style = getComputedStyle(video);
-    const scale = Math.min(video.clientWidth / video.videoWidth, video.clientHeight / video.videoHeight);
-    return { object_fit: style.objectFit, source_ratio: video.videoWidth / video.videoHeight, displayed_width: video.videoWidth * scale, displayed_height: video.videoHeight * scale };
+    const scale = Math.max(video.clientWidth / video.videoWidth, video.clientHeight / video.videoHeight);
+    const [positionX, positionY] = style.objectPosition.split(' ').map(value => parseFloat(value) / 100);
+    const left = (video.videoWidth * scale - video.clientWidth) * positionX / scale;
+    const top = (video.videoHeight * scale - video.clientHeight) * positionY / scale;
+    return { object_fit: style.objectFit, source_ratio: video.videoWidth / video.videoHeight, displayed_width: video.videoWidth * scale, displayed_height: video.videoHeight * scale, box_width: video.clientWidth, box_height: video.clientHeight, visible_source: { left, top, right: left + video.clientWidth / scale, bottom: top + video.clientHeight / scale } };
   });
-  assert.equal(fit.object_fit, 'contain', 'Video must preserve its original aspect ratio');
-  assert.equal(fit.displayed_width / fit.displayed_height, fit.source_ratio, 'No stretch or crop');
+  assert.equal(fit.object_fit, 'cover', 'Video fills the image box without letterboxes');
+  assert.equal(fit.displayed_width / fit.displayed_height, fit.source_ratio, 'Uniform scaling preserves proportions');
+  assert.ok(fit.displayed_width >= fit.box_width && fit.displayed_height >= fit.box_height, 'No added side or top/bottom bars');
+  // Bounds measured over all 97 frames of each unchanged active source clip.
+  const protectedBounds = pagePath.startsWith('/en')
+    ? [[20, 27, 954, 144], [20, 730, 218, 926]]
+    : [[7, 22, 959, 144], [22, 734, 201, 909]];
+  for (const [left, top, right, bottom] of protectedBounds) {
+    assert.ok(left >= fit.visible_source.left && top >= fit.visible_source.top
+      && right < fit.visible_source.right && bottom < fit.visible_source.bottom, 'Caption and pink icon remain fully inside the visible source');
+  }
   assert.equal(await page.locator('.is-whipping').count(), 0);
   await page.screenshot({ path: `${output}/desktop-static.png` });
   const burst = smoke ? 2 : 100;

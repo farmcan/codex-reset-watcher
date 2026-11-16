@@ -1,0 +1,279 @@
+{
+  "checked_at": "2026-11-16T03:30:23.858425+00:00",
+  "cause": "960x960 video was contained in a 960x905 image box, adding white side letterboxes only while video was visible. Fixed-radius mobile corners also covered edge caption pixels.",
+  "repair": {
+    "fit": "cover",
+    "object_position": "50% 20%",
+    "source_crop_zh": {
+      "top": 11,
+      "bottom": 44,
+      "left": 0,
+      "right": 0
+    },
+    "source_crop_en": {
+      "top": 0,
+      "bottom": 0,
+      "left": 0,
+      "right": 0
+    },
+    "frame_border_radius": "6.8%",
+    "layout": "Original images still own the same box and layout; video scales uniformly."
+  },
+  "source_bounds": {
+    "zh": {
+      "frames": 97,
+      "caption_bounds": [
+        7,
+        22,
+        959,
+        144
+      ],
+      "pink_icon_bounds": [
+        22,
+        734,
+        201,
+        909
+      ]
+    },
+    "en": {
+      "frames": 97,
+      "caption_bounds": [
+        20,
+        27,
+        954,
+        144
+      ],
+      "pink_icon_bounds": [
+        20,
+        730,
+        218,
+        926
+      ]
+    }
+  },
+  "rounded_caption_pixel_check": {
+    "frames_per_locale": 97,
+    "widths_zh": [
+      348,
+      90
+    ],
+    "widths_en": [
+      348,
+      66
+    ],
+    "new_rounded_corner_clipped_dark_caption_pixels": 0,
+    "old_mobile_fixed_radius_clipped_dark_caption_pixels": 63763,
+    "region": "top 145 source rows, left/right caption edges; dark pixels <95 per RGB channel"
+  },
+  "native_browser_edge_pixels": [
+    {
+      "viewport": 1440,
+      "page": "/",
+      "corrected": {
+        "width": 348,
+        "height": 329,
+        "white_fraction": 0
+      },
+      "old_contain": {
+        "width": 348,
+        "height": 329,
+        "white_fraction": 1
+      }
+    },
+    {
+      "viewport": 1440,
+      "page": "/en/",
+      "corrected": {
+        "width": 348,
+        "height": 349,
+        "white_fraction": 0
+      },
+      "old_contain": null
+    },
+    {
+      "viewport": 390,
+      "page": "/",
+      "corrected": {
+        "width": 90,
+        "height": 85,
+        "white_fraction": 0
+      },
+      "old_contain": {
+        "width": 90,
+        "height": 85,
+        "white_fraction": 1
+      }
+    },
+    {
+      "viewport": 390,
+      "page": "/en/",
+      "corrected": {
+        "width": 66,
+        "height": 66,
+        "white_fraction": 0
+      },
+      "old_contain": null
+    },
+    {
+      "viewport": 320,
+      "page": "/",
+      "corrected": {
+        "width": 90,
+        "height": 85,
+        "white_fraction": 0
+      },
+      "old_contain": {
+        "width": 90,
+        "height": 85,
+        "white_fraction": 1
+      }
+    },
+    {
+      "viewport": 320,
+      "page": "/en/",
+      "corrected": {
+        "width": 66,
+        "height": 66,
+        "white_fraction": 0
+      },
+      "old_contain": null
+    }
+  ],
+  "flow_checks": {
+    "zh": {
+      "origin": "http://localhost:8796",
+      "page": "/",
+      "checked_at": "2026-11-16T03:29:12.238Z",
+      "smoke": false,
+      "results": [
+        {
+          "name": "rapid taps + playback + audio + real D1",
+          "taps": 100,
+          "before": 630,
+          "after": 730,
+          "metadata": {
+            "duration": 4.041667,
+            "rate": 5.388889333333334,
+            "muted": true,
+            "inline": true,
+            "loop": false,
+            "controls": false
+          },
+          "fit": {
+            "object_fit": "cover",
+            "source_ratio": 1,
+            "displayed_width": 348,
+            "displayed_height": 348,
+            "box_width": 348,
+            "box_height": 328,
+            "visible_source": {
+              "left": 0,
+              "top": 11.03448275862069,
+              "right": 960,
+              "bottom": 915.8620689655173
+            }
+          },
+          "playback": {
+            "plays": 1,
+            "seeks": 1,
+            "ends": 1,
+            "audioPlays": 1,
+            "accepted": 100,
+            "started": 1039.5999999046326,
+            "duration_ms": 719.6999998092651
+          }
+        },
+        {
+          "name": "New round and secondary action use the same counter; mute works",
+          "passed": true
+        },
+        {
+          "name": "Mobile touch 390px",
+          "passed": true
+        },
+        {
+          "name": "Mobile touch 320px",
+          "passed": true
+        },
+        {
+          "name": "Failed video retains original image and real counting",
+          "passed": true
+        },
+        {
+          "name": "Reduced motion retains static image and counting",
+          "passed": true
+        }
+      ]
+    },
+    "en": {
+      "origin": "http://localhost:8796",
+      "page": "/en/",
+      "checked_at": "2026-11-16T03:29:22.253Z",
+      "smoke": false,
+      "results": [
+        {
+          "name": "rapid taps + playback + audio + real D1",
+          "taps": 100,
+          "before": 735,
+          "after": 835,
+          "metadata": {
+            "duration": 4.041667,
+            "rate": 5.388889333333334,
+            "muted": true,
+            "inline": true,
+            "loop": false,
+            "controls": false
+          },
+          "fit": {
+            "object_fit": "cover",
+            "source_ratio": 1,
+            "displayed_width": 348,
+            "displayed_height": 348,
+            "box_width": 348,
+            "box_height": 348,
+            "visible_source": {
+              "left": 0,
+              "top": 0,
+              "right": 960,
+              "bottom": 960
+            }
+          },
+          "playback": {
+            "plays": 1,
+            "seeks": 1,
+            "ends": 1,
+            "audioPlays": 1,
+            "accepted": 100,
+            "started": 1031.4000000953674,
+            "duration_ms": 711.5
+          }
+        },
+        {
+          "name": "New round and secondary action use the same counter; mute works",
+          "passed": true
+        },
+        {
+          "name": "Mobile touch 390px",
+          "passed": true
+        },
+        {
+          "name": "Mobile touch 320px",
+          "passed": true
+        },
+        {
+          "name": "Failed video retains original image and real counting",
+          "passed": true
+        },
+        {
+          "name": "Reduced motion retains static image and counting",
+          "passed": true
+        }
+      ]
+    }
+  },
+  "source_video_sha256": {
+    "cat-whip-zh-02.mp4": "3a257b8064fa66313e786b8f1a62c15860ac679aa027a1ccc954ae5fa6115b4e",
+    "cat-whip-en.mp4": "8c4ab903a54f33991739a55fcf7e7f115bbcdf6873982b5e95325902bcac1096"
+  },
+  "project_check": "147 tests, typecheck, backtest and deploy dry-run passed"
+}
