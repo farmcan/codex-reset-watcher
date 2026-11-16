@@ -1,0 +1,233 @@
+{
+  "checked_at": "2026-11-16T06:03:23.858964+00:00",
+  "cause": "Generation uniformly covered the 960x905 reference into 960x960 (scale 960/905 and centered horizontal crop). Covering the original again zoomed the whole scene by ~6%, causing image/video handoff jumps. The preceding white-edge test only checked bars and outer layout, not content registration.",
+  "registration": {
+    "zh": {
+      "reference_size": [
+        960,
+        905
+      ],
+      "video_size": [
+        960,
+        960
+      ],
+      "generation_scale": 1.0607734806629834,
+      "generation_crop_x_each": 29.171270718231995,
+      "display_overlay": [
+        27.5,
+        0,
+        905,
+        905
+      ],
+      "side_strips": "unchanged original image, not white padding"
+    },
+    "en": {
+      "reference_size": [
+        960,
+        960
+      ],
+      "video_size": [
+        960,
+        960
+      ],
+      "display_overlay": [
+        0,
+        0,
+        960,
+        960
+      ]
+    },
+    "first_presented_frame": "requestVideoFrameCallback, with playing fallback",
+    "opacity_crossfade": false
+  },
+  "first_frame_comparison": [
+    {
+      "time": 0.001,
+      "kind": "current_cover",
+      "mean_absolute_rgb_error": {
+        "all": 24.23656269183548,
+        "caption": 46.07487068965517,
+        "face": 24.46990476190476,
+        "pink_icon": 45.336875
+      }
+    },
+    {
+      "time": 0.001,
+      "kind": "registered_overlay",
+      "mean_absolute_rgb_error": {
+        "all": 2.4532734806629835,
+        "caption": 4.003297413793104,
+        "face": 2.688242857142857,
+        "pink_icon": 5.072733333333334
+      }
+    }
+  ],
+  "natural_playback_checks": {
+    "zh": {
+      "origin": "http://localhost:8796",
+      "page": "/",
+      "checked_at": "2026-11-16T05:58:23.416Z",
+      "smoke": false,
+      "results": [
+        {
+          "name": "rapid taps + playback + audio + real D1",
+          "taps": 100,
+          "before": 945,
+          "after": 1045,
+          "metadata": {
+            "duration": 4.041667,
+            "rate": 5.388889333333334,
+            "muted": true,
+            "inline": true,
+            "loop": false,
+            "controls": false
+          },
+          "fit": {
+            "object_fit": "contain",
+            "source_ratio": 1,
+            "overlay_width": 328.062,
+            "overlay_height": 328.062,
+            "background": "rgba(0, 0, 0, 0)",
+            "transition_duration": "0s",
+            "reference_width": 348
+          },
+          "start_alignment": {
+            "media_time": 0,
+            "mean_absolute_rgb_error": 2.4462173879680784,
+            "box": {
+              "left": 27.499968000000003,
+              "top": 0,
+              "width": 904.99968,
+              "height": 905
+            }
+          },
+          "playback": {
+            "plays": 1,
+            "seeks": 1,
+            "ends": 1,
+            "audioPlays": 1,
+            "accepted": 100,
+            "started": 1076.0999999046326,
+            "duration_ms": 710.0999999046326,
+            "end_alignment": {
+              "media_time": 4.041667,
+              "mean_absolute_rgb_error": 2.9348338704726826,
+              "box": {
+                "left": 27.499968000000003,
+                "top": 0,
+                "width": 904.99968,
+                "height": 905
+              }
+            }
+          }
+        },
+        {
+          "name": "New round and secondary action use the same counter; mute works",
+          "passed": true
+        },
+        {
+          "name": "Mobile touch 390px",
+          "passed": true
+        },
+        {
+          "name": "Mobile touch 320px",
+          "passed": true
+        },
+        {
+          "name": "Failed video retains original image and real counting",
+          "passed": true
+        },
+        {
+          "name": "Reduced motion retains static image and counting",
+          "passed": true
+        }
+      ]
+    },
+    "en": {
+      "origin": "http://localhost:8796",
+      "page": "/en/",
+      "checked_at": "2026-11-16T05:58:33.448Z",
+      "smoke": false,
+      "results": [
+        {
+          "name": "rapid taps + playback + audio + real D1",
+          "taps": 100,
+          "before": 1050,
+          "after": 1150,
+          "metadata": {
+            "duration": 4.041667,
+            "rate": 5.388889333333334,
+            "muted": true,
+            "inline": true,
+            "loop": false,
+            "controls": false
+          },
+          "fit": {
+            "object_fit": "contain",
+            "source_ratio": 1,
+            "overlay_width": 348,
+            "overlay_height": 348,
+            "background": "rgba(0, 0, 0, 0)",
+            "transition_duration": "0s",
+            "reference_width": 348
+          },
+          "start_alignment": {
+            "media_time": 0,
+            "mean_absolute_rgb_error": 2.0702690972222224,
+            "box": {
+              "left": 0,
+              "top": 0,
+              "width": 960,
+              "height": 960
+            }
+          },
+          "playback": {
+            "plays": 1,
+            "seeks": 1,
+            "ends": 1,
+            "audioPlays": 1,
+            "accepted": 100,
+            "started": 1080.2999997138977,
+            "duration_ms": 712.8000001907349,
+            "end_alignment": {
+              "media_time": 4.041667,
+              "mean_absolute_rgb_error": 2.5381528501157407,
+              "box": {
+                "left": 0,
+                "top": 0,
+                "width": 960,
+                "height": 960
+              }
+            }
+          }
+        },
+        {
+          "name": "New round and secondary action use the same counter; mute works",
+          "passed": true
+        },
+        {
+          "name": "Mobile touch 390px",
+          "passed": true
+        },
+        {
+          "name": "Mobile touch 320px",
+          "passed": true
+        },
+        {
+          "name": "Failed video retains original image and real counting",
+          "passed": true
+        },
+        {
+          "name": "Reduced motion retains static image and counting",
+          "passed": true
+        }
+      ]
+    }
+  },
+  "validation_notes": [
+    "First-frame mean RGB error dropped from about24.24 to2.45 after coordinate registration.",
+    "Last-frame alignment is captured after natural playback; its media_time is4.041667. Manual seeks on the local HTTP resource clamp to0 and are not used as last-frame evidence.",
+    "Original still images, all four source videos, prompt archives, original counters and ~0.75s rounds are preserved."
+  ],
+  "project_check": "147 tests, typecheck, backtest and deploy dry-run passed"
+}

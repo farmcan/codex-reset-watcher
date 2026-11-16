@@ -1,4 +1,4 @@
-import { createCatWhip } from './cat-whip.js?v=20261113-2';
+import { createCatWhip } from './cat-whip.js?v=20261116-aligned-1';
 
 const english = document.documentElement.lang.startsWith('en');
 const text = (zh, en) => english ? en : zh;

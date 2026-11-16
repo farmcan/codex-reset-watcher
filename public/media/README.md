@@ -37,22 +37,31 @@ Archiving these prompts does not submit a new generation request.
 ## Display and sound
 
 The original image remains underneath and owns the logo's layout: Chinese
-960×905, English 960×960. Video uses uniform `object-fit: cover` with
-`object-position: 50% 20%` to fill that same box without stretching or white bars.
-For Chinese this trims 11 source pixels from the top and 44 from the bottom;
-English is already square and does not need a crop. All 97 frames of both active
-clips were inspected for caption/pink-icon bounds: Chinese caption y=22–144,
-pink icon y=734–909; both remain inside the visible y=11–916 source region.
-The original source clips and prompt texts remain unchanged.
-Frame corners scale with the image (`6.8%`) rather than staying at 16px on a tiny
-mobile logo. A per-frame check of dark caption pixels at both edges confirms
-the resized corner mask does not cut them on desktop or mobile.
+960×905, English 960×960. Generation first covered the reference into a 960×960
+square. For Chinese this enlarged reference content by 960/905 and cropped
+29.17 source pixels from each side. Rendering that video over the full original
+box therefore caused a visible ~6% zoom at image/video handoff.
 
-Framing history: the initial `fill` stretched the Chinese clip; `contain` fixed
-that distortion but added visible side letterboxes at click time. On 2026-11-16,
-the user reported those white edges, so display changed to the verified safe
-crop above. This replaces the side letterboxes while retaining the original
-logo box, readable top text, full pink icon and correct video proportions.
+The player now **inverts that generation mapping**. The Chinese video occupies
+905×905 reference pixels at x=27.5, y=0 inside the unchanged 960×905 image.
+Its overlay is therefore 94.270833% wide, centered at 2.864583% from the left.
+The original image itself remains visible in the side strips; they are not
+filled with white. English maps to the full original 960×960 box. Metadata and
+the original image dimensions determine this mapping in `cat-whip.js`.
+No video pixels are further cropped or stretched. The original images, source
+clips and submitted prompt texts remain unchanged.
+
+The video is revealed only once a decoded frame is presented, using
+`requestVideoFrameCallback` when available. Opacity crossfades are removed to
+avoid ghosting. Frame corners still scale with the image (`6.8%`).
+
+Framing history: `contain` with a white background added side bars; the later
+`cover` crop removed those bars but retained the generation zoom. The user
+identified the remaining image/video gap on 2026-11-16. That approach is
+superseded by the registered overlay above. Tests now compare the first and
+naturally played last frames against the original image, in addition to
+checking layout and counting. A seeked event alone is insufficient evidence
+of a requested test frame on local HTTP media with a zero-length seekable range.
 
 `cat-whip.wav` is a short, sharper **Whip crack #1** by Joseph SARDIN / BigSoundBank,
 CC0-1.0, source/license checked on 2026-11-13:

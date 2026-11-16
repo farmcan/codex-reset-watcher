@@ -25,10 +25,25 @@ async function pageFor(options = {}, videoFailure = false) {
   await page.evaluate(() => {
     window.whipTest = { plays: 0, seeks: 0, ends: 0, audioPlays: 0, accepted: 0 };
     const video = document.querySelector('.cat-whip');
+    window.measureWhipAlignment = () => {
+      const image = document.querySelector('#cat-button img');
+      const width = image.naturalWidth, height = image.naturalHeight;
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(image, 0, 0);
+      const reference = ctx.getImageData(0, 0, width, height).data;
+      const box = { left: parseFloat(video.style.left) / 100 * width, top: parseFloat(video.style.top) / 100 * height, width: parseFloat(video.style.width) / 100 * width, height: parseFloat(video.style.height) / 100 * height };
+      ctx.drawImage(video, box.left, box.top, box.width, box.height);
+      const actual = ctx.getImageData(0, 0, width, height).data;
+      let error = 0;
+      for (let i = 0; i < actual.length; i += 4) for (let c = 0; c < 3; c++) error += Math.abs(reference[i + c] - actual[i + c]);
+      return { media_time: video.currentTime, mean_absolute_rgb_error: error / (width * height * 3), box };
+    };
     video.addEventListener('play', () => whipTest.plays++);
     video.addEventListener('playing', () => { whipTest.started ??= performance.now(); });
     video.addEventListener('seeking', () => whipTest.seeks++);
-    video.addEventListener('ended', () => { whipTest.ends++; whipTest.duration_ms = performance.now() - whipTest.started; });
+    video.addEventListener('ended', () => { whipTest.ends++; whipTest.duration_ms = performance.now() - whipTest.started; whipTest.end_alignment = measureWhipAlignment(); });
     document.querySelector('#whip-audio').addEventListener('playing', () => whipTest.audioPlays++);
   });
   page.on('response', async response => {
@@ -49,28 +64,21 @@ try {
   assert.ok(metadata.muted && metadata.inline && !metadata.loop && !metadata.controls);
   const fit = await page.locator('video').evaluate(video => {
     const style = getComputedStyle(video);
-    const scale = Math.max(video.clientWidth / video.videoWidth, video.clientHeight / video.videoHeight);
-    const [positionX, positionY] = style.objectPosition.split(' ').map(value => parseFloat(value) / 100);
-    const left = (video.videoWidth * scale - video.clientWidth) * positionX / scale;
-    const top = (video.videoHeight * scale - video.clientHeight) * positionY / scale;
-    return { object_fit: style.objectFit, source_ratio: video.videoWidth / video.videoHeight, displayed_width: video.videoWidth * scale, displayed_height: video.videoHeight * scale, box_width: video.clientWidth, box_height: video.clientHeight, visible_source: { left, top, right: left + video.clientWidth / scale, bottom: top + video.clientHeight / scale } };
+    const image = document.querySelector('#cat-button img');
+    return { object_fit: style.objectFit, source_ratio: video.videoWidth / video.videoHeight, overlay_width: parseFloat(style.width), overlay_height: parseFloat(style.height), background: style.backgroundColor, transition_duration: style.transitionDuration, reference_width: parseFloat(getComputedStyle(image).width) };
   });
-  assert.equal(fit.object_fit, 'cover', 'Video fills the image box without letterboxes');
-  assert.equal(fit.displayed_width / fit.displayed_height, fit.source_ratio, 'Uniform scaling preserves proportions');
-  assert.ok(fit.displayed_width >= fit.box_width && fit.displayed_height >= fit.box_height, 'No added side or top/bottom bars');
-  // Bounds measured over all 97 frames of each unchanged active source clip.
-  const protectedBounds = pagePath.startsWith('/en')
-    ? [[20, 27, 954, 144], [20, 730, 218, 926]]
-    : [[7, 22, 959, 144], [22, 734, 201, 909]];
-  for (const [left, top, right, bottom] of protectedBounds) {
-    assert.ok(left >= fit.visible_source.left && top >= fit.visible_source.top
-      && right < fit.visible_source.right && bottom < fit.visible_source.bottom, 'Caption and pink icon remain fully inside the visible source');
-  }
+  assert.equal(fit.object_fit, 'contain', 'Registered overlay preserves the full video frame');
+  assert.ok(Math.abs(fit.overlay_width / fit.overlay_height - fit.source_ratio) < .001, 'Overlay box has the video aspect ratio, so it adds no bars');
+  assert.equal(fit.background, 'rgba(0, 0, 0, 0)', 'Uncovered edges expose the original image');
+  assert.equal(fit.transition_duration, '0s', 'No crossfade ghosting between different images');
+  const startAlignment = await page.evaluate(() => measureWhipAlignment());
+  assert.ok(startAlignment.mean_absolute_rgb_error < 6, 'First frame matches original composition instead of zooming it');
   assert.equal(await page.locator('.is-whipping').count(), 0);
   await page.screenshot({ path: `${output}/desktop-static.png` });
   const burst = smoke ? 2 : 100;
   await page.locator('#cat-button').click();
   await page.waitForFunction(() => whipTest.started !== undefined);
+  await page.waitForFunction(() => document.querySelector('#cat-button').classList.contains('is-whipping'));
   await page.waitForTimeout(150);
   const progress = await page.locator('video').evaluate(video => video.currentTime);
   const seeks = await page.evaluate(() => whipTest.seeks);
@@ -89,6 +97,8 @@ try {
   const playback = await page.evaluate(() => whipTest);
   assert.equal(playback.plays, 1, 'No queued playback after the burst');
   assert.equal(playback.audioPlays, 1, 'No overlapping sounds during the burst');
+  assert.ok(playback.end_alignment.media_time > metadata.duration - .05, 'End alignment samples the naturally played last frame, not an unsupported seek');
+  assert.ok(playback.end_alignment.mean_absolute_rgb_error < 6, 'Last frame matches the original before returning to static');
   assert.ok(playback.duration_ms >= 600 && playback.duration_ms < 1050, `Round took ${playback.duration_ms}ms`);
   assert.equal(await page.locator('.is-whipping').count(), 0);
   assert.equal(await page.locator('.cat-plus').count(), 0);
@@ -97,7 +107,7 @@ try {
   const backend = await page.evaluate(async () => (await fetch('/api/engagement')).json());
   assert.equal(backend.likes, before + burst, 'Real backend persisted every tap');
   assert.deepEqual(await page.locator('.hero-visual').boundingBox(), box, 'No logo layout shift');
-  report.results.push({ name: 'rapid taps + playback + audio + real D1', taps: burst, before, after: backend.likes, metadata, fit, playback });
+  report.results.push({ name: 'rapid taps + playback + audio + real D1', taps: burst, before, after: backend.likes, metadata, fit, start_alignment: startAlignment, playback });
 
   if (!smoke) {
     await page.locator('#whip-sound').click();
@@ -112,6 +122,7 @@ try {
       const mobile = await pageFor({ viewport: { width, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
       const start = number(await mobile.page.locator('#like-count').textContent());
       await mobile.page.locator('#cat-button').tap();
+      await mobile.page.waitForFunction(() => document.querySelector('#cat-button').classList.contains('is-whipping'));
       await mobile.page.waitForFunction(() => whipTest.ends === 1 && whipTest.accepted === 1);
       assert.equal(number(await mobile.page.locator('#like-count').textContent()), start + 1);
       assert.equal(await mobile.page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
