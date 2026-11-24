@@ -130,7 +130,18 @@ npm run dev -- --ip 127.0.0.1 --port 8793
 
 可在另一个终端运行 `node scripts/check-personal-quota.mjs`，使用本机 Chrome 验证导入、合并、刷新、图表和网络行为。额度看板本身可直接用演示数据或本地 JSON，无需配置抓取凭据。
 
-如果想在 macOS 菜单栏查看实时额度，可以单独使用 CodexBar。
+### macOS 菜单栏应用
+
+ResetCat Quota Bar 支持 macOS 14 及以上版本。安装需要 Node.js 和 Xcode 命令行工具。在仓库根目录运行：
+
+```bash
+npm ci
+apps/quota-bar/install.sh
+```
+
+安装完成后，在系统菜单栏点单色小猫。齿轮菜单可加载演示、导入 JSON，或选定 AI Agent 会继续更新的本机快照。「完整图表」打开独立窗口，燃尽图和泳道图都读取同一份本机记录。菜单栏拥挤时，从 Spotlight 或 Finder 打开 `ResetCat Quota Bar` 调出面板。App 安装到 `~/Applications`，离线运行无需终端或 Node.js。
+
+更新前从齿轮菜单退出应用，再运行安装脚本。另可使用第三方 CodexBar 查看其直接接入的额度来源。
 
 ```bash
 brew install --cask codexbar

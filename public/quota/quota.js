@@ -3,6 +3,7 @@ import { bounds, burnChart, laneChart } from './charts.js';
 import { demo, demoNow } from './demo.js';
 
 const $ = id => document.getElementById(id);
+const desktop = window.webkit?.messageHandlers?.quota;
 const en = new URLSearchParams(location.search).get('lang') === 'en';
 const tr = (zh, english) => en ? english : zh;
 const locale = tr('zh-CN', 'en-GB');
@@ -70,7 +71,7 @@ function showNotice(message, error = false) {
 
 let saved = [];
 try {
-  const state = JSON.parse(localStorage.getItem(storageKey));
+  const state = desktop ? null : JSON.parse(localStorage.getItem(storageKey));
   if (Array.isArray(state)) saved = state;
   const theme = localStorage.getItem(themeKey);
   if (theme === 'dark' || theme === 'light') document.documentElement.dataset.theme = theme;
@@ -313,7 +314,7 @@ function setView(value) {
 $('burn').onclick = () => setView('burn');
 $('lanes').onclick = () => setView('lanes');
 for (const id of ['range', 'sample', 'lane-range']) $(id).onchange = () => render();
-$('import').onclick = () => $('file').click();
+$('import').onclick = () => desktop ? desktop.postMessage('import') : $('file').click();
 $('file').onchange = async () => {
   const file = $('file').files[0];
   if (!file) return;
@@ -347,16 +348,19 @@ $('file').onchange = async () => {
   }
 };
 $('demo').onclick = () => {
+  if (desktop) return desktop.postMessage('demo');
   demoMode = true;
   setView('burn');
   showNotice('');
 };
 $('back').onclick = () => {
+  if (desktop) return desktop.postMessage('live');
   demoMode = false;
   render();
   showNotice('');
 };
 $('clear').onclick = () => {
+  if (desktop) return desktop.postMessage('clear');
   if (!confirm(tr('清除当前浏览器保存的所有额度快照？', 'Clear all quota snapshots saved in this browser?'))) return;
   try {
     localStorage.removeItem(storageKey);
@@ -390,6 +394,7 @@ $('copy').onclick = async () => {
 $('show-guide').onclick = () => { $('guide').hidden = !$('guide').hidden; };
 $('guide').textContent = agentGuide;
 $('example').onclick = () => {
+  if (desktop) return desktop.postMessage('example');
   const url = URL.createObjectURL(new Blob([JSON.stringify(demo, null, 2) + '\n'], { type: 'application/json' }));
   const download = node('a');
   download.href = url;
@@ -406,7 +411,19 @@ if (en) {
   $('language').textContent = '中文';
   document.querySelector('.brand').href = '../en/';
 }
-render();
+if (desktop) {
+  window.showQuotaBarState = state => {
+    saved = state.saved;
+    demoMode = state.demo;
+    render();
+  };
+  document.querySelector('.brand').href = 'https://resetcat.pages.dev/';
+  document.querySelector('.intro p').textContent = '查看快照余额、消耗速度和下次重置。记录保存在这台 Mac。';
+  $('language').hidden = true;
+  desktop.postMessage('ready');
+} else {
+  render();
+}
 setInterval(() => {
   if (!demoMode && saved.length && !document.activeElement?.closest('#dashboard')) render();
 }, 60_000);
