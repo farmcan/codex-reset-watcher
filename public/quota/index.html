@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta http-equiv="Content-Security-Policy" content="connect-src 'none'; form-action 'none'">
+  <title>个人额度 · Codex 重置雷达</title>
+  <link rel="icon" href="../brand-zh.png">
+  <link rel="stylesheet" href="quota.css">
+  <script type="module" src="quota.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <a class="brand" href="../">
+        <img src="../brand-zh.png" alt="" width="46" height="46">
+        <span><strong data-en="Reset Cat">Codex 重置雷达</strong><small data-en="Public reset signals ↗">公开重置信号 ↗</small></span>
+      </a>
+      <div class="actions">
+        <a id="language" href="?lang=en" lang="en">EN</a>
+        <button id="theme" type="button" data-en="Theme">切换外观</button>
+        <button id="import" class="primary" type="button" data-en="Import JSON">导入 JSON</button>
+        <input id="file" type="file" accept=".json,application/json" hidden>
+      </div>
+    </header>
+    <section class="intro">
+      <div>
+        <h1 data-en="Personal quota">个人额度</h1>
+        <p data-en="See your remaining quota, burn rate, and next reset from snapshots saved in this browser.">用额度快照查看余额、消耗速度和下次重置。记录仅保存在当前浏览器。</p>
+      </div>
+      <div class="actions">
+        <button id="demo" type="button" data-en="Load demo">加载演示</button>
+        <button id="copy" type="button" data-en="Copy for AI agent">复制给 AI Agent</button>
+      </div>
+    </section>
+    <p id="notice" class="notice" role="status" hidden></p>
+    <section id="empty" class="empty">
+      <h2 data-en="Import your first snapshot">导入第一份额度快照</h2>
+      <p data-en="One observation is enough to see the remaining quota and deadline. Import more snapshots to build history.">一个观测点就能看余额和期限。之后继续导入快照，即可积累历史。</p>
+      <button id="example" type="button" data-en="Download example JSON">下载 JSON 示例</button>
+    </section>
+    <section id="dashboard" hidden>
+      <div class="summary">
+        <strong id="summary"></strong>
+        <span id="updated"></span>
+      </div>
+      <div class="toolbar">
+        <div class="tabs" role="group" aria-label="图表 / Chart">
+          <button id="burn" aria-pressed="true" type="button" data-en="Burndown">燃尽图</button>
+          <button id="lanes" aria-pressed="false" type="button" data-en="Swimlanes">泳道图</button>
+        </div>
+        <div class="actions" id="burn-controls">
+          <select id="range" aria-label="时间范围 / Time range">
+            <option value="cycle" data-en="Current cycle">本周期</option>
+            <option value="day" data-en="Last 24 hours">最近 24 小时</option>
+            <option value="week" data-en="Last 7 days">最近 7 天</option>
+            <option value="compare" data-en="Shared time axis">同轴比较</option>
+          </select>
+          <select id="sample" aria-label="采样 / Sampling">
+            <option value="raw" data-en="Raw points">原始点</option>
+            <option value="hour" data-en="Hourly">按小时</option>
+            <option value="day" data-en="Daily">按天</option>
+          </select>
+        </div>
+        <select id="lane-range" aria-label="期限范围 / Deadline range" hidden>
+          <option value="7" data-en="Next 7 days">未来 7 天</option>
+          <option value="31" selected data-en="Next 31 days">未来 31 天</option>
+          <option value="90" data-en="Next 90 days">未来 90 天</option>
+        </select>
+      </div>
+      <div id="legend" class="legend"></div>
+      <div id="cards" class="cards"></div>
+    </section>
+    <footer>
+      <details>
+        <summary data-en="Snapshot format and calculations">快照格式与计算说明</summary>
+        <p data-en="Quota is based on imported observations. The projection needs three consecutive points over at least an hour. Gaps over six hours, increases and cycle changes break the line. Projections stop at the earliest known deadline. Date-only deadlines are marked by day.">余额来自导入的观测。余额增加、周期变化或间隔超过 6 小时时断开。预测要求近 24 小时内至少 3 个连续点、跨度至少 1 小时，预测到已知期限为止。仅有日期的期限按天标记。</p>
+        <button id="show-guide" type="button" data-en="Show agent instructions">查看 Agent 指令</button>
+        <pre id="guide" hidden></pre>
+      </details>
+      <div class="actions">
+        <button id="back" type="button" hidden data-en="Exit demo">退出演示</button>
+        <button id="clear" type="button" hidden data-en="Clear local records">清除本机记录</button>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>

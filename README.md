@@ -68,6 +68,59 @@
 [10 月新增核验](docs/recent-reset-audit.md)已补入 6 次完成确认，精确执行时刻未公布；它是核验子集，不代表全月清单。
 [早期 12 轮历史审计](docs/historical-audit.md)用于回看证据，不能当作未来预测准确率。[信源判断方法](docs/credibility-methodology.md) · [怎么蹬的筛选依据](docs/research-pedaling-workflows.md)
 
+## 个人额度
+
+打开 [个人额度看板](https://resetcat.pages.dev/quota/)，可加载演示、下载示例或复制 Agent 指令。导入一次即显示最后观测的余额和已知期限。导入更多快照会在当前浏览器合并历史。看板可切换燃尽图、泳道图、时间范围和采样粒度。通过页面底部的「清除本机记录」删除导入的快照。不同域名和浏览器各自保存记录。
+
+### Agent 指令
+
+> 根据我手动提供或授权读取的额度信息，按下方 v1 示例生成 quota-snapshot.json。保留来源、池和周期的稳定本地 ID、单位、实际观测时间及当时剩余量。来源明确给出周期或期限时才填写，未知填 null。只有日期时保留 YYYY-MM-DD。观测时间须带时区。省略凭据、账户标识、原始日志和未经观测的历史。
+
+### 快照格式 v1
+
+```json
+{
+  "schemaVersion": 1,
+  "timezone": "Asia/Shanghai",
+  "pools": [
+    {
+      "sourceId": "codex",
+      "sourceLabel": "Codex",
+      "poolId": "weekly",
+      "poolLabel": "周额度",
+      "cycleId": "demo-week-01",
+      "unit": "percent",
+      "total": 100,
+      "cycleStart": "2026-11-24T06:00:00+08:00",
+      "resetsAt": "2026-11-24T09:00:00+08:00",
+      "expiresAt": null,
+      "deadlineAt": null,
+      "observations": [
+        {"observedAt": "2026-11-24T07:00:00+08:00", "remaining": 60},
+        {"observedAt": "2026-11-24T07:30:00+08:00", "remaining": 55},
+        {"observedAt": "2026-11-24T08:00:00+08:00", "remaining": 50}
+      ]
+    }
+  ]
+}
+```
+
+| 字段 | 约定 |
+| --- | --- |
+| `timezone` | IANA 时区。省略时使用 UTC。用于显示时间、按天采样和解释仅日期的期限。 |
+| `sourceId` / `sourceLabel` | 稳定来源 ID 与显示名称。多个账户可用不同的本地别名。 |
+| `poolId` / `poolLabel` | 来源内稳定的额度池 ID 与显示名称。 |
+| `cycleId` | 建议提供稳定周期 ID。缺省时根据开始和期限字段识别周期。 |
+| `unit` / `total` | `percent` 表示 0–100 的剩余百分比。也可用 `credits` 等原单位，未知总量填 null。 |
+| `cycleStart` / `resetsAt` / `expiresAt` / `deadlineAt` | 周期开始、刷新、失效、自定计划期限。接受带时区的 ISO 8601 时间、YYYY-MM-DD 或 null。仅日期的期限按当地日期起点标记，界面保留日精度。 |
+| `observations[]` | 至少一个观测点。用带时区的 `observedAt` 和非负数或 null 的 `remaining`。0 表示耗尽。 |
+
+合并键为来源、池、单位、周期和观测时刻。同一键重复导入只保留一个点，后导入的值可更正该点。相同池和单位的其他周期可在跨周期视图中查看。小时或天采样取相应桶内的末点。
+
+燃尽图在余额回升、周期切换、未知余额或间隔超过 6 小时处断开。近 24 小时内至少有 3 个连续点，跨度至少 1 小时，且最新观测距查看时刻不超过 6 小时时，才用首末余额之差估计平均速率。预测画到理论归零或已知期限中更早的时刻，点线表示均匀使用参考。余额只取导入的观测，过期时提示待更新。
+
+本地启动后运行 `node scripts/check-personal-quota.mjs` 可验证导入、合并、刷新、图表和网络行为，默认检查 `http://127.0.0.1:8793`。
+
 ## 本地运行与自托管
 
 ```sh
