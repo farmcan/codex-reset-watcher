@@ -119,7 +119,25 @@
 
 燃尽图在余额回升、周期切换、未知余额或间隔超过 6 小时处断开。近 24 小时内至少有 3 个连续点，跨度至少 1 小时，且最新观测距查看时刻不超过 6 小时时，才用首末余额之差估计平均速率。预测画到理论归零或已知期限中更早的时刻，点线表示均匀使用参考。余额只取导入的观测，过期时提示待更新。
 
-本地启动后运行 `node scripts/check-personal-quota.mjs` 可验证导入、合并、刷新、图表和网络行为，默认检查 `http://127.0.0.1:8793`。
+### 本地打开看板
+
+在仓库根目录运行以下命令，然后打开 [本地个人额度](http://127.0.0.1:8793/quota/)。
+
+```bash
+npm ci
+npm run dev -- --ip 127.0.0.1 --port 8793
+```
+
+可在另一个终端运行 `node scripts/check-personal-quota.mjs`，使用本机 Chrome 验证导入、合并、刷新、图表和网络行为。额度看板本身可直接用演示数据或本地 JSON，无需配置抓取凭据。
+
+如果想在 macOS 菜单栏查看实时额度，可以单独使用 CodexBar。
+
+```bash
+brew install --cask codexbar
+open -a CodexBar
+```
+
+在 CodexBar 的 Settings → Providers 中启用 Codex。个人额度网页通过 JSON 快照更新。[CodexBar 官方安装说明](https://github.com/steipete/CodexBar#install)
 
 ## 本地运行与自托管
 
