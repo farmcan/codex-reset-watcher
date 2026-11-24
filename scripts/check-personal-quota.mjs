@@ -75,9 +75,11 @@ try {
   await page.goto(origin + '/');
   assert.equal(await page.locator('a[href="quota/"]').first().textContent(), '个人额度');
   await page.locator('header a[href="quota/"]').click();
+  await page.waitForLoadState('load');
   await shown('#empty');
   trackQuota = true;
   await page.getByRole('button', { name: '复制给 AI Agent' }).click();
+  await page.getByText('已复制 Agent 指令和 JSON 示例。', { exact: true }).waitFor();
   assert.match(await page.evaluate(() => navigator.clipboard.readText()), /schemaVersion/);
   if (process.env.QUOTA_REAL_SNAPSHOT) {
     const real = JSON.parse(await readFile(process.env.QUOTA_REAL_SNAPSHOT, 'utf8'));
@@ -142,7 +144,7 @@ try {
   await shown('#empty');
   assert.equal(await page.evaluate(() => localStorage.getItem('resetcat:quota:v1')), null);
   await page.locator('#language').click();
-  assert.equal(await page.locator('h1').textContent(), 'Personal quota');
+  await page.getByRole('heading', { name: 'Personal quota', exact: true }).waitFor();
   assert.deepEqual(submissions, []);
   assert.deepEqual(errors, []);
   console.log('OK · model, import, invalid file, dedupe, cycles, storage, demo, chart modes, mobile, privacy, English'
