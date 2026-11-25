@@ -132,14 +132,16 @@ npm run dev -- --ip 127.0.0.1 --port 8793
 
 ### macOS 菜单栏应用
 
-ResetCat Quota Bar 支持 macOS 14 及以上版本。安装需要 Node.js 和 Xcode 命令行工具。在仓库根目录运行：
+ResetCat Quota Bar 支持 macOS 14 及以上版本。[下载 GitHub 公测安装包](https://github.com/farmcan/codex-reset-watcher/releases/tag/quota-bar-v0.1.0)，解压后将 `ResetCat Quota Bar.app` 拖到「应用程序」并打开。公测包尚未完成 Apple 公证，首次打开可能需要确认。[Apple 的打开说明](https://support.apple.com/zh-cn/102445)
+
+从源码编译需要 Node.js 22+ 和 Xcode 命令行工具。在仓库根目录运行：
 
 ```bash
 npm ci
 apps/quota-bar/install.sh
 ```
 
-安装完成后，在系统菜单栏点单色小猫。齿轮菜单可加载演示、导入 JSON，或选定 AI Agent 会继续更新的本机快照。「完整图表」打开独立窗口，燃尽图和泳道图都读取同一份本机记录。菜单栏拥挤时，从 Spotlight 或 Finder 打开 `ResetCat Quota Bar` 调出面板。App 安装到 `~/Applications`，离线运行无需终端或 Node.js。
+安装完成后，在系统菜单栏点单色小猫。齿轮菜单可加载演示、导入 JSON，或选定 AI Agent 会继续更新的本机快照。「完整图表」打开独立窗口，燃尽图和泳道图都读取同一份本机记录。菜单栏拥挤时，从 Spotlight 或 Finder 打开 `ResetCat Quota Bar` 调出面板。源码安装脚本将 App 放到 `~/Applications`。安装后的 App 可离线运行。
 
 更新前从齿轮菜单退出应用，再运行安装脚本。另可使用第三方 CodexBar 查看其直接接入的额度来源。
 
