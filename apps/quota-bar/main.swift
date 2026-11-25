@@ -81,6 +81,9 @@ final class QuotaBar: NSObject, NSApplicationDelegate, WKScriptMessageHandler, W
             refresh: { [weak self] in self?.model.refresh(force: true) },
             chooseFile: { [weak self] watch in self?.chooseFile(watch: watch) },
             stopWatching: { [weak self] in self?.model.stopWatching() },
+            connectCodex: { [weak self] in self?.confirmCodex() },
+            disconnectCodex: { [weak self] in self?.model.disconnectCodex() },
+            copy: { [weak self] template in self?.copyAgentText(template: template) },
             demo: { [weak self] in self.map { $0.model.showDemo(!$0.model.demo) } },
             clear: { [weak self] in self?.confirmClear() },
             charts: { [weak self] in self?.showCharts() },
@@ -109,6 +112,28 @@ final class QuotaBar: NSObject, NSApplicationDelegate, WKScriptMessageHandler, W
         floatingPanel?.makeKeyAndOrderFront(nil)
     }
 
+    private func confirmCodex() {
+        if model.codexEnabled {
+            model.connectCodex()
+            return
+        }
+        popover.performClose(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = "连接本机 Codex？"
+        alert.informativeText = "使用你已登录的本机 Codex 只读查询额度。应用运行时每 5 分钟检查一次，观测保存在本机。可以随时从设置停止。"
+        alert.addButton(withTitle: "同意并连接")
+        alert.addButton(withTitle: "取消")
+        if alert.runModal() == .alertFirstButtonReturn { model.connectCodex() }
+        showAfterDialog()
+    }
+
+    private func copyAgentText(template: Bool) {
+        let text = template ? model.template : model.agentGuide
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+    }
+
     private func chooseFile(watch: Bool) {
         popover.performClose(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -118,7 +143,12 @@ final class QuotaBar: NSObject, NSApplicationDelegate, WKScriptMessageHandler, W
         panel.title = watch ? "选定本机额度快照" : "导入额度快照"
         panel.prompt = watch ? "开始监测" : "导入"
         if panel.runModal() == .OK, let url = panel.url { model.importFile(url, watch: watch) }
-        if chartWindow?.isVisible != true && floatingPanel?.isVisible != true { toggle() }
+        showAfterDialog()
+    }
+
+    private func showAfterDialog() {
+        guard chartWindow?.isVisible != true, floatingPanel?.isVisible != true else { return }
+        DispatchQueue.main.async { [weak self] in self?.showFloatingPanel() }
     }
 
     private func confirmClear() {
@@ -126,11 +156,11 @@ final class QuotaBar: NSObject, NSApplicationDelegate, WKScriptMessageHandler, W
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
         alert.messageText = "清除本机额度记录？"
-        alert.informativeText = "已导入的历史会删除，已选定的文件会停止监测。"
+        alert.informativeText = "会删除本机历史，并停止 Codex 刷新和文件监测。"
         alert.addButton(withTitle: "保留")
         alert.addButton(withTitle: "清除")
         if alert.runModal() == .alertSecondButtonReturn { model.clear() }
-        if chartWindow?.isVisible != true && floatingPanel?.isVisible != true { toggle() }
+        showAfterDialog()
     }
 
     private func saveExample() {
@@ -189,6 +219,7 @@ final class QuotaBar: NSObject, NSApplicationDelegate, WKScriptMessageHandler, W
         case "live": model.showDemo(false)
         case "clear": confirmClear()
         case "example": saveExample()
+        case "copy-agent-guide": copyAgentText(template: false)
         default: break
         }
     }

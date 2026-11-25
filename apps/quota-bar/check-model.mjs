@@ -13,6 +13,13 @@ assert.equal(weekly.latest.remaining, 50);
 assert.equal(weekly.estimate.remaining, 40);
 assert.equal(weekly.estimate.end, Date.parse('2026-11-24T09:00:00+08:00'));
 
+const credits = panel.sources.find(source => source.id === 'demo-b').pools[0];
+assert.equal(credits.estimate.zeroAt, Date.parse('2026-11-24T09:00:00+08:00'));
+assert.equal((credits.estimate.zeroAt - asOf) / 60_000, 55);
+assert.equal(credits.estimate.deadline.type, 'expiry');
+assert.match(model.agentGuide(), /每 5 分钟/);
+assert.equal(JSON.parse(model.template()).schemaVersion, 1);
+
 const snapshot = { ...demo, pools: [demo.pools[0]] };
 let saved = model.merge(JSON.stringify(snapshot), '[]', asOf);
 saved = model.merge(JSON.stringify(snapshot), saved, asOf);

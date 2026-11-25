@@ -1,4 +1,5 @@
 import { deadlines, forecast, mergePools, poolKey, readSnapshot, splitPoints } from '../../public/quota/model.js';
+import { agentTemplate, formatAgentGuide } from '../../public/quota/agent-guide.js';
 import { demo, demoNow } from '../../public/quota/demo.js';
 
 globalThis.quotaModel = {
@@ -17,6 +18,12 @@ globalThis.quotaModel = {
   },
   example() {
     return JSON.stringify(demo, null, 2);
+  },
+  agentGuide() { return formatAgentGuide(); },
+  template() { return agentTemplate; },
+  sources(source) {
+    const { pools } = readSnapshot(JSON.parse(source.replace(/^\uFEFF/, '')));
+    return JSON.stringify([...new Set(pools.map(pool => pool.sourceId))]);
   },
   panel(data, demoMode, now) {
     const pools = demoMode ? mergePools([], readSnapshot(demo).pools) : JSON.parse(data);

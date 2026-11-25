@@ -1,5 +1,6 @@
 import { DAY, HOUR, deadlines, forecast, mergePools, poolKey, readSnapshot } from './model.js';
 import { bounds, burnChart, laneChart } from './charts.js';
+import { formatAgentGuide } from './agent-guide.js';
 import { demo, demoNow } from './demo.js';
 
 const $ = id => document.getElementById(id);
@@ -18,14 +19,8 @@ const states = {
   short: tr('样本不足', 'Insufficient samples'),
   flat: tr('余额持平', 'Balance is flat')
 };
-const agentGuide = tr(
-  '请根据我手动提供或授权读取的额度信息，生成一个 quota-snapshot.json 文件。只整理实际读数。使用下面的 v1 结构，来源、池和周期使用稳定的本地 ID，保留单位、实际观测时间及剩余量。周期开始、重置、到期和计划期限仅在来源明确给出时填写，未知填 null。只有日期时保留 YYYY-MM-DD，观测时间必须带时区。只输出看板需要的字段，省略凭据、账户标识、原始日志及未经观测的历史。示例中的数值仅演示格式。',
-  'Create quota-snapshot.json from actual quota readings I provide or authorize you to read. Follow the v1 structure below. Use stable local IDs for sources, pools, and cycles. Preserve the unit, observation time, and remaining amount. Include cycle start, reset, expiry and planned deadlines only when known. Use null for unknown values. Keep date-only deadlines as YYYY-MM-DD, and include an offset on observation timestamps. Omit credentials, account identifiers, raw logs, and unobserved history. The example values only illustrate the format.'
-) + '\n\n' + JSON.stringify({
-  schemaVersion: 1, timezone: demo.timezone, pools: [{
-    ...demo.pools[0], expiresAt: null, deadlineAt: null, observations: demo.pools[0].observations.slice(0, 1)
-  }]
-}, null, 2);
+const agentGuide = formatAgentGuide(en ? 'en' : 'zh');
+let staleSources = new Set();
 
 function node(tag, text, className) {
   const element = document.createElement(tag);
@@ -49,7 +44,7 @@ function number(amount) {
 }
 
 function format(ms, zone, style = 'full') {
-  const time = { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' };
+  const time = { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', ...(style === 'observed' && { second: '2-digit' }) };
   const day = { month: '2-digit', day: '2-digit' };
   const options = style === 'time' ? time : style === 'day' ? { ...day, year: 'numeric' } : style === 'axis' ? day : { ...day, ...time };
   return new Intl.DateTimeFormat(locale, { ...options, timeZone: zone }).format(ms);
@@ -95,7 +90,8 @@ function groupsOf(pools, now) {
       histories.sort((a, b) => a.observations.at(-1).ms - b.observations.at(-1).ms
         || (a.cycleStart?.ms ?? 0) - (b.cycleStart?.ms ?? 0));
       const pool = histories.at(-1);
-      return { pool, histories, latest: pool.observations.at(-1), estimate: forecast(pool, now) };
+      const estimate = staleSources.has(pool.sourceId) ? { state: 'stale' } : forecast(pool, now);
+      return { pool, histories, latest: pool.observations.at(-1), estimate };
     });
     const latest = series.reduce((a, b) => a.latest.ms >= b.latest.ms ? a : b);
     return { id: latest.pool.sourceId, label: latest.pool.sourceLabel, latest, series };
@@ -245,7 +241,7 @@ function laneCard(groups, side, now) {
         else if (marker.ms > now + days * DAY) status = ' · ' + tr('超出当前范围', 'Outside range');
         track.append(node('small', day(marker.ms, marker.day ? 'day' : 'full') + ' · ' + indicators[marker.type] + status));
       }
-      if (estimate.state === 'update') track.append(node('small', states.update));
+      if (['update', 'stale'].includes(estimate.state)) track.append(node('small', states[estimate.state]));
       row.append(node('strong', pool.poolLabel, 'lane-pool'), amount, track);
       card.append(row, detailsFor(series));
     }
@@ -285,7 +281,7 @@ function render(focus = {}) {
   $('summary').textContent = (demoMode ? tr('演示数据 · ', 'Demo data · ') : '') +
     active + ' / ' + groups.length + tr(' 个来源有读数', ' sources with readings');
   $('updated').textContent = (demoMode ? tr('演示查看时刻', 'Demo as of') : tr('最新观测', 'Last observed'))
-    + ' · ' + format(demoMode ? now : mostRecent, timezone) + ' · ' + timezone;
+    + ' · ' + format(demoMode ? now : mostRecent, timezone, demoMode ? 'full' : 'observed') + ' · ' + timezone;
   $('burn-controls').hidden = view !== 'burn';
   $('lane-range').hidden = view !== 'lanes';
   $('burn').setAttribute('aria-pressed', String(view === 'burn'));
@@ -381,6 +377,11 @@ $('theme').onclick = () => {
   try { localStorage.setItem(themeKey, next); } catch { /* Theme stays active on this page. */ }
 };
 $('copy').onclick = async () => {
+  if (desktop) {
+    desktop.postMessage('copy-agent-guide');
+    showNotice('已复制 Agent 接入指令。');
+    return;
+  }
   try {
     await navigator.clipboard.writeText(agentGuide);
     showNotice(tr('已复制 Agent 指令和 JSON 示例。', 'Agent instructions and JSON example copied.'));
@@ -415,6 +416,7 @@ if (desktop) {
   window.showQuotaBarState = state => {
     saved = state.saved;
     demoMode = state.demo;
+    staleSources = new Set(state.stale ?? []);
     render();
   };
   document.querySelector('.brand').href = 'https://resetcat.pages.dev/';

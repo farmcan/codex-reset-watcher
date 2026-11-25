@@ -132,7 +132,7 @@ npm run dev -- --ip 127.0.0.1 --port 8793
 
 ### macOS 菜单栏应用
 
-ResetCat Quota Bar 支持 macOS 14 及以上版本。[下载 GitHub 公测安装包](https://github.com/farmcan/codex-reset-watcher/releases/tag/quota-bar-v0.1.0)，解压后将 `ResetCat Quota Bar.app` 拖到「应用程序」并打开。公测包尚未完成 Apple 公证，首次打开可能需要确认。[Apple 的打开说明](https://support.apple.com/zh-cn/102445)
+ResetCat Quota Bar 支持 macOS 14 及以上版本。[下载 GitHub 公测安装包](https://github.com/farmcan/codex-reset-watcher/releases/tag/quota-bar-v0.1.1)，解压后将 `ResetCat Quota Bar.app` 拖到「应用程序」并打开。公测包尚未完成 Apple 公证，首次打开可能需要确认。[Apple 的打开说明](https://support.apple.com/zh-cn/102445)
 
 从源码编译需要 Node.js 22+ 和 Xcode 命令行工具。在仓库根目录运行：
 
@@ -141,7 +141,12 @@ npm ci
 apps/quota-bar/install.sh
 ```
 
-安装完成后，在系统菜单栏点单色小猫。齿轮菜单可加载演示、导入 JSON，或选定 AI Agent 会继续更新的本机快照。「完整图表」打开独立窗口，燃尽图和泳道图都读取同一份本机记录。菜单栏拥挤时，从 Spotlight 或 Finder 打开 `ResetCat Quota Bar` 调出面板。源码安装脚本将 App 放到 `~/Applications`。安装后的 App 可离线运行。
+安装完成后，在系统菜单栏点单色小猫。首次接入可以选择：
+
+- **连接 Codex**。确认后使用已登录的本机 Codex CLI 只读校验。应用运行时每 5 分钟检查一次。齿轮里可以立即刷新或停止连接。
+- **监测本机快照**。复制 Agent 接入指令及 v1 模板，选定一个本机文件。Agent 每次成功查询后原子更新同一个文件，应用会自动合并新观测。若已有采集器，可直接选定它的输出。一次性导入也可单独使用。
+
+面板顶部显示最后观测、检查结果和下次检查。读取失败时保留最后的真实读数，并标为旧快照。「完整图表」在独立窗口读取同一份记录，断网时也可看历史。菜单栏拥挤时，从 Spotlight 或 Finder 打开 `ResetCat Quota Bar` 调出面板。源码安装脚本将 App 放到 `~/Applications`。
 
 更新前从齿轮菜单退出应用，再运行安装脚本。另可使用第三方 CodexBar 查看其直接接入的额度来源。
 

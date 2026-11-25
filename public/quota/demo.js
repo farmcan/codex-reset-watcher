@@ -24,13 +24,11 @@ export const demo = {
     },
     {
       "sourceId": "demo-b", "sourceLabel": "来源 B", "poolId": "grant", "poolLabel": "赠送额度",
-      "cycleId": "demo-grant-01", "unit": "credits", "total": 100, "expiresAt": "2026-11-26T18:00:00+08:00",
+      "cycleId": "demo-grant-01", "unit": "credits", "total": 100, "expiresAt": "2026-11-24T10:00:00+08:00",
       "observations": [
-        {"observedAt": "2026-11-23T17:00:00+08:00", "remaining": 78},
-        {"observedAt": "2026-11-24T05:00:00+08:00", "remaining": 57},
-        {"observedAt": "2026-11-24T06:00:00+08:00", "remaining": 52},
-        {"observedAt": "2026-11-24T07:00:00+08:00", "remaining": 47},
-        {"observedAt": "2026-11-24T08:00:00+08:00", "remaining": 42}
+        {"observedAt": "2026-11-24T06:00:00+08:00", "remaining": 60},
+        {"observedAt": "2026-11-24T07:00:00+08:00", "remaining": 40},
+        {"observedAt": "2026-11-24T08:00:00+08:00", "remaining": 20}
       ]
     },
     {
