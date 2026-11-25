@@ -127,8 +127,13 @@ struct QuotaPanel: View {
                 ScrollView(.vertical) {
                     VStack(spacing: 0) {
                         ForEach(model.panel.sources) { source in
-                            if let pool = source.pools.first(where: { $0.id == selection[source.id] }) ?? source.pools.first {
-                                quotaRow(source, pool)
+                            let windows = source.pools.filter { !$0.isResetCredit }
+                            if let pool = windows.first(where: { $0.id == selection[source.id] }) ?? windows.first {
+                                quotaRow(source, pool, options: windows)
+                                Divider().overlay(Color.quotaTrack)
+                            }
+                            ForEach(source.pools.filter(\.isResetCredit)) { pool in
+                                resetCardRow(source, pool)
                                 Divider().overlay(Color.quotaTrack)
                             }
                         }
@@ -193,7 +198,7 @@ struct QuotaPanel: View {
         .frame(height: 34)
     }
 
-    private func quotaRow(_ source: QuotaSource, _ pool: QuotaPool) -> some View {
+    private func quotaRow(_ source: QuotaSource, _ pool: QuotaPool, options: [QuotaPool]) -> some View {
         HStack(alignment: .top, spacing: 8) {
             Text(sourceBadge(source.label))
                 .font(.system(size: 11, weight: .semibold)).foregroundStyle(Color.quotaPink)
@@ -229,9 +234,9 @@ struct QuotaPanel: View {
                     .font(.system(size: 10)).lineLimit(1)
                     .foregroundStyle(stale || pool.estimate.state == "forecast" ? Color.quotaAmber : Color.quotaQuiet)
                 HStack(spacing: 4) {
-                    if source.pools.count > 1 {
+                    if options.count > 1 {
                         Menu {
-                            ForEach(source.pools) { option in
+                            ForEach(options) { option in
                                 Button(option.label + " · " + deadlineLine(option)) { selection[source.id] = option.id }
                             }
                         } label: {
@@ -248,6 +253,29 @@ struct QuotaPanel: View {
             }
         }
         .padding(.vertical, 4)
+    }
+
+    private func resetCardRow(_ source: QuotaSource, _ pool: QuotaPool) -> some View {
+        let amount = pool.latest.remaining.map { number($0) + " 张" } ?? "—"
+        let expired = pool.deadlines.contains { $0.ms <= model.panel.asOf }
+        let stale = model.staleSources.contains(source.id)
+        return HStack(spacing: 6) {
+            Image(systemName: "ticket").foregroundStyle(Color.quotaPink).accessibilityHidden(true)
+            Text(pool.label).fontWeight(.semibold)
+            Text(amount).monospacedDigit()
+            Spacer(minLength: 0)
+            Text(resetCardTiming(pool, expired: expired, stale: stale)).foregroundStyle(Color.quotaQuiet)
+        }
+        .font(.system(size: 10))
+        .padding(.vertical, 5)
+    }
+
+    private func resetCardTiming(_ pool: QuotaPool, expired: Bool, stale: Bool) -> String {
+        if expired { return deadlineLine(pool) + " · 已过／待更新" }
+        if stale { return "来源暂不可用 · 旧快照" }
+        if pool.deadlines.first != nil { return deadlineLine(pool) }
+        if pool.latest.remaining == 0 { return "无可用卡" }
+        return pool.latest.remaining == nil ? "可用张数未知" : "到期未知"
     }
 
     private func sourceBadge(_ label: String) -> String {

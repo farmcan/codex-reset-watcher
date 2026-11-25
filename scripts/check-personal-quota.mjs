@@ -26,7 +26,8 @@ const example = structuredClone(demo);
 const onlyPoint = demo.pools[0].observations.at(-1);
 example.pools = [{
   ...example.pools[0], sourceId: 'custom-source', sourceLabel: '本地验收来源',
-  observations: [onlyPoint], deadlineAt: null
+  observations: [onlyPoint], deadlineAt: null,
+  observedResetAt: '2026-11-24T06:00:00+08:00', cycleStartBasis: 'window-length'
 }];
 const withHistory = structuredClone(example);
 withHistory.pools[0].observations = demo.pools[0].observations;
@@ -96,6 +97,11 @@ try {
   await shown('.balance');
   assert.equal(await page.locator('.balance').textContent(), '50%');
   assert.match(await page.locator('.cycle').textContent(), /09:00.*重置/);
+  assert.match(await page.locator('.cycle-origin').textContent(), /按窗口长度推算/);
+  await page.locator('#lanes').click();
+  assert.match(await page.locator('.lane-label').allTextContents().then(items => items.join(' ')), /已观测重置.*09:00.*重置（计划）.*已过/);
+  assert.match(await page.locator('.lane-track').textContent(), /待更新/);
+  await page.locator('#burn').click();
   await upload('{');
   assert.match(await page.locator('#notice').textContent(), /有效的 JSON/);
   assert.equal(await page.locator('.balance').textContent(), '50%');
@@ -116,6 +122,15 @@ try {
   assert.match(await codex.locator('.estimate').textContent(), /10 个百分点.*40%/);
   assert.equal(await codex.locator('line.forecast').getAttribute('data-end'), '2026-11-24T01:00:00.000Z');
   assert.equal(await codex.locator('line.forecast').getAttribute('data-remaining'), '40');
+  assert.equal(await codex.locator('.forecast-label').textContent(), '重置时预计剩 40%');
+  assert.match(await codex.locator('.marker').getAttribute('aria-label'), /40%.*09:00/);
+  assert.equal(await codex.locator('.cycle-origin').textContent(), '周期开始');
+  assert.ok(await codex.locator('.chart text').allTextContents().then(labels => labels.includes('06:00')));
+  assert.ok(Number(await codex.locator('.point').first().getAttribute('cx')) > 53);
+  const grant = page.locator('.card').nth(1);
+  assert.equal(await grant.locator('.forecast-label').textContent(), '预计耗尽 09:00');
+  assert.equal(await grant.locator('.cycle-origin').textContent(), '首笔观测');
+  assert.match(await grant.locator('.cycle').textContent(), /周期开始未知/);
   if (screenshot) await page.screenshot({ path: screenshot + '-burndown.png', fullPage: true });
   await codex.locator('select').selectOption({ label: '短时额度' });
   assert.equal(await codex.locator('.balance').textContent(), '76%');
@@ -127,7 +142,13 @@ try {
   await page.locator('#sample').selectOption('day');
   assert.equal(await codex.locator('.point').count(), 1);
   await page.locator('#lanes').click();
-  assert.equal(await page.locator('.lane-row').count(), 5);
+  assert.equal(await page.locator('.lane-row').count(), 7);
+  const lanes = (await page.locator('.lane-label').allTextContents()).join(' ');
+  assert.match(lanes, /11\/24 09:00 · 重置/);
+  assert.match(lanes, /11\/24 10:00 · 到期/);
+  assert.match(lanes, /11\/26 12:00 · 到期/);
+  assert.match(lanes, /11\/28 12:00 · 到期/);
+  assert.equal(await page.locator('.lane-row').filter({ hasText: '重置卡' }).count(), 2);
   await page.locator('#lane-range').selectOption('7');
   assert.match(await page.locator('.lane-head').first().textContent(), /7 天/);
   if (screenshot) await page.screenshot({ path: screenshot + '-swimlanes.png', fullPage: true });

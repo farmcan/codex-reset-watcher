@@ -113,6 +113,8 @@
 | `cycleId` | 建议提供稳定周期 ID。缺省时根据开始和期限字段识别周期。 |
 | `unit` / `total` | `percent` 表示 0–100 的剩余百分比。也可用 `credits` 等原单位，未知总量填 null。 |
 | `cycleStart` / `resetsAt` / `expiresAt` / `deadlineAt` | 周期开始、刷新、失效、自定计划期限。接受带时区的 ISO 8601 时间、YYYY-MM-DD 或 null。仅日期的期限按当地日期起点标记，界面保留日精度。 |
+| `cycleStartBasis` / `observedResetAt` | 可选。使用 `window-length` 标明周期开始依窗口长度推算。只有来源确有重置观测时才填 `observedResetAt`，可用带时区的 ISO 8601 时间或 YYYY-MM-DD。 |
+| `kind` | 可选。`reset-credit` 搭配 `unit: "count"` 表示重置卡可用张数。每个到期批次独立设池，未知到期填 null。重置卡仅显示在库存与泳道视图。 |
 | `observations[]` | 至少一个观测点。用带时区的 `observedAt` 和非负数或 null 的 `remaining`。0 表示耗尽。 |
 
 合并键为来源、池、单位、周期和观测时刻。同一键重复导入只保留一个点，后导入的值可更正该点。相同池和单位的其他周期可在跨周期视图中查看。小时或天采样取相应桶内的末点。
@@ -132,7 +134,7 @@ npm run dev -- --ip 127.0.0.1 --port 8793
 
 ### macOS 菜单栏应用
 
-ResetCat Quota Bar 支持 macOS 14 及以上版本。[下载 GitHub 公测安装包](https://github.com/farmcan/codex-reset-watcher/releases/tag/quota-bar-v0.1.1)，解压后将 `ResetCat Quota Bar.app` 拖到「应用程序」并打开。公测包尚未完成 Apple 公证，首次打开可能需要确认。[Apple 的打开说明](https://support.apple.com/zh-cn/102445)
+ResetCat Quota Bar 支持 macOS 14 及以上版本。[下载 GitHub 公测安装包](https://github.com/farmcan/codex-reset-watcher/releases/tag/quota-bar-v0.1.2)，解压后将 `ResetCat Quota Bar.app` 拖到「应用程序」并打开。公测包尚未完成 Apple 公证，首次打开可能需要确认。[Apple 的打开说明](https://support.apple.com/zh-cn/102445)
 
 从源码编译需要 Node.js 22+ 和 Xcode 命令行工具。在仓库根目录运行：
 

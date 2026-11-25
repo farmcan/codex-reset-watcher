@@ -8,7 +8,11 @@ const example = model.panel('[]', true, asOf);
 const panel = JSON.parse(example);
 assert.equal(panel.sources.length, 4);
 const weekly = panel.sources[0].pools[0];
-assert.equal(panel.sources[0].pools.length, 2);
+assert.equal(panel.sources[0].pools.filter(pool => pool.kind !== 'reset-credit').length, 2);
+const cards = panel.sources[0].pools.filter(pool => pool.kind === 'reset-credit');
+assert.equal(cards.length, 2);
+assert.ok(cards.every(card => card.estimate.state === 'inventory'));
+assert.notEqual(cards[0].deadlines[0].ms, cards[1].deadlines[0].ms);
 assert.equal(weekly.latest.remaining, 50);
 assert.equal(weekly.estimate.remaining, 40);
 assert.equal(weekly.estimate.end, Date.parse('2026-11-24T09:00:00+08:00'));
@@ -32,4 +36,16 @@ const current = JSON.parse(model.panel(saved, false, asOf)).sources[0].pools[0];
 assert.equal(current.latest.remaining, 0);
 assert.equal(current.estimate.state, 'empty');
 assert.equal(JSON.parse(saved)[0].observations.length, 4);
-console.log('Quota Bar model · shared forecast, multi-pool, merge, zero and invalid input passed');
+
+const zeroCards = { ...demo, pools: [{
+  ...demo.pools[2], poolId: 'reset-card-summary', expiresAt: null,
+  observations: [{ observedAt: new Date(asOf).toISOString(), remaining: 0 }]
+}] };
+const stock = model.merge(JSON.stringify(demo), '[]', asOf);
+const changed = model.merge(JSON.stringify(zeroCards), stock, asOf, 'codex');
+const currentStock = JSON.parse(model.panel(changed, false, asOf)).sources[0].pools;
+assert.equal(currentStock.filter(pool => pool.kind === 'reset-credit').length, 1);
+assert.equal(currentStock.find(pool => pool.kind === 'reset-credit').latest.remaining, 0);
+assert.equal(currentStock.filter(pool => pool.kind !== 'reset-credit').length, 2);
+
+console.log('Quota Bar model · forecast, inventory replacement, merge and invalid input passed');

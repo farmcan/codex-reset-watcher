@@ -31,7 +31,7 @@ enum CodexQuota {
         let rpc = try QuotaRPC(executable: executable, searchPaths: searchPaths)
         defer { rpc.close() }
         _ = try rpc.call(id: 1, method: "initialize", params: [
-            "clientInfo": ["name": "resetcat_quota_bar", "version": "0.1.1"]
+            "clientInfo": ["name": "resetcat_quota_bar", "version": "0.1.2"]
         ])
         try rpc.send(["method": "initialized"])
         let identity = try rpc.call(id: 2, method: "account/read", params: ["refreshToken": false])
@@ -63,10 +63,8 @@ enum CodexQuota {
             for slot in ["primary", "secondary"] {
                 guard let window = limit[slot] as? [String: Any],
                       let used = numeric(window["usedPercent"]), used.isFinite, used >= 0, used <= 100 else { continue }
-                let duration = window["windowDurationMins"] as? Int
-                let reset = numeric(window["resetsAt"]).flatMap {
-                    $0.isFinite && $0 > 0 && $0 < 253402300800 ? Date(timeIntervalSince1970: $0) : nil
-                }
+                let duration = numeric(window["windowDurationMins"]).flatMap { Int(exactly: $0) }
+                let reset = date(window["resetsAt"])
                 let label: String
                 switch duration {
                 case 10080: label = "周额度"
@@ -74,21 +72,85 @@ enum CodexQuota {
                 case let value? where value > 0: label = "\(value) 分钟额度"
                 default: label = slot == "primary" ? "主额度" : "副额度"
                 }
-                pools.append([
+                var pool: [String: Any] = [
                     "sourceId": sourceID, "sourceLabel": "本机 Codex",
                     "poolId": key + "-" + slot, "poolLabel": key == "codex" ? label : key + " · " + label,
                     "cycleId": reset.map { iso.string(from: $0) } ?? "unknown",
                     "unit": "percent", "total": 100, "resetsAt": reset.map { iso.string(from: $0) } as Any? ?? NSNull(),
                     "observations": [["observedAt": timestamp, "remaining": 100 - used]]
-                ])
+                ]
+                if let reset, let duration, duration > 0, reset > observed {
+                    let start = reset.addingTimeInterval(-Double(duration) * 60)
+                    if start <= observed && start.timeIntervalSince1970 > 0 {
+                        pool["cycleStart"] = iso.string(from: start)
+                        pool["cycleStartBasis"] = "window-length"
+                    }
+                }
+                pools.append(pool)
             }
         }
-        guard !pools.isEmpty else {
-            throw QuotaError(message: "Codex 未返回可用的额度窗口，请稍后重试。")
+        let credits = result["rateLimitResetCredits"] as? [String: Any]
+        let cardPools = resetCardPools(credits, observed: observed, iso: iso)
+        guard !pools.isEmpty || cardPools.contains(where: { pool in
+            (pool["observations"] as? [[String: Any]])?.first?["remaining"] is Int
+        }) else {
+            throw QuotaError(message: "Codex 未返回可用的额度窗口或重置卡读数，请稍后重试。")
         }
+        pools.append(contentsOf: cardPools)
         return try JSONSerialization.data(withJSONObject: [
             "schemaVersion": 1, "timezone": TimeZone.current.identifier, "pools": pools
         ])
+    }
+
+    private static func date(_ value: Any?) -> Date? {
+        numeric(value).flatMap {
+            $0.isFinite && $0 > 0 && $0 < 253402300800 ? Date(timeIntervalSince1970: $0) : nil
+        }
+    }
+
+    private static func resetCardPools(_ credits: [String: Any]?, observed: Date,
+                                       iso: ISO8601DateFormatter) -> [[String: Any]] {
+        let total = numeric(credits?["availableCount"]).flatMap {
+            $0 >= 0 && $0 <= Double(Int32.max) && $0.rounded() == $0 ? Int($0) : nil
+        }
+        let timestamp = iso.string(from: observed)
+        func pool(expiry: Date?, count: Int?) -> [String: Any] {
+            let end = expiry.map { iso.string(from: $0) }
+            let remaining: Any = count.map { $0 as Any } ?? NSNull()
+            return [
+                "sourceId": sourceID, "sourceLabel": "本机 Codex",
+                "poolId": end.map { "reset-card-" + $0 } ?? "reset-cards-undated",
+                "poolLabel": end == nil ? "可用重置卡" : "重置卡",
+                "cycleId": "available", "unit": "count", "kind": "reset-credit",
+                "expiresAt": end.map { $0 as Any } ?? NSNull(),
+                "observations": [["observedAt": timestamp, "remaining": remaining]]
+            ]
+        }
+
+        if total == 0 { return [pool(expiry: nil, count: 0)] }
+        let details = credits?["credits"] as? [[String: Any]] ?? []
+        var seen: Set<String> = []
+        var byExpiry: [Date: Int] = [:]
+        var undated = 0
+        for card in details where card["status"] as? String == "available" {
+            if let id = card["id"] as? String, !seen.insert(id).inserted { continue }
+            if let expiry = date(card["expiresAt"]) {
+                if expiry > observed { byExpiry[expiry, default: 0] += 1 }
+            } else {
+                undated += 1
+            }
+        }
+        let dated = byExpiry.values.reduce(0, +)
+        if let total, dated + undated > total {
+            return [pool(expiry: nil, count: total)]
+        }
+        var pools = byExpiry.keys.sorted().map { pool(expiry: $0, count: byExpiry[$0]) }
+        if let total, total > dated {
+            pools.append(pool(expiry: nil, count: total - dated))
+        } else if total == nil && undated > 0 {
+            pools.append(pool(expiry: nil, count: undated))
+        }
+        return pools.isEmpty ? [pool(expiry: nil, count: nil)] : pools
     }
 }
 

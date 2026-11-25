@@ -3,7 +3,7 @@ import { agentTemplate, formatAgentGuide } from '../../public/quota/agent-guide.
 import { demo, demoNow } from '../../public/quota/demo.js';
 
 globalThis.quotaModel = {
-  merge(source, previous, now) {
+  merge(source, previous, now, inventorySource = null) {
     let input;
     try {
       input = JSON.parse(source.replace(/^\uFEFF/, ''));
@@ -14,7 +14,12 @@ globalThis.quotaModel = {
     if (pools.some(pool => pool.observations.some(point => point.ms > now))) {
       throw new Error('观测时间不能晚于当前时间。');
     }
-    return JSON.stringify(mergePools(JSON.parse(previous), pools));
+    const stored = JSON.parse(previous);
+    const inventoryReturned = inventorySource && pools.some(pool => pool.sourceId === inventorySource && pool.kind === 'reset-credit');
+    const preserved = inventoryReturned
+      ? stored.filter(pool => pool.sourceId !== inventorySource || pool.kind !== 'reset-credit')
+      : stored;
+    return JSON.stringify(mergePools(preserved, pools));
   },
   example() {
     return JSON.stringify(demo, null, 2);
@@ -43,7 +48,7 @@ globalThis.quotaModel = {
         bySource.set(pool.sourceId, { id: pool.sourceId, label: pool.sourceLabel, pools: [] });
       }
       bySource.get(pool.sourceId).pools.push({
-        id: key, label: pool.poolLabel, unit: pool.unit, zone: pool.zone,
+        id: key, label: pool.poolLabel, unit: pool.unit, zone: pool.zone, kind: pool.kind,
         total: pool.total, latest, estimate: forecast(pool, asOf),
         deadlines: deadlines(pool), groups: splitPoints(points)
       });

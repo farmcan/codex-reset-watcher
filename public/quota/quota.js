@@ -1,4 +1,4 @@
-import { DAY, HOUR, deadlines, forecast, mergePools, poolKey, readSnapshot } from './model.js';
+import { DAY, HOUR, deadlines, forecast, mergePools, poolKey, readSnapshot, timelineMarkers } from './model.js';
 import { bounds, burnChart, laneChart } from './charts.js';
 import { formatAgentGuide } from './agent-guide.js';
 import { demo, demoNow } from './demo.js';
@@ -10,14 +10,18 @@ const tr = (zh, english) => en ? english : zh;
 const locale = tr('zh-CN', 'en-GB');
 const storageKey = 'resetcat:quota:v1';
 const themeKey = 'resetcat:quota:theme';
-const indicators = { reset: tr('重置', 'Reset'), expiry: tr('到期', 'Expiry'), planned: tr('计划期限', 'Planned') };
+const indicators = {
+  reset: tr('重置', 'Reset'), expiry: tr('到期', 'Expiry'), planned: tr('计划期限', 'Planned'),
+  'observed-reset': tr('已观测重置', 'Observed reset')
+};
 const states = {
   missing: tr('无可用读数', 'No reading'),
   update: tr('待更新', 'Awaiting update'),
   empty: tr('已耗尽', 'Depleted'),
   stale: tr('观测已陈旧', 'Reading is stale'),
   short: tr('样本不足', 'Insufficient samples'),
-  flat: tr('余额持平', 'Balance is flat')
+  flat: tr('余额持平', 'Balance is flat'),
+  inventory: tr('可用卡库存', 'Available cards')
 };
 const agentGuide = formatAgentGuide(en ? 'en' : 'zh');
 let staleSources = new Set();
@@ -51,7 +55,9 @@ function format(ms, zone, style = 'full') {
 }
 
 function balance(pool, remaining) {
-  return remaining == null ? '—' : number(remaining) + (pool.unit === 'percent' ? '%' : '');
+  if (remaining == null) return '—';
+  if (pool.kind === 'reset-credit') return number(remaining) + tr(' 张', ' cards');
+  return number(remaining) + (pool.unit === 'percent' ? '%' : '');
 }
 
 function percentage(pool, remaining) {
@@ -111,12 +117,12 @@ function detailsFor(series) {
   info.append(
     node('small', tr('来源', 'Source') + ' · ' + pool.sourceLabel + ' / ' + pool.sourceId),
     node('small', tr('最近观测', 'Latest reading') + ' · ' + format(latest.ms, pool.zone) + ' · ' + pool.zone),
-    ...deadlines(pool).map(marker => node('small', indicators[marker.type] + ' · ' + format(marker.ms, pool.zone, marker.day ? 'day' : 'full')
+    ...timelineMarkers(pool).map(marker => node('small', indicators[marker.type] + ' · ' + format(marker.ms, pool.zone, marker.day ? 'day' : 'full')
       + (marker.day ? tr('（仅日期）', ' (date only)') : ''))),
   );
   if (estimate.state === 'forecast') {
     info.append(node('small', tr('用最近连续观测的首末余额之差除以时间，按当前速度外推。', 'Projection uses the balance change between the first and last recent consecutive observations.')));
-  } else {
+  } else if (pool.kind !== 'reset-credit') {
     info.append(node('small', tr('预测', 'Projection') + ' · ' + states[estimate.state]));
   }
   details.append(info);
@@ -163,7 +169,11 @@ function burnCard(group, series, now, compareDomain) {
   }
   metrics.append(measured, projected);
   const timing = node('div', '', 'cycle');
-  timing.append(node('span', tr('开始', 'Start') + ' · ' + (pool.cycleStart ? day(pool.cycleStart.ms, pool.cycleStart.day ? 'day' : 'full') : '—')));
+  const origin = pool.cycleStart
+    ? tr('周期开始', 'Cycle start') + ' · ' + day(pool.cycleStart.ms, pool.cycleStart.day ? 'day' : 'full')
+      + (pool.cycleStartBasis === 'window-length' ? tr('（按窗口长度推算）', ' (inferred from window length)') : '')
+    : tr('周期开始未知', 'Cycle start unknown');
+  timing.append(node('span', origin));
   const markers = deadlines(pool);
   if (!markers.length) timing.append(node('span', tr('期限 · —', 'Deadline · —')));
   for (const marker of markers) {
@@ -181,7 +191,8 @@ function burnCard(group, series, now, compareDomain) {
   const shown = range === 'cycle' ? [pool] : histories;
   card.append(burnChart({
     histories: shown, pool, now, domain: compareDomain ?? bounds(pool, now, range, estimate),
-    sampling: $('sample').value, estimate, tr, date: day, number, types: indicators
+    range, sampling: $('sample').value, estimate, tr, date: day, number, types: indicators,
+    balance: (entry, remaining) => balance(entry, remaining) + (entry.unit === 'percent' ? '' : ' ' + entry.unit)
   }), detailsFor(series));
   return card;
 }
@@ -222,7 +233,7 @@ function laneCard(groups, side, now) {
       const amount = node('div', '', 'lane-amount');
       const pct = percentage(pool, latest.remaining);
       amount.append(node('strong', balance(pool, latest.remaining)));
-      if (pool.unit !== 'percent') amount.append(node('small', pool.unit + (pct == null ? '' : ' · ' + number(pct) + '%')));
+      if (pool.unit !== 'percent' && pool.kind !== 'reset-credit') amount.append(node('small', pool.unit + (pct == null ? '' : ' · ' + number(pct) + '%')));
       if (pct != null) {
         const meter = node('progress');
         meter.max = 100;
@@ -231,17 +242,26 @@ function laneCard(groups, side, now) {
         amount.append(meter);
       }
       const track = node('div', '', 'lane-track');
-      const markers = deadlines(pool);
-      const day = (ms, style) => format(ms, pool.zone, style);
-      track.append(laneChart(markers, now, days, pool.poolLabel, indicators, day));
-      if (!markers.length) track.append(node('small', tr('期限未知', 'Deadline unknown')));
-      for (const marker of markers) {
-        let status = '';
-        if (marker.ms < now) status = ' · ' + tr('已过', 'Passed');
-        else if (marker.ms > now + days * DAY) status = ' · ' + tr('超出当前范围', 'Outside range');
-        track.append(node('small', day(marker.ms, marker.day ? 'day' : 'full') + ' · ' + indicators[marker.type] + status));
+      const markers = timelineMarkers(pool);
+      if (markers.length) {
+        const label = marker => {
+          const day = format(marker.ms, pool.zone, marker.day ? 'day' : 'full');
+          const type = marker.type === 'reset' ? tr('重置（计划）', 'Reset (scheduled)') : indicators[marker.type];
+          if (marker.type === 'observed-reset') return day + ' · ' + type;
+          const suffix = marker.ms <= now ? tr(' · 已过', ' · Passed')
+            : marker.ms > now + days * DAY ? tr(' · 超出范围', ' · Outside range') : '';
+          return day + ' · ' + type + suffix;
+        };
+        track.append(laneChart(markers, now, days, pool.poolLabel, label));
+      } else {
+        const message = pool.kind === 'reset-credit'
+          ? latest.remaining == null ? tr('可用张数未知', 'Available count unknown')
+            : latest.remaining === 0 ? tr('无可用卡', 'No available cards') : tr('到期未知', 'Expiry unknown')
+          : tr('期限未知', 'Deadline unknown');
+        track.append(node('small', message));
       }
       if (['update', 'stale'].includes(estimate.state)) track.append(node('small', states[estimate.state]));
+      else if (pool.kind === 'reset-credit' && markers.some(marker => marker.ms <= now)) track.append(node('small', states.update));
       row.append(node('strong', pool.poolLabel, 'lane-pool'), amount, track);
       card.append(row, detailsFor(series));
     }
@@ -255,7 +275,7 @@ function renderLegend() {
     ['prediction', tr('虚线 · 近期速度外推', 'Dashed · Projection')],
     ['guide', tr('点线 · 均匀使用参考', 'Dotted · Even-use guide')]
   ] : [
-    ['', tr('● 重置', '● Reset')], ['prediction', tr('◆ 到期', '◆ Expiry')], ['planned', tr('■ 计划期限', '■ Planned')],
+    ['', tr('● 计划重置', '● Scheduled reset')], ['', tr('○ 已观测重置', '○ Observed reset')], ['prediction', tr('◆ 到期', '◆ Expiry')], ['planned', tr('■ 计划期限', '■ Planned')],
     ['', tr('短条表示余额比例，横轴表示期限', 'Short bars show remaining share. The axis shows deadlines.')]
   ];
   $('legend').replaceChildren(...items.map(([style, label]) => {
@@ -292,13 +312,20 @@ function render(focus = {}) {
     if (focus.lane !== undefined) $('cards').children[focus.lane].querySelector('select').focus();
     return;
   }
-  const chosen = groups.map(group => group.series.find(series => poolKey(series.pool) === selections.get(group.id)) ?? group.series[0]);
+  const burnGroups = groups.map(group => ({
+    ...group, series: group.series.filter(series => series.pool.kind !== 'reset-credit')
+  })).filter(group => group.series.length);
+  if (!burnGroups.length) {
+    $('cards').replaceChildren(node('p', tr('可在泳道图查看重置卡到期时间。', 'Switch to swimlanes for card expiries.')));
+    return;
+  }
+  const chosen = burnGroups.map(group => group.series.find(series => poolKey(series.pool) === selections.get(group.id)) ?? group.series[0]);
   let domain;
   if ($('range').value === 'compare') {
     const domains = chosen.map(series => bounds(series.pool, now, 'cycle', series.estimate));
     domain = [Math.min(...domains.map(item => item[0])), Math.max(...domains.map(item => item[1]))];
   }
-  $('cards').replaceChildren(...groups.map((group, i) => burnCard(group, chosen[i], now, domain)));
+  $('cards').replaceChildren(...burnGroups.map((group, i) => burnCard(group, chosen[i], now, domain)));
   if (focus.source) Array.from($('cards').children).find(card => card.dataset.source === focus.source)?.querySelector('select').focus();
 }
 

@@ -128,3 +128,25 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--muted); }
   .card { padding: 12px; }
   button, select { padding-inline: 8px; }
 }
+
+.chart .forecast-label {
+  fill: var(--forecast);
+  font-size: 12px;
+  font-weight: 650;
+  paint-order: stroke;
+  stroke: var(--paper);
+  stroke-width: 3.5;
+  stroke-linejoin: round;
+}
+.chart .forecast-tick { stroke: var(--forecast); stroke-width: 1; }
+.chart .marker:focus-visible { stroke: var(--ink); stroke-width: 2; }
+.chart .lane-label { font-size: 12px; font-weight: 600; }
+.chart .lane-marker.expiry { fill: var(--forecast); }
+.chart .lane-marker.observed-reset { fill: var(--paper); stroke: var(--accent); stroke-width: 1.5; }
+.chart .lane-marker.elapsed { opacity: .65; }
+@media (max-width: 440px) {
+  .lane-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .lane-track { grid-column: 1 / -1; }
+  .lane-axis { grid-template-columns: minmax(0, 1fr) auto; }
+  .lane-axis > div { grid-column: 1 / -1; }
+}

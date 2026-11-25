@@ -23,6 +23,16 @@ export const demo = {
       ]
     },
     {
+      "sourceId": "codex", "sourceLabel": "Codex", "poolId": "reset-card-1", "poolLabel": "重置卡",
+      "cycleId": "available", "unit": "count", "kind": "reset-credit", "expiresAt": "2026-11-26T12:00:00+08:00",
+      "observations": [{"observedAt": "2026-11-24T08:00:00+08:00", "remaining": 1}]
+    },
+    {
+      "sourceId": "codex", "sourceLabel": "Codex", "poolId": "reset-card-2", "poolLabel": "重置卡",
+      "cycleId": "available", "unit": "count", "kind": "reset-credit", "expiresAt": "2026-11-28T12:00:00+08:00",
+      "observations": [{"observedAt": "2026-11-24T08:00:00+08:00", "remaining": 1}]
+    },
+    {
       "sourceId": "demo-b", "sourceLabel": "来源 B", "poolId": "grant", "poolLabel": "赠送额度",
       "cycleId": "demo-grant-01", "unit": "credits", "total": 100, "expiresAt": "2026-11-24T10:00:00+08:00",
       "observations": [

@@ -27,12 +27,16 @@ export function bounds(pool, now, range, estimate) {
   const latestKnownDeadline = deadlines(pool).at(-1)?.ms;
   const start = range === 'day' ? now - DAY : range === 'week' ? now - 7 * DAY
     : pool.cycleStart?.ms ?? pool.observations[0].ms;
+  const lastObservation = pool.observations.at(-1).ms;
+  if (range === 'cycle' && latestKnownDeadline >= lastObservation && latestKnownDeadline < now) {
+    return [Math.min(start, latestKnownDeadline - 1), latestKnownDeadline];
+  }
   const end = latestKnownDeadline ?? (estimate.state === 'forecast' ? estimate.end : now);
-  return [Math.min(start, now - 5 * 60_000), Math.max(now, Math.min(end, now + 90 * DAY))];
+  return [start, Math.max(now, Math.min(end, now + 90 * DAY), start + 1)];
 }
 
-export function burnChart({ histories, pool, now, domain, sampling, estimate, tr, date, number, types }) {
-  const chart = svg(480, 188, tr('额度燃尽图', 'Quota burndown chart'));
+export function burnChart({ histories, pool, now, domain, range, sampling, estimate, tr, date, number, types, balance }) {
+  const chart = svg(480, 197, tr('额度燃尽图', 'Quota burndown chart'));
   const [start, end] = domain;
   const x = ms => 53 + 416 * (ms - start) / (end - start);
   const normalized = histories.every(history => history.total > 0);
@@ -49,7 +53,10 @@ export function burnChart({ histories, pool, now, domain, sampling, estimate, tr
   const defs = shape(chart, 'defs', {});
   const clip = shape(defs, 'clipPath', { id: clipId });
   shape(clip, 'rect', { x: 52, y: 14, width: 420, height: 138 });
-  if (now < end) shape(chart, 'rect', { x: x(now), y: 16, width: 469 - x(now), height: 133, class: 'forecast-zone' });
+  if (now < end) {
+    const forecastStart = x(Math.max(start, now));
+    shape(chart, 'rect', { x: forecastStart, y: 16, width: 469 - forecastStart, height: 133, class: 'forecast-zone' });
+  }
   for (const fraction of [1, .75, .5, .25, 0]) {
     const level = scale * fraction;
     line(chart, 53, y(level), 469, y(level), 'grid');
@@ -59,6 +66,12 @@ export function burnChart({ histories, pool, now, domain, sampling, estimate, tr
     const ms = start + (end - start) * fraction;
     const anchor = fraction === 0 ? 'start' : fraction === 1 ? 'end' : 'middle';
     shape(chart, 'text', { x: x(ms), y: 171, 'text-anchor': anchor }, date(ms, end - start <= DAY ? 'time' : 'axis'));
+  }
+  if (range === 'cycle') {
+    const startLabel = pool.cycleStart ? (pool.cycleStartBasis === 'window-length'
+      ? tr('按窗口长度推算', 'Inferred from window length') : tr('周期开始', 'Cycle start'))
+      : tr('首笔观测', 'First observation');
+    shape(chart, 'text', { x: 53, y: 187, 'text-anchor': 'start', class: 'cycle-origin' }, startLabel);
   }
   const plot = shape(chart, 'g', { 'clip-path': 'url(#' + clipId + ')' });
   if (now < end && x(now) - 53 > 40 && 469 - x(now) > 40) {
@@ -95,29 +108,49 @@ export function burnChart({ histories, pool, now, domain, sampling, estimate, tr
       x(estimate.end), y(value(estimate.remaining, pool)), 'forecast');
     segment.dataset.end = new Date(estimate.end).toISOString();
     segment.dataset.remaining = String(estimate.remaining);
-    if (estimate.end <= end) shape(plot, 'circle', {
-      cx: x(estimate.end), cy: y(value(estimate.remaining, pool)), r: 3, class: 'marker'
-    });
+    if (estimate.end >= start && estimate.end <= end) {
+      const px = x(estimate.end);
+      const py = y(value(estimate.remaining, pool));
+      const atDeadline = estimate.remaining > 0 && estimate.end === estimate.deadline?.ms;
+      const when = date(estimate.end, end - start <= DAY ? 'time' : 'full');
+      const text = atDeadline
+        ? tr(types[estimate.deadline.type] + '时预计剩 ' + balance(pool, estimate.remaining),
+          balance(pool, estimate.remaining) + ' at ' + types[estimate.deadline.type])
+        : tr('预计耗尽 ' + when, 'Projected depletion ' + when);
+      const labelY = py < 43 ? py + 21 : py - 13;
+      const anchor = px > 261 ? 'end' : 'start';
+      line(chart, px, py, px, py < 43 ? labelY - 10 : labelY + 4, 'forecast-tick');
+      const mark = shape(chart, 'circle', { cx: px, cy: py, r: 4, class: 'marker', tabindex: 0,
+        'aria-label': text + ' · ' + date(estimate.end, 'full') });
+      shape(mark, 'title', {}, text + ' · ' + date(estimate.end, 'full'));
+      shape(chart, 'text', { x: px + (anchor === 'end' ? -5 : 5), y: labelY,
+        'text-anchor': anchor, class: 'forecast-label' }, text);
+      chart.setAttribute('aria-label', chart.getAttribute('aria-label') + ' · ' + text);
+    }
   }
   return chart;
 }
 
-export function laneChart(markers, now, days, label, types, date) {
-  const chart = svg(215, 35, label);
-  line(chart, 6, 18, 209, 18, 'timeline');
-  for (const fraction of [0, .25, .5, .75, 1]) {
-    const x = 6 + 203 * fraction;
-    line(chart, x, 6, x, 30, 'grid');
-  }
-  for (const marker of markers) {
+export function laneChart(markers, now, days, label, markerLabel) {
+  const chart = svg(268, 32 * markers.length, [label, ...markers.map(markerLabel)].join(' · '));
+  markers.forEach((marker, index) => {
     const fraction = (marker.ms - now) / (days * DAY);
-    if (fraction < 0 || fraction > 1) continue;
-    const x = 6 + 203 * fraction;
-    let mark;
-    if (marker.type === 'reset') mark = shape(chart, 'circle', { cx: x, cy: 18, r: 4, class: 'reset' });
-    if (marker.type === 'expiry') mark = shape(chart, 'path', { d: `M${x} 12l6 6-6 6-6-6z`, class: 'marker' });
-    if (marker.type === 'planned') mark = shape(chart, 'rect', { x: x - 3, y: 15, width: 6, height: 6, class: 'planned' });
-    shape(mark, 'title', {}, types[marker.type] + ' · ' + date(marker.ms, marker.day ? 'day' : 'full'));
-  }
+    const x = 8 + 252 * Math.max(0, Math.min(1, fraction));
+    const y = 23 + index * 32;
+    const classes = 'lane-marker ' + marker.type + (fraction < 0 ? ' elapsed' : '');
+    line(chart, 8, y, 260, y, 'timeline');
+    for (const tick of [0, .25, .5, .75, 1]) line(chart, 8 + 252 * tick, y - 5, 8 + 252 * tick, y + 5, 'grid');
+    if (marker.type === 'reset' || marker.type === 'observed-reset') {
+      shape(chart, 'circle', { cx: x, cy: y, r: 4, class: classes });
+    } else if (marker.type === 'expiry') {
+      shape(chart, 'path', { d: `M${x} ${y - 5}l5 5-5 5-5-5z`, class: classes });
+    } else {
+      shape(chart, 'rect', { x: x - 4, y: y - 4, width: 8, height: 8, class: classes });
+    }
+    const text = markerLabel(marker);
+    const width = Math.min(252, Array.from(text).reduce((sum, char) => sum + (char.codePointAt(0) > 127 ? 12 : 6.2), 0));
+    const labelX = Math.min(260 - width, Math.max(8, x - width / 2));
+    shape(chart, 'text', { x: labelX, y: y - 9, class: 'lane-label' }, text);
+  });
   return chart;
 }

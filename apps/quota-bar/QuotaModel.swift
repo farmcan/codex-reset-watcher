@@ -31,12 +31,15 @@ struct QuotaPool: Decodable, Identifiable {
     let id: String
     let label: String
     let unit: String
+    let kind: String?
     let zone: String
     let total: Double?
     let latest: QuotaPoint
     let estimate: QuotaEstimate
     let deadlines: [QuotaDeadline]
     let groups: [[QuotaPoint]]
+
+    var isResetCredit: Bool { kind == "reset-credit" }
 
     var fraction: Double? {
         guard let total, total > 0, let remaining = latest.remaining else { return nil }
@@ -217,7 +220,7 @@ final class QuotaModel: ObservableObject {
         let next = date.addingTimeInterval(CodexQuota.interval)
         do {
             let bytes = try result.get()
-            try importBytes(bytes, leaveDemo: false)
+            try importBytes(bytes, leaveDemo: false, inventorySource: CodexQuota.sourceID)
             codexCheck = QuotaCheck(attempted: date, next: next, result: "刷新成功")
         } catch {
             codexCheck = QuotaCheck(attempted: date, next: next, result: Self.problemText(error), failed: true)
@@ -319,11 +322,11 @@ final class QuotaModel: ObservableObject {
         return bytes
     }
 
-    private func importBytes(_ bytes: Data, leaveDemo: Bool = true) throws {
+    private func importBytes(_ bytes: Data, leaveDemo: Bool = true, inventorySource: String? = nil) throws {
         guard let text = String(data: bytes, encoding: .utf8) else {
             throw QuotaError(message: "文件应使用 UTF-8 编码。")
         }
-        let merged = try call("merge", [text, records, now])
+        let merged = try call("merge", [text, records, now, inventorySource.map { $0 as Any } ?? NSNull()])
         if merged != records {
             try FileManager.default.createDirectory(at: storage.deletingLastPathComponent(), withIntermediateDirectories: true)
             try Data(merged.utf8).write(to: storage, options: .atomic)

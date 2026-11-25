@@ -6,7 +6,7 @@ const instant = /^(\d{4}-\d{2}-\d{2})T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\
 
 export const poolKey = pool => JSON.stringify([pool.sourceId, pool.poolId, pool.unit]);
 const cycleKey = pool => JSON.stringify([poolKey(pool), pool.cycleId]);
-const stamps = ['cycleStart', 'resetsAt', 'expiresAt', 'deadlineAt'];
+const stamps = ['cycleStart', 'resetsAt', 'expiresAt', 'deadlineAt', 'observedResetAt'];
 
 function validDay(day) {
   const ms = Date.parse(day);
@@ -88,8 +88,10 @@ export function readSnapshot(input) {
       pool.total = 100;
     }
     for (const key of stamps) pool[key] = timestamp(raw[key], field + '.' + key, timezone, true);
+    if (raw.cycleStartBasis === 'window-length' && pool.cycleStart) pool.cycleStartBasis = 'window-length';
+    if (raw.kind === 'reset-credit' && pool.unit === 'count') pool.kind = 'reset-credit';
     pool.cycleId = raw.cycleId == null
-      ? JSON.stringify(stamps.map(key => pool[key]?.value ?? null))
+      ? JSON.stringify(stamps.filter(key => key !== 'observedResetAt').map(key => pool[key]?.value ?? null))
       : label(raw.cycleId, field + '.cycleId');
     pool.observations = raw.observations.map((obs, i) => {
       const name = field + '.observations[' + i + ']';
@@ -153,7 +155,14 @@ export function deadlines(pool) {
     .sort((a, b) => a.ms - b.ms);
 }
 
+export function timelineMarkers(pool) {
+  const markers = deadlines(pool);
+  if (pool.observedResetAt) markers.push({ ...pool.observedResetAt, type: 'observed-reset' });
+  return markers.sort((a, b) => a.ms - b.ms);
+}
+
 export function forecast(pool, now) {
+  if (pool.kind === 'reset-credit') return { state: 'inventory' };
   const points = pool.observations.filter(point => point.ms <= now);
   const latest = points.at(-1);
   const markers = deadlines(pool);

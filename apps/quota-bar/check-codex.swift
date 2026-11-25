@@ -28,7 +28,7 @@ struct CheckCodex {
         let file = root.appendingPathComponent("quota-snapshot.json")
         try fixture.write(to: file, options: .atomic)
         model.importFile(file, watch: true)
-        precondition(model.panel.sources.first?.pools.map(\.latest.remaining) == [40, 0])
+        precondition(model.panel.sources.first?.pools.filter { !$0.isResetCredit }.map(\.latest.remaining) == [40, 0])
         try Data("{broken".utf8).write(to: file, options: .atomic)
         Thread.sleep(forTimeInterval: QuotaModel.watchInterval)
         model.refresh()
@@ -46,6 +46,51 @@ struct CheckCodex {
         precondition(model.panel.sources.first?.pools.first?.latest.remaining == 28)
         precondition(model.chartState.contains("\"remaining\":28"))
         print("PASS: bad file kept last good value; next atomic update reached both views")
+        let sampleDate = Date(timeIntervalSince1970: 1_800_000_000)
+        let now = sampleDate.timeIntervalSince1970
+        func readFixture(_ credits: [String: Any]?) throws -> [[String: Any]] {
+            var raw: [String: Any] = [
+                "rateLimits": ["primary": [
+                    "usedPercent": 50, "windowDurationMins": 300, "resetsAt": now + 3600
+                ]]
+            ]
+            if let credits { raw["rateLimitResetCredits"] = credits }
+            let json = try CodexQuota.snapshot(raw, observed: sampleDate)
+            return (try JSONSerialization.jsonObject(with: json) as? [String: Any])?["pools"] as? [[String: Any]] ?? []
+        }
+
+        let batches = try readFixture([
+            "availableCount": 2, "credits": [
+                ["id": "sample-a", "status": "available", "expiresAt": now + 3600 * 24],
+                ["id": "sample-b", "status": "available", "expiresAt": now + 3600 * 48],
+                ["id": "sample-used", "status": "used", "expiresAt": now + 3600 * 72]
+            ]
+        ])
+        precondition(batches.count == 3)
+        precondition(batches[0]["cycleStartBasis"] as? String == "window-length")
+        let iso = ISO8601DateFormatter()
+        precondition(iso.date(from: batches[0]["cycleStart"] as? String ?? "")?.timeIntervalSince1970 == now - 4 * 3600)
+        precondition(batches[1]["expiresAt"] as? String != batches[2]["expiresAt"] as? String)
+        precondition(!String(describing: batches).contains("sample-"))
+        func remaining(_ pools: [[String: Any]]) -> Any? {
+            (pools.last?["observations"] as? [[String: Any]])?.first?["remaining"]
+        }
+        let unavailable = try readFixture(nil)
+        let summary = try readFixture(["availableCount": 3, "credits": NSNull()])
+        let zero = try readFixture(["availableCount": 0, "credits": []])
+        precondition(remaining(unavailable) is NSNull)
+        precondition(remaining(summary) as? Int == 3 && summary.last?["expiresAt"] is NSNull)
+        precondition(remaining(zero) as? Int == 0)
+        print("PASS: inferred start, separate card expiries, used card excluded, count-only, unknown and explicit zero")
+
+        if arguments.dropFirst(2).first == "--live-once" {
+            guard let executable = CodexQuota.executable() else { throw QuotaError(message: "Codex CLI not found") }
+            let bytes = try CodexQuota.read(executable: executable)
+            let data = (try JSONSerialization.jsonObject(with: bytes) as? [String: Any])?["pools"] as? [[String: Any]] ?? []
+            precondition(data.contains { $0["kind"] as? String == "reset-credit" })
+            print("PASS: real read-only Codex response converted, no account values logged")
+            return
+        }
         guard arguments.dropFirst(2).first == "--live" else { return }
 
         model.clear()
