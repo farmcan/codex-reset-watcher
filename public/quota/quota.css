@@ -69,16 +69,19 @@ h2 { font-size: 18px; overflow-wrap: anywhere; }
 .tabs button { border-color: transparent; background: transparent; }
 .tabs button[aria-pressed="true"] { background: var(--paper); color: var(--accent); }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); margin: 14px 0; font-size: 12px; }
-.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend span, .legend .guide-control { display: inline-flex; align-items: center; gap: 6px; }
+.legend .guide-control { font: inherit; padding: 3px 6px; color: inherit; }
+.legend .guide-control[aria-pressed="false"] i { opacity: .35; }
+.hide-guide .chart .guide { display: none; }
 .legend i { width: 20px; border-top: 2px solid var(--accent); }
 .legend .prediction { border-top: 2px dashed var(--forecast); }
 .legend .guide { border-top: 2px dotted var(--muted); }
 .legend .planned { border-color: var(--plan); }
 .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
-.card { border: 1px solid var(--line); border-radius: 13px; background: var(--paper); padding: 16px; min-width: 0; }
+.card { border: 1px solid var(--line); border-radius: 13px; background: var(--paper); padding: 16px; min-width: 0; container-type: inline-size; }
 .card small, .cycle, summary, .lane-head p, .lane-pool small { font-size: 12px; color: var(--muted); }
 .card select { display: block; width: 100%; margin: 9px 0 0; }
-.metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; align-items: start; }
+.metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 12px 0; align-items: start; }
 .metrics > div:last-child { text-align: right; }
 .balance, .zero, .lane-amount strong { display: block; line-height: 1.25; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .balance { font-size: 29px; }
@@ -129,17 +132,41 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--muted); }
   button, select { padding-inline: 8px; }
 }
 
-.chart .forecast-label {
-  fill: var(--forecast);
-  font-size: 12px;
-  font-weight: 650;
-  paint-order: stroke;
-  stroke: var(--paper);
-  stroke-width: 3.5;
-  stroke-linejoin: round;
+.burndown { margin: 0 0 12px; }
+.burndown > .chart { margin-bottom: 3px; }
+.chart-events {
+  display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 6px 0 0;
+  border-top: 1px solid var(--line); margin: 0; list-style: none;
 }
-.chart .forecast-tick { stroke: var(--forecast); stroke-width: 1; }
-.chart .marker:focus-visible { stroke: var(--ink); stroke-width: 2; }
+.chart-event { min-width: 0; overflow-wrap: anywhere; color: var(--accent); font-size: 12px; }
+.chart-event summary { color: inherit; display: flex; align-items: center; gap: 6px; min-height: 24px; font-weight: 650; }
+.chart-event summary::-webkit-details-marker { display: none; }
+.chart-event summary::after {
+  content: ""; flex: 0 0 auto; width: 5px; height: 5px;
+  border: solid currentColor; border-width: 0 1px 1px 0; transform: rotate(45deg) translateY(-1px);
+}
+.chart-event details[open] summary::after { transform: rotate(225deg); }
+.chart-event summary::before, .chart-event.unobserved::before {
+  content: ""; flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: currentColor;
+}
+.chart-event details small { display: block; padding: 0 0 4px 13px; }
+.chart-event.projected, .chart-event.expiry { color: var(--forecast); }
+.chart-event.planned, .chart-event.unobserved { color: var(--plan); }
+.chart-event:not(.measured):not(.projected) summary::before { width: 2px; height: 11px; border-radius: 1px; }
+.chart-event.unobserved { display: flex; align-items: center; gap: 6px; min-height: 24px; }
+.chart-event.unobserved::before { width: 10px; height: 0; border-top: 2px dashed; background: none; border-radius: 0; }
+.chart .event-marker { cursor: pointer; }
+.chart .event-marker.highlighted:not(.deadline) { stroke: var(--ink); stroke-width: 2; }
+.chart .deadline { stroke-width: 1.5; }
+.chart .deadline.highlighted { stroke-width: 3; }
+.chart .deadline.planned { stroke: var(--plan); }
+.chart .last-point { stroke: var(--paper); stroke-width: 1.5; }
+@container (max-width: 350px) {
+  .metrics { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .metrics > div:last-child { text-align: left; }
+  .chart-events { flex-direction: column; }
+  .chart-event summary { min-height: 28px; }
+}
 .chart .lane-label { font-size: 12px; font-weight: 600; }
 .chart .lane-marker.expiry { fill: var(--forecast); }
 .chart .lane-marker.observed-reset { fill: var(--paper); stroke: var(--accent); stroke-width: 1.5; }
@@ -155,8 +182,4 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--muted); }
 .chart .chart-fill.observed { fill: var(--accent); opacity: .12; }
 .chart .chart-fill.projected { fill: var(--forecast); opacity: .13; }
 .chart .pre-observation-line { stroke: var(--plan); stroke-width: 1.6; stroke-dasharray: 5 4; }
-.chart .pre-observation-label { fill: var(--plan); }
-.chart .observed-label, .chart .forecast-lead { font-size: 12px; font-weight: 650; paint-order: stroke; stroke: var(--paper); stroke-width: 3.5; stroke-linejoin: round; }
-.chart .observed-label { fill: var(--accent); }
-.chart .forecast-lead { fill: var(--forecast); font-size: 11px; }
 .legend .reference { border-top: 2px dashed var(--plan); }

@@ -173,6 +173,7 @@ function burnCard(group, series, now, compareDomain) {
   const measured = node('div');
   const pct = percentage(pool, latest.remaining);
   measured.append(node('small', tr('最近观测余额', 'Last observed balance')), node('strong', balance(pool, latest.remaining), 'balance'));
+  measured.append(node('small', tr('观测于 ', 'Observed at ') + day(latest.ms)));
   if (pool.unit !== 'percent') {
     measured.append(node('small', pool.unit + ' · ' + (pct == null
       ? tr('比例未知', 'Share unknown') : number(pct) + tr('% 剩余', '% remaining'))));
@@ -303,7 +304,16 @@ function renderLegend() {
     ['', tr('短条表示余额比例，横轴表示期限', 'Short bars show remaining share. The axis shows deadlines.')]
   ];
   $('legend').replaceChildren(...items.map(([style, label]) => {
-    const element = node('span');
+    const element = node(style === 'guide' ? 'button' : 'span');
+    if (style === 'guide') {
+      element.type = 'button';
+      element.className = 'guide-control';
+      element.setAttribute('aria-pressed', String(!$('cards').classList.contains('hide-guide')));
+      element.onclick = () => {
+        const hidden = $('cards').classList.toggle('hide-guide');
+        element.setAttribute('aria-pressed', String(!hidden));
+      };
+    }
     if (view === 'burn') element.append(node('i', '', style));
     element.append(document.createTextNode(label));
     return element;

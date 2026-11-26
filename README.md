@@ -135,7 +135,7 @@ npm run dev -- --ip 127.0.0.1 --port 8793
 
 ### macOS 菜单栏应用
 
-ResetCat Quota Bar 支持 macOS 14 及以上版本。[下载 GitHub 公测安装包](https://github.com/farmcan/codex-reset-watcher/releases/tag/quota-bar-v0.1.3)，解压后将 `ResetCat Quota Bar.app` 拖到「应用程序」并打开。公测包尚未完成 Apple 公证，首次打开可能需要确认。[Apple 的打开说明](https://support.apple.com/zh-cn/102445)
+ResetCat Quota Bar 支持 macOS 14 及以上版本。[下载 GitHub 公测安装包](https://github.com/farmcan/codex-reset-watcher/releases/tag/quota-bar-v0.1.4)，解压后将 `ResetCat Quota Bar.app` 拖到「应用程序」并打开。公测包尚未完成 Apple 公证，首次打开可能需要确认。[Apple 的打开说明](https://support.apple.com/zh-cn/102445)
 
 从源码编译需要 Node.js 22+ 和 Xcode 命令行工具。在仓库根目录运行：
 

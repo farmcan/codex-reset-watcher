@@ -1,4 +1,4 @@
-import { DAY, HOUR, deadlines, sampleGroup, splitPoints } from './model.js';
+import { DAY, HOUR, deadlines, localDay, sampleGroup, splitPoints } from './model.js';
 
 const ns = 'http://www.w3.org/2000/svg';
 
@@ -38,6 +38,17 @@ export function bounds(pool, now, range, estimate) {
 export function burnChart({ histories, pool, now, domain, range, sampling, estimate, tr, date, number, types, balance, forecastLead }) {
   const chart = svg(480, 197, tr('额度燃尽图', 'Quota burndown chart'));
   const [start, end] = domain;
+  const sameDay = localDay(start, pool.zone) === localDay(end, pool.zone);
+  const eventTime = ms => date(ms, sameDay ? 'time' : 'full');
+  const events = [];
+  const figure = document.createElement('figure');
+  figure.className = 'burndown';
+  figure.append(chart);
+  function addEvent({ marker, kind, ms, label, detail }) {
+    events.push({ marker, kind, ms, label, detail });
+    marker?.classList.add('event-marker');
+    if (marker) shape(marker, 'title', {}, detail);
+  }
   const x = ms => 53 + 416 * (ms - start) / (end - start);
   const normalized = histories.every(history => history.total > 0);
   const value = (remaining, history) => normalized ? 100 * remaining / history.total : remaining;
@@ -92,22 +103,24 @@ export function burnChart({ histories, pool, now, domain, range, sampling, estim
       const reference = line(plot, ...points[0], ...points[1], 'pre-observation-line');
       shape(reference, 'title', {}, tr('首笔前 · 估算参考', 'Before first observation · estimate'));
     } else {
-      const reference = line(plot, x(pool.cycleStart.ms), 146, x(first.ms), 146, 'pre-observation-line');
-      shape(reference, 'title', {}, tr('无观测', 'No observations'));
-      shape(plot, 'text', { x: (x(pool.cycleStart.ms) + x(first.ms)) / 2, y: 139,
-        'text-anchor': 'middle', class: 'pre-observation-label' }, tr('无观测', 'No observations'));
+      const interval = eventTime(pool.cycleStart.ms) + '–' + eventTime(first.ms);
+      const label = interval + ' ' + tr('暂无观测', 'No observations');
+      addEvent({ kind: 'unobserved', ms: pool.cycleStart.ms, label, detail: label });
     }
   }
   if (now < end && x(now) - 53 > 40 && 469 - x(now) > 40) {
     line(plot, x(now), 16, x(now), 149, 'now');
     shape(chart, 'text', { x: x(now) + 4, y: 28 }, tr('查看时刻', 'As of'));
   }
-  for (const marker of deadlines(pool)) {
+  const limits = deadlines(pool);
+  for (const marker of limits) {
     if (marker.ms < start || marker.ms > end) continue;
     const mark = line(plot, x(marker.ms), 16, x(marker.ms), 149, 'deadline ' + marker.type);
-    shape(mark, 'title', {}, types[marker.type] + ' · ' + date(marker.ms, marker.day ? 'day' : 'full'));
+    addEvent({ marker: mark, kind: marker.type, ms: marker.ms,
+      label: (marker.day ? date(marker.ms, 'day') : eventTime(marker.ms)) + ' ' + types[marker.type],
+      detail: date(marker.ms, marker.day ? 'day' : 'full') + ' · ' + types[marker.type] });
   }
-  const reference = deadlines(pool).find(marker => marker.ms > now);
+  const reference = limits.find(marker => marker.ms > now);
   const latest = pool.observations.filter(point => point.ms <= now).at(-1);
   if (latest?.remaining != null && reference && reference.ms > now) {
     line(plot, x(latest.ms), y(value(latest.remaining, pool)), x(reference.ms), y(0), 'guide');
@@ -124,7 +137,7 @@ export function burnChart({ histories, pool, now, domain, range, sampling, estim
       for (const point of sampled) {
         const mark = shape(plot, 'circle', { cx: x(point.ms), cy: y(value(point.remaining, history)), r: 3, class: 'point' });
         shape(mark, 'title', {}, date(point.ms, 'full') + ' · ' + axisLabel(value(point.remaining, history)));
-        if (!lastPoint || point.ms >= lastPoint.ms) lastPoint = { ...point, history };
+        if (!lastPoint || point.ms >= lastPoint.ms) lastPoint = { ...point, history, mark };
       }
     }
   }
@@ -139,36 +152,60 @@ export function burnChart({ histories, pool, now, domain, range, sampling, estim
       const px = x(estimate.end);
       const py = y(value(estimate.remaining, pool));
       const atDeadline = estimate.remaining > 0 && estimate.end === estimate.deadline?.ms;
-      const when = date(estimate.end, end - start <= DAY ? 'time' : 'full');
+      const when = eventTime(estimate.end);
       const text = atDeadline
         ? tr(types[estimate.deadline.type] + '时预计剩 ' + balance(pool, estimate.remaining),
           balance(pool, estimate.remaining) + ' at ' + types[estimate.deadline.type])
         : tr('预计耗尽 ' + when, 'Projected depletion ' + when);
-      const labelY = py < 51 ? py + 23 : py - (forecastLead ? 27 : 13);
-      const anchor = px > 261 ? 'end' : 'start';
-      line(chart, px, py, px, py < 43 ? labelY - 10 : labelY + 4, 'forecast-tick');
-      const description = [text, forecastLead, date(estimate.end, 'full')].filter(Boolean).join(' · ');
-      const mark = shape(chart, 'circle', { cx: px, cy: py, r: 4, class: 'marker', tabindex: 0, 'aria-label': description });
-      shape(mark, 'title', {}, description);
-      const labelX = px + (anchor === 'end' ? -5 : 5);
-      shape(chart, 'text', { x: labelX, y: labelY, 'text-anchor': anchor, class: 'forecast-label' }, text);
-      if (forecastLead) {
-        shape(chart, 'text', { x: labelX, y: labelY + 13, 'text-anchor': anchor, class: 'forecast-lead' }, forecastLead);
-      }
-      chart.setAttribute('aria-label', chart.getAttribute('aria-label') + ' · ' + description);
+      const description = [text, date(estimate.end, 'full'), forecastLead].filter(Boolean).join(' · ');
+      const mark = shape(chart, 'circle', { cx: px, cy: py, r: 5, class: 'marker' });
+      addEvent({ marker: mark, kind: 'projected', ms: estimate.end, label: text, detail: description });
     }
   }
   if (lastPoint) {
-    const px = x(lastPoint.ms);
-    const py = y(value(lastPoint.remaining, lastPoint.history));
-    const toLeft = px > 160;
-    const nearForecast = estimate.state === 'forecast' && Math.abs(x(estimate.end) - px) < 140
-      && Math.abs(y(value(estimate.remaining, pool)) - py) < 45;
-    const labelY = nearForecast ? Math.max(25, py - 11) : Math.max(25, py - 9);
-    shape(chart, 'text', { x: px + (toLeft ? -7 : 7), y: labelY,
-      'text-anchor': toLeft ? 'end' : 'start', class: 'observed-label' }, balance(lastPoint.history, lastPoint.remaining));
+    const reading = balance(lastPoint.history, lastPoint.remaining);
+    const name = tr('图中末笔观测', 'Last plotted reading');
+    lastPoint.mark.classList.add('last-point');
+    lastPoint.mark.setAttribute('r', '5');
+    lastPoint.mark.querySelector('title').remove();
+    addEvent({ marker: lastPoint.mark, kind: 'measured', ms: lastPoint.ms,
+      label: eventTime(lastPoint.ms) + ' · ' + name + ' ' + reading,
+      detail: date(lastPoint.ms, 'observed') + ' · ' + name + ' ' + reading });
   }
-  return chart;
+  if (events.length) figure.append(eventList(events, tr('图表事件', 'Chart events')));
+  return figure;
+}
+
+function eventList(events, label) {
+  const list = document.createElement('ul');
+  list.className = 'chart-events';
+  list.setAttribute('aria-label', label);
+  events.sort((a, b) => a.ms - b.ms).forEach(event => {
+    const row = document.createElement('li');
+    row.className = 'chart-event ' + event.kind;
+    if (!event.marker) {
+      row.textContent = event.label;
+      list.append(row);
+      return;
+    }
+    const details = document.createElement('details');
+    const summary = document.createElement('summary');
+    const detail = document.createElement('small');
+    summary.textContent = event.label;
+    summary.title = event.detail;
+    summary.setAttribute('aria-label', event.detail);
+    detail.textContent = event.detail;
+    details.append(summary, detail);
+    row.append(details);
+    list.append(row);
+    event.marker.addEventListener('click', () => {
+      details.open = true;
+      summary.focus({ preventScroll: true });
+    });
+    summary.addEventListener('focus', () => event.marker.classList.add('highlighted'));
+    summary.addEventListener('blur', () => event.marker.classList.remove('highlighted'));
+  });
+  return list;
 }
 
 export function laneChart(markers, now, days, label, markerLabel) {
