@@ -1,10 +1,12 @@
 import AppKit
+import Carbon
 import SwiftUI
 import UniformTypeIdentifiers
 import WebKit
 
 final class QuotaBar: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKNavigationDelegate {
     private let model: QuotaModel
+    private let login = LoginItem()
     private let chartURL: URL
     private lazy var item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let popover = NSPopover()
@@ -40,13 +42,23 @@ final class QuotaBar: NSObject, NSApplicationDelegate, WKScriptMessageHandler, W
         timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
             self?.model.refresh()
         }
-        if !UserDefaults.standard.bool(forKey: "didShowWelcomePanel") {
+        if !launchedAsLoginItem && !UserDefaults.standard.bool(forKey: "didShowWelcomePanel") {
             UserDefaults.standard.set(true, forKey: "didShowWelcomePanel")
             DispatchQueue.main.async { [weak self] in self?.showInitialPanel() }
         }
     }
 
+    private var launchedAsLoginItem: Bool {
+        NSAppleEventManager.shared().currentAppleEvent?
+            .paramDescriptor(forKeyword: AEKeyword(keyAELaunchedAsLogInItem)) != nil
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        login.reload()
+    }
+
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if launchedAsLoginItem { return false }
         if floatingPanel?.isVisible == true {
             floatingPanel?.makeKeyAndOrderFront(nil)
         } else if !popover.isShown {
@@ -67,6 +79,7 @@ final class QuotaBar: NSObject, NSApplicationDelegate, WKScriptMessageHandler, W
             return
         }
         floatingPanel?.orderOut(nil)
+        login.reload()
         model.refresh()
         guard let button = item.button, let window = button.window, window.isVisible else {
             showFloatingPanel()
@@ -77,12 +90,13 @@ final class QuotaBar: NSObject, NSApplicationDelegate, WKScriptMessageHandler, W
     }
 
     private func panelView() -> QuotaPanel {
-        QuotaPanel(model: model, actions: QuotaActions(
+        QuotaPanel(model: model, login: login, actions: QuotaActions(
             refresh: { [weak self] in self?.model.refresh(force: true) },
             chooseFile: { [weak self] watch in self?.chooseFile(watch: watch) },
             stopWatching: { [weak self] in self?.model.stopWatching() },
             connectCodex: { [weak self] in self?.confirmCodex() },
             disconnectCodex: { [weak self] in self?.model.disconnectCodex() },
+            restoreHistory: { [weak self] in self?.confirmCodex(restoreOnly: true) },
             copy: { [weak self] template in self?.copyAgentText(template: template) },
             demo: { [weak self] in self.map { $0.model.showDemo(!$0.model.demo) } },
             clear: { [weak self] in self?.confirmClear() },
@@ -112,19 +126,25 @@ final class QuotaBar: NSObject, NSApplicationDelegate, WKScriptMessageHandler, W
         floatingPanel?.makeKeyAndOrderFront(nil)
     }
 
-    private func confirmCodex() {
-        if model.codexEnabled {
+    private func confirmCodex(restoreOnly: Bool = false) {
+        if model.codexEnabled && !restoreOnly {
             model.connectCodex()
             return
         }
         popover.performClose(nil)
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
-        alert.messageText = "连接本机 Codex？"
-        alert.informativeText = "使用你已登录的本机 Codex 只读查询额度。应用运行时每 5 分钟检查一次，观测保存在本机。可以随时从设置停止。"
-        alert.addButton(withTitle: "同意并连接")
+        alert.messageText = restoreOnly ? "恢复近期 Codex 额度观测？" : "连接本机 Codex？"
+        alert.informativeText = "只读查询已登录的本机 Codex。应用运行时每 5 分钟检查一次。选择恢复历史时，会在本机查找最近 24 小时内与当前周期精确匹配的额度观测。"
+        alert.addButton(withTitle: "读取并恢复近期观测")
+        if !restoreOnly { alert.addButton(withTitle: "只读取当前额度") }
         alert.addButton(withTitle: "取消")
-        if alert.runModal() == .alertFirstButtonReturn { model.connectCodex() }
+        let choice = alert.runModal()
+        if choice == .alertFirstButtonReturn {
+            model.connectCodex(restoreHistory: true)
+        } else if !restoreOnly && choice == .alertSecondButtonReturn {
+            model.connectCodex()
+        }
         showAfterDialog()
     }
 

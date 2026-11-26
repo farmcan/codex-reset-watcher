@@ -88,6 +88,11 @@ export function readSnapshot(input) {
       pool.total = 100;
     }
     for (const key of stamps) pool[key] = timestamp(raw[key], field + '.' + key, timezone, true);
+    if (raw.cycleInitialRemaining != null && pool.cycleStart) {
+      const initial = amount(raw.cycleInitialRemaining, field + '.cycleInitialRemaining');
+      if (pool.total != null && initial > pool.total) throw new Error(field + '.cycleInitialRemaining · exceeds total');
+      pool.cycleInitialRemaining = initial;
+    }
     if (raw.cycleStartBasis === 'window-length' && pool.cycleStart) pool.cycleStartBasis = 'window-length';
     if (raw.kind === 'reset-credit' && pool.unit === 'count') pool.kind = 'reset-credit';
     pool.cycleId = raw.cycleId == null
@@ -161,6 +166,16 @@ export function timelineMarkers(pool) {
   return markers.sort((a, b) => a.ms - b.ms);
 }
 
+// Date-only deadlines compare calendar dates in the source timezone.
+export function leadBeforeDeadline(zeroAt, deadline, timezone) {
+  if (!deadline || zeroAt >= deadline.ms) return null;
+  if (deadline.day) {
+    const days = (Date.parse(localDay(deadline.ms, timezone)) - Date.parse(localDay(zeroAt, timezone))) / DAY;
+    return days > 0 ? { days } : null;
+  }
+  return { minutes: Math.round((deadline.ms - zeroAt) / 60_000) };
+}
+
 export function forecast(pool, now) {
   if (pool.kind === 'reset-credit') return { state: 'inventory' };
   const points = pool.observations.filter(point => point.ms <= now);
@@ -184,5 +199,6 @@ export function forecast(pool, now) {
   if (!Number.isFinite(zeroAt) || zeroAt > 8.64e15) return { state: 'flat' };
   const end = Math.min(zeroAt, deadline?.ms ?? Infinity);
   const remaining = Math.max(0, latest.remaining - rate * (end - latest.ms) / HOUR);
-  return { state: 'forecast', rate, zeroAt, end, remaining, latest, deadline };
+  return { state: 'forecast', rate, zeroAt, end, remaining, latest, deadline,
+    lead: leadBeforeDeadline(zeroAt, deadline, pool.zone) };
 }

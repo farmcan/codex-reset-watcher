@@ -23,6 +23,17 @@ export const demo = {
       ]
     },
     {
+      "sourceId": "codex", "sourceLabel": "Codex", "poolId": "early-example", "poolLabel": "提前耗尽样例",
+      "cycleId": "demo-early-01", "unit": "percent", "total": 100,
+      "cycleStart": "2026-11-24T06:00:00+08:00", "cycleInitialRemaining": 100,
+      "resetsAt": "2026-11-24T10:00:00+08:00",
+      "observations": [
+        {"observedAt": "2026-11-24T07:00:00+08:00", "remaining": 60},
+        {"observedAt": "2026-11-24T07:30:00+08:00", "remaining": 45},
+        {"observedAt": "2026-11-24T08:00:00+08:00", "remaining": 30}
+      ]
+    },
+    {
       "sourceId": "codex", "sourceLabel": "Codex", "poolId": "reset-card-1", "poolLabel": "重置卡",
       "cycleId": "available", "unit": "count", "kind": "reset-credit", "expiresAt": "2026-11-26T12:00:00+08:00",
       "observations": [{"observedAt": "2026-11-24T08:00:00+08:00", "remaining": 1}]

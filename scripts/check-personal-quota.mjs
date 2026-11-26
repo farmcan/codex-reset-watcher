@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
-import { readSnapshot, mergePools, forecast, splitPoints, HOUR } from '../public/quota/model.js';
+import { readSnapshot, mergePools, forecast, leadBeforeDeadline, splitPoints, HOUR } from '../public/quota/model.js';
 import { demo, demoNow } from '../public/quota/demo.js';
 
 const origin = process.env.QUOTA_ORIGIN ?? 'http://127.0.0.1:8793';
@@ -16,6 +16,15 @@ assert.equal(forecast(weekly, estimate.end).state, 'update');
 assert.equal(forecast({ ...weekly, observations: weekly.observations.slice(1) }, demoNow).state, 'short');
 assert.equal(forecast({ ...weekly, observations: weekly.observations.map(point => ({ ...point, remaining: 60 })) }, demoNow).state, 'flat');
 assert.equal(forecast({ ...weekly, resetsAt: null }, demoNow + 7 * HOUR).state, 'stale');
+const early = demoPools.find(pool => pool.poolId === 'early-example');
+const earlyProjection = forecast(early, demoNow);
+assert.equal(earlyProjection.zeroAt, Date.parse('2026-11-24T09:00:00+08:00'));
+assert.deepEqual(earlyProjection.lead, { minutes: 60 });
+assert.equal(forecast({ ...early, resetsAt: null }, demoNow).lead, null);
+assert.equal(forecast({ ...early, resetsAt: { ...early.resetsAt, ms: earlyProjection.zeroAt } }, demoNow).lead, null);
+assert.equal(estimate.lead, null);
+assert.deepEqual(leadBeforeDeadline(earlyProjection.zeroAt,
+  { ms: Date.parse('2026-11-26T00:00:00+08:00'), day: true }, 'Asia/Shanghai'), { days: 2 });
 const points = [
   { ms: 0, remaining: 4 }, { ms: HOUR, remaining: 6 }, { ms: 8 * HOUR, remaining: 5 },
   { ms: 9 * HOUR, remaining: null }, { ms: 10 * HOUR, remaining: 3 }
@@ -132,6 +141,15 @@ try {
   assert.equal(await grant.locator('.cycle-origin').textContent(), '首笔观测');
   assert.match(await grant.locator('.cycle').textContent(), /周期开始未知/);
   if (screenshot) await page.screenshot({ path: screenshot + '-burndown.png', fullPage: true });
+  await codex.locator('select').selectOption({ label: '提前耗尽样例' });
+  assert.equal(await codex.locator('.observed-label').textContent(), '30%');
+  assert.equal(await codex.locator('.forecast-label').textContent(), '预计耗尽 09:00');
+  assert.equal(await codex.locator('.forecast-lead').textContent(), '比 10:00 重置早 1 小时');
+  assert.match(await codex.locator('.metrics').textContent(), /比 10:00 重置早 1 小时/);
+  assert.equal(await codex.locator('.chart-fill').count(), 3);
+  assert.equal(await codex.locator('line.forecast').getAttribute('data-end'), '2026-11-24T01:00:00.000Z');
+  assert.equal(await codex.locator('.chart .point').count(), 3);
+  if (screenshot) await page.screenshot({ path: screenshot + '-three-phases.png', fullPage: true });
   await codex.locator('select').selectOption({ label: '短时额度' });
   assert.equal(await codex.locator('.balance').textContent(), '76%');
   await page.locator('#range').selectOption('compare');
@@ -142,7 +160,7 @@ try {
   await page.locator('#sample').selectOption('day');
   assert.equal(await codex.locator('.point').count(), 1);
   await page.locator('#lanes').click();
-  assert.equal(await page.locator('.lane-row').count(), 7);
+  assert.equal(await page.locator('.lane-row').count(), 8);
   const lanes = (await page.locator('.lane-label').allTextContents()).join(' ');
   assert.match(lanes, /11\/24 09:00 · 重置/);
   assert.match(lanes, /11\/24 10:00 · 到期/);

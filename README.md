@@ -114,12 +114,13 @@
 | `unit` / `total` | `percent` 表示 0–100 的剩余百分比。也可用 `credits` 等原单位，未知总量填 null。 |
 | `cycleStart` / `resetsAt` / `expiresAt` / `deadlineAt` | 周期开始、刷新、失效、自定计划期限。接受带时区的 ISO 8601 时间、YYYY-MM-DD 或 null。仅日期的期限按当地日期起点标记，界面保留日精度。 |
 | `cycleStartBasis` / `observedResetAt` | 可选。使用 `window-length` 标明周期开始依窗口长度推算。只有来源确有重置观测时才填 `observedResetAt`，可用带时区的 ISO 8601 时间或 YYYY-MM-DD。 |
+| `cycleInitialRemaining` | 可选。已知 `cycleStart` 时，可填有依据的周期初始余额，用于绘制首笔观测前的估算参考。使用与 `remaining` 相同的单位。 |
 | `kind` | 可选。`reset-credit` 搭配 `unit: "count"` 表示重置卡可用张数。每个到期批次独立设池，未知到期填 null。重置卡仅显示在库存与泳道视图。 |
 | `observations[]` | 至少一个观测点。用带时区的 `observedAt` 和非负数或 null 的 `remaining`。0 表示耗尽。 |
 
 合并键为来源、池、单位、周期和观测时刻。同一键重复导入只保留一个点，后导入的值可更正该点。相同池和单位的其他周期可在跨周期视图中查看。小时或天采样取相应桶内的末点。
 
-燃尽图在余额回升、周期切换、未知余额或间隔超过 6 小时处断开。近 24 小时内至少有 3 个连续点，跨度至少 1 小时，且最新观测距查看时刻不超过 6 小时时，才用首末余额之差估计平均速率。预测画到理论归零或已知期限中更早的时刻，点线表示均匀使用参考。余额只取导入的观测，过期时提示待更新。
+燃尽图分开绘制首笔前参考、实际观测与预测。已知周期开始但缺少初始余额时，图中标记「无观测」。实际余额在回升、周期切换、未知余额或间隔超过 6 小时处断开。近 24 小时内至少有 3 个连续点，跨度至少 1 小时，且最新观测距查看时刻不超过 6 小时时，才用首末余额之差估计平均速率。预测画到理论归零或已知期限中更早的时刻。若在已知期限前归零，会标出提前时长。余额只取导入的观测，过期时提示待更新。
 
 ### 本地打开看板
 
@@ -134,7 +135,7 @@ npm run dev -- --ip 127.0.0.1 --port 8793
 
 ### macOS 菜单栏应用
 
-ResetCat Quota Bar 支持 macOS 14 及以上版本。[下载 GitHub 公测安装包](https://github.com/farmcan/codex-reset-watcher/releases/tag/quota-bar-v0.1.2)，解压后将 `ResetCat Quota Bar.app` 拖到「应用程序」并打开。公测包尚未完成 Apple 公证，首次打开可能需要确认。[Apple 的打开说明](https://support.apple.com/zh-cn/102445)
+ResetCat Quota Bar 支持 macOS 14 及以上版本。[下载 GitHub 公测安装包](https://github.com/farmcan/codex-reset-watcher/releases/tag/quota-bar-v0.1.3)，解压后将 `ResetCat Quota Bar.app` 拖到「应用程序」并打开。公测包尚未完成 Apple 公证，首次打开可能需要确认。[Apple 的打开说明](https://support.apple.com/zh-cn/102445)
 
 从源码编译需要 Node.js 22+ 和 Xcode 命令行工具。在仓库根目录运行：
 
@@ -145,10 +146,12 @@ apps/quota-bar/install.sh
 
 安装完成后，在系统菜单栏点单色小猫。首次接入可以选择：
 
-- **连接 Codex**。确认后使用已登录的本机 Codex CLI 只读校验。应用运行时每 5 分钟检查一次。齿轮里可以立即刷新或停止连接。
+- **连接 Codex**。确认后使用已登录的本机 Codex CLI 只读查询，先显示当前余额，之后每 5 分钟检查一次。可选恢复最近 24 小时内属于同一额度池和同一重置周期的本机观测，保留原时间并去重。应用最多扫描 32 个近期会话日志的末尾，只保存匹配的额度读数。齿轮里可以立即刷新、恢复历史或停止连接。
 - **监测本机快照**。复制 Agent 接入指令及 v1 模板，选定一个本机文件。Agent 每次成功查询后原子更新同一个文件，应用会自动合并新观测。若已有采集器，可直接选定它的输出。一次性导入也可单独使用。
 
 面板顶部显示最后观测、检查结果和下次检查。读取失败时保留最后的真实读数，并标为旧快照。「完整图表」在独立窗口读取同一份记录，断网时也可看历史。菜单栏拥挤时，从 Spotlight 或 Finder 打开 `ResetCat Quota Bar` 调出面板。源码安装脚本将 App 放到 `~/Applications`。
+
+齿轮里的「登录时启动」默认关闭。开启后，登录 macOS 时会在菜单栏启动并继续已配置的 Codex 检查或快照监测。若系统需要批准，可从齿轮打开系统设置的登录项页面。
 
 更新前从齿轮菜单退出应用，再运行安装脚本。另可使用第三方 CodexBar 查看其直接接入的额度来源。
 

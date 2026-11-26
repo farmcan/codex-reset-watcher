@@ -19,6 +19,11 @@ struct QuotaDeadline: Decodable {
         }
     }
 }
+struct QuotaLead: Decodable {
+    let days: Int?
+    let minutes: Int?
+}
+
 struct QuotaEstimate: Decodable {
     let state: String
     let zeroAt: Double?
@@ -26,6 +31,7 @@ struct QuotaEstimate: Decodable {
     let remaining: Double?
     let latest: QuotaPoint?
     let deadline: QuotaDeadline?
+    let lead: QuotaLead?
 }
 struct QuotaPool: Decodable, Identifiable {
     let id: String
@@ -175,13 +181,13 @@ final class QuotaModel: ObservableObject {
         }
     }
 
-    func connectCodex() {
-        guard !codexEnabled else { refreshCodex(force: true); return }
+    func connectCodex(restoreHistory: Bool = false) {
+        guard !codexEnabled else { refreshCodex(force: true, restoreHistory: restoreHistory); return }
         codexEnabled = true
         demo = false
         update()
         defaults.set(true, forKey: "codexQuotaEnabled")
-        refreshCodex(force: true)
+        refreshCodex(force: true, restoreHistory: restoreHistory)
     }
 
     func disconnectCodex() {
@@ -193,7 +199,7 @@ final class QuotaModel: ObservableObject {
         update()
     }
 
-    private func refreshCodex(force: Bool) {
+    private func refreshCodex(force: Bool, restoreHistory: Bool = false) {
         let started = Date()
         guard codexEnabled, !codexBusy, force || (codexCheck.next ?? .distantPast) <= started else { return }
         guard let cli = CodexQuota.executable() else {
@@ -210,6 +216,9 @@ final class QuotaModel: ObservableObject {
             DispatchQueue.main.async { [weak self] in
                 guard let self, self.codexEnabled, self.codexGeneration == generation else { return }
                 self.finishCodex(result)
+                if restoreHistory, let bytes = try? result.get() {
+                    self.restoreCodexHistory(bytes, generation: generation)
+                }
             }
         }
     }
@@ -226,6 +235,27 @@ final class QuotaModel: ObservableObject {
             codexCheck = QuotaCheck(attempted: date, next: next, result: Self.problemText(error), failed: true)
         }
         update()
+    }
+
+    private func restoreCodexHistory(_ live: Data, generation: UUID) {
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            let result = Result { try CodexHistory.restore(live) }
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.codexEnabled, self.codexGeneration == generation else { return }
+                do {
+                    if let restored = try result.get() {
+                        try self.importBytes(restored.data, leaveDemo: false)
+                        if !self.codexCheck.failed {
+                            self.codexCheck.result = "已检查并合并 \(restored.count) 个历史观测"
+                        }
+                    } else if !self.codexCheck.failed {
+                        self.codexCheck.result = "刷新成功 · 未找到同周期历史"
+                    }
+                } catch {
+                    if !self.codexCheck.failed { self.codexCheck.result = "刷新成功 · 历史读取失败" }
+                }
+            }
+        }
     }
 
     func refresh(force: Bool = false) {

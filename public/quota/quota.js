@@ -1,4 +1,4 @@
-import { DAY, HOUR, deadlines, forecast, mergePools, poolKey, readSnapshot, timelineMarkers } from './model.js';
+import { DAY, HOUR, deadlines, forecast, localDay, mergePools, poolKey, readSnapshot, timelineMarkers } from './model.js';
 import { bounds, burnChart, laneChart } from './charts.js';
 import { formatAgentGuide } from './agent-guide.js';
 import { demo, demoNow } from './demo.js';
@@ -58,6 +58,26 @@ function balance(pool, remaining) {
   if (remaining == null) return '—';
   if (pool.kind === 'reset-credit') return number(remaining) + tr(' 张', ' cards');
   return number(remaining) + (pool.unit === 'percent' ? '%' : '');
+}
+
+function formatLead(estimate, date, timezone) {
+  if (!estimate.lead) return '';
+  const sameDay = localDay(estimate.deadline.ms, timezone) === localDay(estimate.zeroAt, timezone);
+  const when = date(estimate.deadline.ms, estimate.deadline.day ? 'axis' : sameDay ? 'time' : 'full');
+  const type = indicators[estimate.deadline.type];
+  const { days, minutes } = estimate.lead;
+  let duration;
+  if (days) {
+    duration = days + tr(' 天', days === 1 ? ' day' : ' days');
+  } else if (minutes === 0) {
+    duration = tr('不足 1 分钟', 'less than 1 min');
+  } else {
+    const hours = Math.floor(minutes / 60);
+    const tail = minutes % 60;
+    duration = [hours ? hours + tr(' 小时', ' h') : '', tail ? tail + tr(' 分钟', ' min') : '']
+      .filter(Boolean).join(' ');
+  }
+  return tr(`比 ${when} ${type}早 ${duration}`, `${duration} before ${when} ${type.toLowerCase()}`);
 }
 
 function percentage(pool, remaining) {
@@ -161,6 +181,8 @@ function burnCard(group, series, now, compareDomain) {
   projected.append(node('small', tr('预计耗尽', 'Projected depletion')));
   if (estimate.state === 'forecast') {
     projected.append(node('strong', day(estimate.zeroAt), 'zero'));
+    const lead = formatLead(estimate, day, pool.zone);
+    if (lead) projected.append(node('small', lead, 'estimate'));
     if (estimate.deadline && estimate.zeroAt > estimate.deadline.ms) {
       projected.append(node('small', tr('晚于期限 · 理论耗尽时间', 'After deadline · theoretical')));
     }
@@ -192,6 +214,7 @@ function burnCard(group, series, now, compareDomain) {
   card.append(burnChart({
     histories: shown, pool, now, domain: compareDomain ?? bounds(pool, now, range, estimate),
     range, sampling: $('sample').value, estimate, tr, date: day, number, types: indicators,
+    forecastLead: formatLead(estimate, day, pool.zone),
     balance: (entry, remaining) => balance(entry, remaining) + (entry.unit === 'percent' ? '' : ' ' + entry.unit)
   }), detailsFor(series));
   return card;
@@ -271,6 +294,7 @@ function laneCard(groups, side, now) {
 
 function renderLegend() {
   const items = view === 'burn' ? [
+    ['reference', tr('紫色虚线 · 首笔前估算参考／无观测', 'Purple dashed · pre-observation estimate / no readings')],
     ['', tr('实线 · 观测余额', 'Solid · Observed')],
     ['prediction', tr('虚线 · 近期速度外推', 'Dashed · Projection')],
     ['guide', tr('点线 · 均匀使用参考', 'Dotted · Even-use guide')]

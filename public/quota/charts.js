@@ -35,13 +35,16 @@ export function bounds(pool, now, range, estimate) {
   return [start, Math.max(now, Math.min(end, now + 90 * DAY), start + 1)];
 }
 
-export function burnChart({ histories, pool, now, domain, range, sampling, estimate, tr, date, number, types, balance }) {
+export function burnChart({ histories, pool, now, domain, range, sampling, estimate, tr, date, number, types, balance, forecastLead }) {
   const chart = svg(480, 197, tr('额度燃尽图', 'Quota burndown chart'));
   const [start, end] = domain;
   const x = ms => 53 + 416 * (ms - start) / (end - start);
   const normalized = histories.every(history => history.total > 0);
   const value = (remaining, history) => normalized ? 100 * remaining / history.total : remaining;
   let scale = normalized ? 100 : pool.total || 1;
+  if (range === 'cycle' && pool.cycleInitialRemaining != null) {
+    scale = Math.max(scale, value(pool.cycleInitialRemaining, pool));
+  }
   for (const history of histories) {
     for (const point of history.observations) {
       if (point.ms >= start && point.ms <= now) scale = Math.max(scale, value(point.remaining, history));
@@ -53,10 +56,6 @@ export function burnChart({ histories, pool, now, domain, range, sampling, estim
   const defs = shape(chart, 'defs', {});
   const clip = shape(defs, 'clipPath', { id: clipId });
   shape(clip, 'rect', { x: 52, y: 14, width: 420, height: 138 });
-  if (now < end) {
-    const forecastStart = x(Math.max(start, now));
-    shape(chart, 'rect', { x: forecastStart, y: 16, width: 469 - forecastStart, height: 133, class: 'forecast-zone' });
-  }
   for (const fraction of [1, .75, .5, .25, 0]) {
     const level = scale * fraction;
     line(chart, 53, y(level), 469, y(level), 'grid');
@@ -74,6 +73,31 @@ export function burnChart({ histories, pool, now, domain, range, sampling, estim
     shape(chart, 'text', { x: 53, y: 187, 'text-anchor': 'start', class: 'cycle-origin' }, startLabel);
   }
   const plot = shape(chart, 'g', { 'clip-path': 'url(#' + clipId + ')' });
+  const fills = shape(plot, 'g', { 'aria-hidden': true });
+  function fill(points, kind) {
+    if (points.length < 2) return;
+    const base = y(0);
+    const top = points.map(point => point.join(',')).join(' ');
+    shape(fills, 'polygon', {
+      class: 'chart-fill ' + kind, points: points[0][0] + ',' + base + ' ' + top + ' ' + points.at(-1)[0] + ',' + base
+    });
+  }
+  const first = pool.observations.find(point => point.ms <= now && point.remaining != null);
+  if (range === 'cycle' && pool.cycleStart && first && first.ms > pool.cycleStart.ms) {
+    const initial = pool.cycleInitialRemaining;
+    const actualFirst = pool.observations[0];
+    if (initial != null && actualFirst === first) {
+      const points = [[x(pool.cycleStart.ms), y(value(initial, pool))], [x(first.ms), y(value(first.remaining, pool))]];
+      fill(points, 'pre-observation');
+      const reference = line(plot, ...points[0], ...points[1], 'pre-observation-line');
+      shape(reference, 'title', {}, tr('首笔前 · 估算参考', 'Before first observation · estimate'));
+    } else {
+      const reference = line(plot, x(pool.cycleStart.ms), 146, x(first.ms), 146, 'pre-observation-line');
+      shape(reference, 'title', {}, tr('无观测', 'No observations'));
+      shape(plot, 'text', { x: (x(pool.cycleStart.ms) + x(first.ms)) / 2, y: 139,
+        'text-anchor': 'middle', class: 'pre-observation-label' }, tr('无观测', 'No observations'));
+    }
+  }
   if (now < end && x(now) - 53 > 40 && 469 - x(now) > 40) {
     line(plot, x(now), 16, x(now), 149, 'now');
     shape(chart, 'text', { x: x(now) + 4, y: 28 }, tr('查看时刻', 'As of'));
@@ -88,24 +112,27 @@ export function burnChart({ histories, pool, now, domain, range, sampling, estim
   if (latest?.remaining != null && reference && reference.ms > now) {
     line(plot, x(latest.ms), y(value(latest.remaining, pool)), x(reference.ms), y(0), 'guide');
   }
+  let lastPoint;
   for (const history of histories) {
     for (const group of splitPoints(history.observations.filter(point => point.ms <= now))) {
       const sampled = sampleGroup(group.filter(point => point.ms >= start && point.ms <= end), sampling, pool.zone);
       if (sampled.length > 1) {
-        shape(plot, 'polyline', {
-          class: 'actual',
-          points: sampled.map(point => [x(point.ms), y(value(point.remaining, history))].join(',')).join(' ')
-        });
+        const coordinates = sampled.map(point => [x(point.ms), y(value(point.remaining, history))]);
+        fill(coordinates, 'observed');
+        shape(plot, 'polyline', { class: 'actual', points: coordinates.map(point => point.join(',')).join(' ') });
       }
       for (const point of sampled) {
         const mark = shape(plot, 'circle', { cx: x(point.ms), cy: y(value(point.remaining, history)), r: 3, class: 'point' });
         shape(mark, 'title', {}, date(point.ms, 'full') + ' · ' + axisLabel(value(point.remaining, history)));
+        if (!lastPoint || point.ms >= lastPoint.ms) lastPoint = { ...point, history };
       }
     }
   }
   if (estimate.state === 'forecast') {
-    const segment = line(plot, x(estimate.latest.ms), y(value(estimate.latest.remaining, pool)),
-      x(estimate.end), y(value(estimate.remaining, pool)), 'forecast');
+    const points = [[x(estimate.latest.ms), y(value(estimate.latest.remaining, pool))],
+      [x(estimate.end), y(value(estimate.remaining, pool))]];
+    fill(points, 'projected');
+    const segment = line(plot, ...points[0], ...points[1], 'forecast');
     segment.dataset.end = new Date(estimate.end).toISOString();
     segment.dataset.remaining = String(estimate.remaining);
     if (estimate.end >= start && estimate.end <= end) {
@@ -117,16 +144,29 @@ export function burnChart({ histories, pool, now, domain, range, sampling, estim
         ? tr(types[estimate.deadline.type] + '时预计剩 ' + balance(pool, estimate.remaining),
           balance(pool, estimate.remaining) + ' at ' + types[estimate.deadline.type])
         : tr('预计耗尽 ' + when, 'Projected depletion ' + when);
-      const labelY = py < 43 ? py + 21 : py - 13;
+      const labelY = py < 51 ? py + 23 : py - (forecastLead ? 27 : 13);
       const anchor = px > 261 ? 'end' : 'start';
       line(chart, px, py, px, py < 43 ? labelY - 10 : labelY + 4, 'forecast-tick');
-      const mark = shape(chart, 'circle', { cx: px, cy: py, r: 4, class: 'marker', tabindex: 0,
-        'aria-label': text + ' · ' + date(estimate.end, 'full') });
-      shape(mark, 'title', {}, text + ' · ' + date(estimate.end, 'full'));
-      shape(chart, 'text', { x: px + (anchor === 'end' ? -5 : 5), y: labelY,
-        'text-anchor': anchor, class: 'forecast-label' }, text);
-      chart.setAttribute('aria-label', chart.getAttribute('aria-label') + ' · ' + text);
+      const description = [text, forecastLead, date(estimate.end, 'full')].filter(Boolean).join(' · ');
+      const mark = shape(chart, 'circle', { cx: px, cy: py, r: 4, class: 'marker', tabindex: 0, 'aria-label': description });
+      shape(mark, 'title', {}, description);
+      const labelX = px + (anchor === 'end' ? -5 : 5);
+      shape(chart, 'text', { x: labelX, y: labelY, 'text-anchor': anchor, class: 'forecast-label' }, text);
+      if (forecastLead) {
+        shape(chart, 'text', { x: labelX, y: labelY + 13, 'text-anchor': anchor, class: 'forecast-lead' }, forecastLead);
+      }
+      chart.setAttribute('aria-label', chart.getAttribute('aria-label') + ' · ' + description);
     }
+  }
+  if (lastPoint) {
+    const px = x(lastPoint.ms);
+    const py = y(value(lastPoint.remaining, lastPoint.history));
+    const toLeft = px > 160;
+    const nearForecast = estimate.state === 'forecast' && Math.abs(x(estimate.end) - px) < 140
+      && Math.abs(y(value(estimate.remaining, pool)) - py) < 45;
+    const labelY = nearForecast ? Math.max(25, py - 11) : Math.max(25, py - 9);
+    shape(chart, 'text', { x: px + (toLeft ? -7 : 7), y: labelY,
+      'text-anchor': toLeft ? 'end' : 'start', class: 'observed-label' }, balance(lastPoint.history, lastPoint.remaining));
   }
   return chart;
 }

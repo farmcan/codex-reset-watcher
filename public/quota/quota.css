@@ -150,3 +150,13 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--muted); }
   .lane-axis { grid-template-columns: minmax(0, 1fr) auto; }
   .lane-axis > div { grid-column: 1 / -1; }
 }
+
+.chart .chart-fill.pre-observation { fill: var(--plan); opacity: .11; }
+.chart .chart-fill.observed { fill: var(--accent); opacity: .12; }
+.chart .chart-fill.projected { fill: var(--forecast); opacity: .13; }
+.chart .pre-observation-line { stroke: var(--plan); stroke-width: 1.6; stroke-dasharray: 5 4; }
+.chart .pre-observation-label { fill: var(--plan); }
+.chart .observed-label, .chart .forecast-lead { font-size: 12px; font-weight: 650; paint-order: stroke; stroke: var(--paper); stroke-width: 3.5; stroke-linejoin: round; }
+.chart .observed-label { fill: var(--accent); }
+.chart .forecast-lead { fill: var(--forecast); font-size: 11px; }
+.legend .reference { border-top: 2px dashed var(--plan); }

@@ -31,7 +31,7 @@ enum CodexQuota {
         let rpc = try QuotaRPC(executable: executable, searchPaths: searchPaths)
         defer { rpc.close() }
         _ = try rpc.call(id: 1, method: "initialize", params: [
-            "clientInfo": ["name": "resetcat_quota_bar", "version": "0.1.2"]
+            "clientInfo": ["name": "resetcat_quota_bar", "version": "0.1.3"]
         ])
         try rpc.send(["method": "initialized"])
         let identity = try rpc.call(id: 2, method: "account/read", params: ["refreshToken": false])

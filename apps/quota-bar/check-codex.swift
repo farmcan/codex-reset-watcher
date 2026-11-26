@@ -83,6 +83,8 @@ struct CheckCodex {
         precondition(remaining(zero) as? Int == 0)
         print("PASS: inferred start, separate card expiries, used card excluded, count-only, unknown and explicit zero")
 
+        try checkHistory(root: root, model: model, resource: URL(fileURLWithPath: arguments[1]), defaults: defaults)
+
         if arguments.dropFirst(2).first == "--live-once" {
             guard let executable = CodexQuota.executable() else { throw QuotaError(message: "Codex CLI not found") }
             let bytes = try CodexQuota.read(executable: executable)
@@ -117,4 +119,83 @@ struct CheckCodex {
         }
         throw QuotaError(message: "Automatic Codex refresh did not complete: " + model.codexCheck.result)
     }
+    static func checkHistory(root: URL, model: QuotaModel, resource: URL, defaults: UserDefaults) throws {
+        model.clear()
+        let now = Date(timeIntervalSince1970: Date().timeIntervalSince1970.rounded(.down))
+        let epoch = Int(now.timeIntervalSince1970)
+        let reset = epoch + 7200
+        let live = try CodexQuota.snapshot([
+            "rateLimits": ["primary": ["usedPercent": 70, "windowDurationMins": 300, "resetsAt": reset]]
+        ], observed: now)
+        let file = root.appendingPathComponent("live.json")
+        try live.write(to: file, options: .atomic)
+        model.importFile(file, watch: true)
+        precondition(model.panel.sources[0].pools[0].estimate.state == "short")
+
+        let sessions = root.appendingPathComponent("sessions")
+        let day = DateFormatter()
+        day.locale = Locale(identifier: "en_US_POSIX")
+        day.dateFormat = "yyyy/MM/dd"
+        let iso = ISO8601DateFormatter()
+        func event(at date: Date, end: Int, used: Int, limit: String = "codex") -> [String: Any] {
+            ["type": "event_msg", "timestamp": iso.string(from: date), "payload": [
+                "type": "token_count", "rate_limits": [
+                    "limit_id": limit, "primary": ["resets_at": end, "window_minutes": 300, "used_percent": used]
+                ]
+            ]]
+        }
+        let first = now.addingTimeInterval(-3600)
+        let second = now.addingTimeInterval(-1800)
+        let valid = [
+            event(at: first, end: reset, used: 40),
+            event(at: second, end: reset, used: 55)
+        ]
+        let inputs = valid + [
+            valid[1],
+            event(at: first, end: reset - 300, used: 20),
+            event(at: second, end: reset, used: 20, limit: "other"),
+            event(at: now.addingTimeInterval(-14400), end: reset, used: 1),
+            event(at: now, end: reset, used: 7)
+        ]
+        let dated = Dictionary(grouping: inputs) { event in day.string(from: iso.date(from: event["timestamp"] as! String)!) }
+        for (date, rows) in dated {
+            let folder = sessions.appendingPathComponent(date)
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            let log = folder.appendingPathComponent("rollout-fixture.jsonl")
+            var contents = Data()
+            for row in rows {
+                contents.append(try JSONSerialization.data(withJSONObject: row))
+                contents.append(10)
+            }
+            try contents.write(to: log)
+        }
+
+        let empty = try CodexHistory.restore(live, from: root.appendingPathComponent("missing"))
+        precondition(empty == nil)
+        guard let restored = try CodexHistory.restore(live, from: sessions) else {
+            throw QuotaError(message: "Expected matching history")
+        }
+        precondition(restored.count == 2)
+        let historyFile = root.appendingPathComponent("sanitized-history.json")
+        try restored.data.write(to: historyFile, options: .atomic)
+        model.importFile(historyFile, watch: false)
+        model.importFile(historyFile, watch: false)
+        let period = model.panel.sources[0].pools[0]
+        precondition(period.groups.flatMap { $0 }.map(\.remaining) == [60, 45, 30])
+        precondition(period.groups.flatMap { $0 }.first?.ms == first.timeIntervalSince1970 * 1000)
+        precondition(period.estimate.state == "forecast")
+
+        let relaunched = try QuotaModel(resource: resource, storage: root.appendingPathComponent("snapshots.json"), defaults: defaults)
+        precondition(relaunched.watchedFile == file)
+        let later = try CodexQuota.snapshot([
+            "rateLimits": ["primary": ["usedPercent": 75, "windowDurationMins": 300, "resetsAt": reset]]
+        ], observed: Date())
+        if later != live {
+            try later.write(to: file, options: .atomic)
+            relaunched.refresh(force: true)
+            precondition(relaunched.panel.sources[0].pools[0].latest.remaining == 25)
+        }
+        print("PASS: matched history, original timestamps, duplicate/foreign-cycle rejection, and watch restoration on launch")
+    }
+
 }

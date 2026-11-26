@@ -67,6 +67,7 @@ struct QuotaActions {
     let stopWatching: () -> Void
     let connectCodex: () -> Void
     let disconnectCodex: () -> Void
+    let restoreHistory: () -> Void
     let copy: (Bool) -> Void
     let demo: () -> Void
     let clear: () -> Void
@@ -77,6 +78,7 @@ struct QuotaActions {
 
 struct QuotaPanel: View {
     @ObservedObject var model: QuotaModel
+    @ObservedObject var login: LoginItem
     let actions: QuotaActions
     @State private var copyNotice = ""
     @State private var selection: [String: String] = [:]
@@ -85,7 +87,7 @@ struct QuotaPanel: View {
         VStack(spacing: 0) {
             header
             Divider().overlay(Color.quotaTrack)
-            if let error = model.error {
+            if let error = model.error ?? login.error {
                 Text(error).font(.system(size: 10)).foregroundStyle(Color.quotaAmber)
                     .lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 13).padding(.vertical, 4)
@@ -176,7 +178,10 @@ struct QuotaPanel: View {
             .accessibilityIdentifier("refresh-quota")
             Menu {
                 Button(model.codexEnabled ? "立即刷新 Codex" : "连接 Codex…", action: actions.connectCodex)
-                if model.codexEnabled { Button("停止连接 Codex", action: actions.disconnectCodex) }
+                if model.codexEnabled {
+                    Button("恢复近期 Codex 观测…", action: actions.restoreHistory)
+                    Button("停止连接 Codex", action: actions.disconnectCodex)
+                }
                 Divider()
                 Button("一次性导入 JSON…") { actions.chooseFile(false) }
                 Button("监测本机快照…") { actions.chooseFile(true) }
@@ -186,6 +191,12 @@ struct QuotaPanel: View {
                 Button(model.demo ? "退出演示" : "加载演示", action: actions.demo)
                 if model.hasRecords { Button("清除本机记录…", role: .destructive, action: actions.clear) }
                 Divider()
+                Toggle("登录时启动", isOn: Binding(get: { login.requested }, set: login.setEnabled))
+                    .accessibilityIdentifier("launch-at-login")
+                Text("登录启动 · " + login.label)
+                if login.needsApproval || login.error != nil {
+                    Button("打开系统登录项设置…", action: login.openSettings)
+                }
                 Button("收起面板", action: actions.dismiss)
                 Button("退出额度面板", action: actions.quit)
             } label: {
@@ -231,7 +242,7 @@ struct QuotaPanel: View {
                 Sparkline(pool: pool, includePrediction: !stale)
                     .frame(height: 9).accessibilityLabel("迷你燃尽图")
                 Text(stale ? "来源暂不可用 · 旧快照" : estimateLine(pool))
-                    .font(.system(size: 10)).lineLimit(1)
+                    .font(.system(size: 10)).lineLimit(2)
                     .foregroundStyle(stale || pool.estimate.state == "forecast" ? Color.quotaAmber : Color.quotaQuiet)
                 HStack(spacing: 4) {
                     if options.count > 1 {
@@ -321,6 +332,17 @@ struct QuotaPanel: View {
                     inSameDayAs: Date(timeIntervalSince1970: model.panel.asOf / 1_000)
                 )
                 let time = pool.time(zero, timeOnly: sameDay)
+                if let lead = pool.estimate.lead, let deadline = pool.estimate.deadline {
+                    let type = deadline.label
+                    let sameDeadlineDay = calendar.isDate(
+                        Date(timeIntervalSince1970: zero / 1_000),
+                        inSameDayAs: Date(timeIntervalSince1970: deadline.ms / 1_000)
+                    )
+                    let timeAtDeadline = pool.time(deadline.ms, dayOnly: deadline.day, timeOnly: !deadline.day && sameDeadlineDay)
+                    let gap = lead.days.map { "\($0) 天" } ?? (lead.minutes == 0
+                        ? "不足 1 分钟" : duration(Double(lead.minutes ?? 0)))
+                    return "预计 " + time + " 耗尽 · 比 " + timeAtDeadline + " " + type + "早 " + gap
+                }
                 return minutes > 0 ? "预计 " + time + " 耗尽 · 约 " + duration(minutes) : "预计耗尽时间已过 · " + time
             }
             return "历史积累中"
@@ -328,7 +350,9 @@ struct QuotaPanel: View {
         case "stale": return "旧快照"
         case "update": return "待更新"
         case "flat": return "余额持平"
-        default: return "历史积累中"
+        default:
+            let count = pool.groups.reduce(0) { $0 + $1.count }
+            return count == 0 ? "历史积累中" : "历史积累中 · 本周期 \(count) 个观测"
         }
     }
 

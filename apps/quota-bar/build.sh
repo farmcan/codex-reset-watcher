@@ -9,7 +9,7 @@ node apps/quota-bar/build-resources.mjs "$contents/Resources"
 scratch="$(mktemp -d)"
 trap 'rm -rf "$scratch"' EXIT
 sdk="$(xcrun --sdk macosx --show-sdk-path)"
-sources=(apps/quota-bar/CodexQuota.swift apps/quota-bar/QuotaModel.swift apps/quota-bar/QuotaPanel.swift apps/quota-bar/main.swift)
+sources=(apps/quota-bar/CodexQuota.swift apps/quota-bar/CodexHistory.swift apps/quota-bar/LoginItem.swift apps/quota-bar/QuotaModel.swift apps/quota-bar/QuotaPanel.swift apps/quota-bar/main.swift)
 if [[ "${QUOTA_BAR_UNIVERSAL:-0}" == 1 ]]; then
   for architecture in arm64 x86_64; do
     xcrun swiftc -O -sdk "$sdk" -target "$architecture-apple-macosx14.0" \
